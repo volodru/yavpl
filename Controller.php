@@ -143,6 +143,7 @@ class Controller
 	{//он бывает нужен в программе. модуль и класс в программе редко нужен, т.к. это епархия Application
 		$this->running_method_name = $method_name;
 	}
+
 /**
  * Надо иногда
  */
@@ -244,6 +245,8 @@ class Controller
 	}
 
 //Хлебные крошки. Т.к. оно реализовано в виде 1 массива и двух методов, то делать отдельный класс для этого - нунафиг.
+//Тулбар - штука посложнее, поэтому он в отдельном классе. см. ToolBar.php
+
 /**
  * получить приватное поле с крошками
  */
@@ -262,65 +265,6 @@ class Controller
 		$this->__breadcrumbs[] = ($link != '') ? "<a href='$link'>$title</a>" : $title;
 		return $this;
 	}
-
-/** proposed for deletion
- * сбросить накопленные элементы тулбара. надо если не подходят дефолтные кнопки собранные предками и хочется сделать с нуля.
- */
-	/*
-	public function resetToolbar()
-	{
-		$this->__toolbar_elements = [];
-		return $this;
-	}
-	*/
-
-/** proposed for deletion
- * Получить скрытое поле __toolbar_elements с содержимым тулбара
- */
-	/*
-	public function getToolbarElements()
-	{
-		return $this->__toolbar_elements;
-	}
-	*/
-
-/** proposed for deletion
- * добавить кнопку на тублар
- * @param $header заголовок
- * @param $action ссылка/URL или функция на JS
- * @param $options разные опции, каждая емеет право быть неопределена и должна иметь значение по умолчанию.
- */
-	/*
-	protected function addToolButton($header, $action, $options = [])
-	{
-		$e = [
-			'type'			=> 'button',
-			'header'		=> $header,
-			'action'		=> $action,
-			'enabled'		=> isset($options['enabled']) ? $options['enabled'] : true,
-			'enabled_hint'	=> isset($options['enabled_hint']) ? $options['enabled_hint'] : null,
-			'disabled_hint'	=> isset($options['disabled_hint']) ? $options['disabled_hint'] : null,
-			'width'			=> isset($options['width']) ? $options['width'] : round(strlen($header) * 0.6).'em',//magic factor!
-		];
-		$this->__toolbar_elements[] = $e;
-		return $this;
-	}
-	*/
-
-/**proposed for deletion
- * добавить разделитель на тублар
- */
-	/*
-	protected function addToolDivider($options = [])
-	{
-		$e = [
-			'type'	=> 'divider',
-			'width'	=> (isset($options['width']) ? $options['width'] : '1em'),
-		];
-		$this->__toolbar_elements[] = $e;
-		return $this;
-	}
-	*/
 
 /**
  * добавить параметр в набор входных параметров CGI.
@@ -368,36 +312,6 @@ class Controller
 		}
 	}
 
-/** obsolete
- * Приватный метод. Используется в getParam
- */
-	/* proposed for deletion
-	private function checkParamAndReturn($type, $value, $default_value, $valid_values)
-	{
-		//da("$type, $value, $default_value, $valid_values");
-		if (is_array($value))
-		{
-			reset($value);
-			$r = [];
-			while (list($k, $v) = each($value))
-			{
-				$r[$k] = $this->checkParamType($type, $v, $default_value);
-			}
-			return $r;
-		}
-		else
-		{
-			$value = $this->checkParamType($type, $value, $default_value);
-			//da("returned value $value");
-			if (is_array($valid_values) && !(in_array($value, $valid_values)))
-			{
-				$value = (in_array($default_value, $valid_values)) ? $default_value : die("Default value [$default_value] is invalid");
-			}
-			return $value;
-		}
-	}
-	*/
-
 /**
  * Приватный метод для getParam.
  */
@@ -420,7 +334,6 @@ class Controller
 		}
 		return $default_value;
 	}
-
 
 /** Получить параметр извне.
 приоритет параметров:
@@ -451,8 +364,8 @@ class Controller
  * ждем coalesce в php7 и уберу этот ужас нах.
  */
 /*
-		$this->__params_array[$name],//что поставили ручками + тесты
-		$GLOBALS[$name], //для передачи из глобального контекста, например реализаци ЧПУ в Application
+		$this->__params_array[$name],//что поставили ручками + автотесты
+		$GLOBALS[$name], //для передачи данных из глобального контекста, например реализаци ЧПУ в Application
 */
 		$value = (isset($this->__params_array[$name])) ? $this->__params_array[$name] : (
 			(isset($_GET[$name])) ? $_GET[$name] : (
@@ -463,9 +376,6 @@ class Controller
 				)
 			)
 		);
-
-		// if (isset($value))
-		// {
 
 		if (is_array($value))
 		{
@@ -486,51 +396,7 @@ class Controller
 			}
 		}
 		return $result;
-
-			//}// else - next source in list
-		//}//and if none found - return default
-		//return $default_value;
-
-		/*
-		if (isset($this->__params_array[$name]))
-		{//особо одаренные наследники могут перекрыть метод getParam и выдавать данные с любым приоритетом
-			return $this->checkParamAndReturn($type, $this->__params_array[$name], $default_value, $valid_values);
-		}
-		elseif (isset($_GET[$name]))
-		{
-			return $this->checkParamAndReturn($type, $_GET[$name], $default_value, $valid_values);
-		}
-		elseif(isset($_POST[$name]))
-		{
-			return $this->checkParamAndReturn($type, $_POST[$name], $default_value, $valid_values);
-		}
-		elseif(isset($_COOKIE[$name]))
-		{
-			return $this->checkParamAndReturn($type, $_COOKIE[$name], $default_value, $valid_values);
-		}
-		elseif(isset($GLOBALS[$name]))//2014-11-28 - status experimental
-		{
-			return $this->checkParamAndReturn($type, $GLOBALS[$name], $default_value, $valid_values);
-		}
-		else
-		{
-			return $default_value;
-		}
-		*/
 	}
-
-/** obsolete, для getParams лучше использовать встроенный валидатор
- * Валидатор.
- * Использование:
- * $lang = $this->validate($this->getParam('l', 'string'), 'r', ['r', 'e']);
- * Обратить внимание, что дефолтное значение перешло из getParam в валидатор.
- */
-	/* the following code has been proposed for deletion 2015-09-29
-	public function validate($value, $default_value, $valid_values)
-	{
-		return (in_array($value, $valid_values)) ? $value : $default_value;
-	}
-	*/
 
 /**
  * Устанавливает TS документа для нужд поисковых систем.

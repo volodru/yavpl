@@ -78,7 +78,28 @@ class BasicUserModel extends SimpleDictionaryModel
 		'logout_magic_string'			=> 'logout',
 		'auth_by_login_and_password'	=> false,
 		'write_all_activities'			=> true,
+		'settings_field_name'			=> 'settings',
+		'settings_cookie_name'			=> 'settings',
+		'settings_cookie_ttl'			=> 60*60*24*365,// 1 год
 	];
+
+	//наследники сами объявляют массив валидных настроек.
+/** Формат валидатора:
+ * для каждого ключа массив из от 1 до 3 элементов: тип, дефолтное значение, список допустимых значений
+ * если не указаны дефолтные значения, то для целого это 0, для строки - ''
+ * если указано дефолтное значение и список допустимых значений и при этом в списке нет дефолного значения - будет die() на этапе валидации. 'nj jib,rf ghjuhfvvbcnf
+ * такой случай - ошибка программиста и исправлять ее надо сразу.
+ * если значение не входит в список допустимых - оно молча преобразуется в дефолтное.
+ * $this->valid_settings = [
+ * 	'key1'	=> ['integer', 0, [0,1,2]], //целое, варианты 0,1,2
+ *  'key2'	=> ['string', 'qwqw'], //строка, по дефолту 'qwqw', принимает любые значения
+ *  'key2a'	=> ['string'], //строка, по дефолту ''
+ *  'key2b'	=> ['string', '', ['aa', '', 'cccc'], //строка, по дефолту пустая, варианты из списка 'aa', '', 'cccc'
+ *  'key2e'	=> ['string', 'qq', ['aa', '', 'cccc'], //ошибка, дефолтное значение не входит в список допустимых
+ * ];
+ */
+	protected $valid_settings = [];
+
 
 /**
  * Конструктор берет массив параметров.
@@ -133,6 +154,24 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE {$this->key_field} = $1
 		return $this->db->exec("SELECT * FROM {$this->table_name} WHERE {$field_name} = $1", $value)->fetchRow();
 	}
 
+/** Получить ID по уникальному полю (код авторизации, логин, почта, телефон и т.п.)
+ */
+	public function getIdByUniqueField($field_name, $value)
+	{
+		if (!in_array($field_name, $this->fields)) die ("getRowByUniqueField required field $field_name");
+		$this->db->exec("SELECT {$this->key_field} FROM {$this->table_name} WHERE {$field_name} = $1", $value);
+		//проверка строго на 1, т.к. это уникальное поле. если в базе это поле не уникально, то нефиг им пользоваться для получения ID
+		if ($this->db->rows == 1)
+		{
+			list($id) = $this->db->fetchRowArray();
+		}
+		else
+		{//не нашли. почему false: 0 это валидный аноним, -1 это извращение, IMHO.
+			$id = false;
+		}
+		return $id;
+	}
+
 /** Получить ID юзера по логину и незашифрованному паролю. Пароль в базе зашифрован и во время этой проверки закже шифруется.
  * Кому этого мало - перекрывают метод и шифруют пароли, как хотят.
  */
@@ -176,7 +215,8 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
  */
 	public function continueCurrentSession()
 	{
-		//loading user's data and force logout case
+		$this->id = 0;//аноним
+
 		if (isset($_SESSION['log_id']) && intval($_SESSION['log_id']) > 0)
 		{
 			$this->id = $_SESSION['log_id'];
@@ -185,13 +225,13 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
 		elseif (isset($_COOKIE[$this->options['autologin_cookie_name']]))
 		{
 			//da($this);
-			$this->data = $this->getRowByUniqueField($this->options['autologin_field_name'], $_COOKIE[$this->options['autologin_cookie_name']]);
-			if ($this->data !== false)
+			$id = $this->getIdByUniqueField($this->options['autologin_field_name'], $_COOKIE[$this->options['autologin_cookie_name']]);
+			if ($id !== false)
 			{
+				$this->loadCurrentData();
 				if (!isset($_SESSION)){ session_start();}
-				$this->id = $_SESSION['log_id'] = $this->data[$this->key_field];
+				$this->id = $_SESSION['log_id'] = $id;
 				session_write_close();//to avoid locking
-				$this->setAutologin();//just extend cookie's time
 				$this->notifyOnContinueCurrentSession();
 			}
 			else
@@ -203,23 +243,24 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
 		{
 			$this->destroyCurrentSession();
 		}
-		//нашли юзера?
-		if (($this->data === false) ||
+
+		$this->setAutologin();//just extend cookie's time
+
+		//нашли юзера под номером $this->id ?
+		if (($this->data === false) || //какой-то неправильный юзер
 			//а не force logout случай?
 			(strpos($this->data[$this->options['autologin_field_name']], $this->options['logout_magic_string']) >= 0))//logout. magic string. set in UserModel->forceLogout
 		{//LOG OUT
-			$this->data = false;
 			$this->destroyCurrentSession();
 		}
 
 		//не забанили ещё?
 		if (!$this->isUserAllowedToLogin())
 		{
-			$this->notifyOnNotAllowedUser();//какое гадкое название метода :(
+			$this->notifyOnBannedUserLoggedIn();
 			$this->destroyCurrentSession();
 		}
-		//загружаем настройки юзера - нормальному юзеру из базы, анониму из кукиёв.
-		$this->loadSettings();
+
 		//пишем в лог независимо от результатов авторизации!
 		$this->writeActivityLog();
 	}
@@ -237,10 +278,8 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
 
 //обнуляем юзера до анонима
 		$this->id = 0;
-//сбрасываем его текущие данные (может тут сделать $this->loadCurrentData для анонимуса?)
-		$this->dropCurrentData();
-
-
+//грузим данные и настройки для анонимуса.
+		$this->loadCurrentData();
 		$this->notifyOnDestroyCurrentSession();
 	}
 
@@ -273,9 +312,9 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
 			if ($autologinkey == '')
 			{
 				$autologinkey = $this->generateNewAutologin();
-			}
-			$this->db->update($this->table_name, $this->key_field, $this->options['autologin_field_name'],
+				$this->db->update($this->table_name, $this->key_field, $this->options['autologin_field_name'],
 					[$this->key_field => $this->id, $this->options['autologin_field_name'] => $autologinkey]);
+			}
 			setcookie($this->options['autologin_cookie_name'], $autologinkey, time() + $this->options['autologin_cookie_ttl'], '/', COOKIE_DOMAIN);
 		}//else ну какой у анонима автологин?
 		return $this;
@@ -300,9 +339,8 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
 	}
 
 /** Тут можно послать письмо
- *@TODO: стоит переименовать метод!!!!
  */
-	public function notifyOnNotAllowedUser()
+	public function notifyOnBannedUserLoggedIn()
 	{
 	}
 
@@ -356,15 +394,11 @@ CREATE TABLE public.user_activity_logs
  */
 	public function loadCurrentData()
 	{
+		//загружаем данные юзера в память их СУБД.
+//@TODO: тут же можно грузить какие-то данные из кукиёв, а можно отдать это наследникам.
 		$this->data = $this->getRow($this->id);
-		return $this;
-	}
-
-/** Просто очищаем текущие данные. Пока надобность в этом сомнительна.
- */
-	public function dropCurrentData()
-	{
-		$this->data = false;//все проверки делаем на === false
+		//загружаем настройки юзера - нормальному юзеру из базы, анониму из кукиёв.
+		$this->loadSettings();
 		return $this;
 	}
 
@@ -379,110 +413,117 @@ CREATE TABLE public.user_activity_logs
 
 /** Загружаем настройки из сессии или кук, в зависимости от юзер или аноним.
  * Настройки тут же валидируем.
+ * Вызывается один раз при старте или продолжении сессии.
  */
 	public function loadSettings()
 	{
-	}
+		$settings_field_name = $this->options['settings_field_name'];
+		$settings_cookie_name = $this->options['settings_cookie_name'];
 
-/** Изменить отдульную настройку. Меняем данные в памяти и пишем в базу или в куку.
- */
-	public function changeSettings($key, $val)
-	{
-	}
-
-
-
-/**
- *
-	public function dropAutologin()
-	{
-		setcookie('autologinkey', '', time() - 3600, '/', COOKIE_DOMAIN);
-		$this->db->update('users', 'user_id', 'autologinkey', ['user_id' => $this->id, 'autologinkey' => null]);
-		return $this;
-	}
-
-	public function updateLastLogin()
-	{
-		$this->db->exec("--updateLastLogin()
-UPDATE users SET user_lastlogin=now() WHERE user_id=$1", $this->id);
-		return $this;
-	}
-
-	public function loadSettings()
-	{
 		if ($this->id > 0)
 		{
-			$this->settings = (isset($this->data['settings'])) ? unserialize($this->data['settings']) : [];
+			$this->settings = (isset($this->data[$settings_field_name])) ? unserialize($this->data[$settings_field_name]) : [];
 		}
 		else
 		{
-			$this->settings = (isset($_COOKIE['settings'])) ? unserialize(stripslashes($_COOKIE['settings'])) : [];
+			$this->settings = (isset($_COOKIE[$settings_cookie_name])) ? unserialize(stripslashes($_COOKIE[$settings_cookie_name])) : [];
 		}
-		if (isset($this->data['settings']))
+		//и сильно мы так сэкономим память?
+		if (isset($this->data[$settings_field_name]))
 		{
-			unset($this->data['settings']);
+			unset($this->data[$settings_field_name]);
 		}
-		$this->validateSettings();
+
+		//Пропускаем через себя массив настроек юзера.
+		$tmp = [];
+		foreach ($this->valid_settings as $key => $options)
+		{//валидатор сам берез проверяемое значение из $this->settings по ключу $key
+			$tmp[$key] = $this->validateSettings($key, $options);
+		}
+		$this->settings = $tmp;
 		return $this;
 	}
 
-	private function validateSettings()
+/** Нужен в validateSettings()
+ */
+	private function verifyDefaultValue($type)
 	{
-		$tmp = [];
-		foreach ($this->validator as $k => $v)
+		if ($type == 'string')
 		{
-			if (isset($this->settings[$k]))
-			{
-				if (count($v) == 2)
-				{
-					$tmp[$k] = (in_array($this->settings[$k], $v[1])) ? $this->settings[$k] : $v[0];
-				}
-				else
-				{
-					$tmp[$k] = $this->settings[$k];
-				}
-			}
-			else
-			{
-				$tmp[$k] = $v[0];
-			}
+			$default_value = '';
 		}
-		$this->settings = $tmp;
+		elseif ($type == 'integer' || $type == 'float' || $type == 'double')
+		{
+			$default_value = 0;
+		}
+		else
+		{
+			die("Unrecognized type cast \"$type\"");
+		}
+		return $default_value;
 	}
 
+/** Валидируем конкретную настройку.
+ * Все настройки, которых нет в валидаторе пропадают.
+ * Все значения, которые не входят в список допустимых становятся дефолтными.
+ * Описание валидатора смотри в блоке объявлений этого класса.
+ * Наследникам с другим форматом валидатора надо полностью перекрыть этот метод и не беспокоить предка.
+ * $options - массив [тип, дефотное значение, список допустимых значений]
+ */
+	protected function validateSettings($key, $options = null)
+	{
+		// при переборе опции передаются сразу, при проверки одной строки вытягиваем их из валидатора
+		$options = isset($options) ? $options : $this->valid_settings[$key];
+		// с типами все жестко. он должен быть указан.
+		$type = isset($options[0]) ? $options[0] : die("Unknown type for settings key: \"$key\"");
+		// вычисляем сразу дефолтное значение. оно нам надо тут в двух местах.
+		$default_value = (isset($options[1])) ? $options[1] : $this->verifyDefaultValue($type);
+
+		if (isset($this->settings[$key]))
+		{// есть проверяемое значение
+			if (isset($options[2]) && is_array($options[2]) && count($options[2]) > 0)
+			{// есть список допустимых значений
+				$result = (in_array($this->settings[$key], $options[2])) ? $this->settings[$key] : $default_value;
+			}
+			else
+			{// нет списка - ничего не проверяем
+				$result = $this->settings[$key];
+			}
+		}
+		else
+		{// если не передали значение, то устанавливаем дефолтное из валидатора, либо дефотное к типу
+			$result = $default_value;
+		}
+		return $result;
+	}
+
+/** Изменить отдельную настройку. Меняем данные в памяти и пишем в базу или в куку.
+ */
 	public function changeSettings($key, $val)
 	{
-		if (!(isset($this->validator[$key]) && ((count($this->validator[$key])==1) || in_array($val, $this->validator[$key][1]))))
-		{
+		if (!isset($this->valid_settings[$key]))
+		{//фаталити. надо сразу звать программиста. где-то ставится настройка, которой нет в валидаторе.
 			sendBugReport('attempt to change settings was invalid', "INVALID KEY OR VAL!\nKEY='$key' VALUE='$val'\n\n".print_r($this, true));
 			die("your attempt to change settings was invalid. KEY='$key' VALUE='$val'");
 		}
+		//устанавливаем настройку
 		$this->settings[$key] = $val;
+		//проверяем ее валидатором
+		$this->validateSettings($key);
+		//все, что после валидатора останется, мы пишем в хранилище
 
 		if ($this->id > 0)
-		{
-			$this->db->exec("--changeSettings()
-UPDATE public.users SET settings = $1 WHERE user_id = $2", serialize($this->settings), $this->id);
+		{//живых пишем в базу
+			$settings_field_name = $this->options['settings_field_name'];
+			$this->db->update($this->table_name, $this->key_field, $settings_field_name,
+				[$this->key_field => $this->id, $settings_field_name => serialize($this->settings)]);
 		}
 		else
-		{
-			setcookie('settings', serialize($this->settings), time() + 365*24*3600, '/', COOKIE_DOMAIN);
+		{//аноним пишет в куки
+			setcookie($this->options['settings_cookie_name'], serialize($this->settings), time() + $this->options['settings_cookie_ttl'], '/', COOKIE_DOMAIN);
 		}
 		return $this;
 	}
-
-
-
-	public function generateNewKey($email)
-	{
-		$passkey = md5(rand().time());
-		$this->db->exec('--generateNewKey
-UPDATE users SET passkey=$1, autologinkey=null WHERE email=lower($2)', $passkey, $email);
-		return $passkey;
-	}
-
-
-*/
 
 /** Использование: $this->user = UserModel::getCurrentInstance();
  */
