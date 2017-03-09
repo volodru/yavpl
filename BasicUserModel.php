@@ -57,6 +57,19 @@ if (!defined('COOKIE_DOMAIN'))
 	die($msg);
 }
 
+/** DumpArray in temp File - специально для отладки кукиев и сессий
+ */
+function daf($v)
+{
+	if ($_SERVER['APPLICATION_ENV'] != 'production')
+	{
+		$l = fopen('/tmp/'.$_SERVER['SERVER_NAME'].'__'.date('Y_m_d__H_i_s').'.log', 'a+');
+		//fwrite($l, "\n---".date('Y-m-d H:i:s')."\n".var_export($v, true)."\n");
+		fwrite($l, var_export($v, true)."\n");
+		fclose($l);
+	}
+}
+
 class BasicUserModel extends SimpleDictionaryModel
 {
 	// нужен для реализации шаблона Singleton
@@ -153,7 +166,7 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE {$this->key_field} = $1
  */
 	public function getRowByUniqueField($field_name, $value)
 	{
-		if (!in_array($field_name, $this->fields)) die ("getRowByUniqueField required field $field_name");
+		if (!in_array($field_name, $this->fields)) die(__METHOD__." requires field $field_name");
 		return $this->db->exec("SELECT * FROM {$this->table_name} WHERE {$field_name} = $1", $value)->fetchRow();
 	}
 
@@ -161,7 +174,7 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE {$this->key_field} = $1
  */
 	public function getIdByUniqueField($field_name, $value)
 	{
-		if (!in_array($field_name, $this->fields)) die ("getRowByUniqueField required field $field_name");
+		if (!in_array($field_name, $this->fields)) die(__METHOD__." requires field $field_name");
 		$this->db->exec("SELECT {$this->key_field} FROM {$this->table_name} WHERE {$field_name} = $1", $value);
 		//проверка строго на 1, т.к. это уникальное поле. если в базе это поле не уникально, то нефиг им пользоваться для получения ID
 		if ($this->db->rows == 1)
@@ -180,7 +193,7 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE {$this->key_field} = $1
  */
 	public function getIdByLoginAndPassword($login, $password)
 	{
-		if (!$this->options['auth_by_login_and_password']) die('Login by login&password is not supported.');
+		if (!$this->options['auth_by_login_and_password']) die(__METHOD__.' Login by login&password is not supported.');
 
 		$this->db->exec("-- ".get_class($this).", method: ".__METHOD__."
 SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password = $2", $login, md5($password));
@@ -202,11 +215,14 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
  */
 	public function createCurrentSession($id)
 	{
+		daf(__METHOD__);
 		if (!isset($_SESSION)){ session_start();}
 		$this->id = $id;
 		$_SESSION['log_id'] = $id;
 		session_write_close();//to avoid locking
 		$this->loadCurrentData();
+		daf("session started id = $id");
+		daf($this->data);
 		$this->setAutologin();
 		$this->notifyOnCreateCurrentSession();
 	}
@@ -218,23 +234,30 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
  */
 	public function continueCurrentSession()
 	{
+		daf(__METHOD__);
+
+		if (!isset($_SESSION)){ session_start();}
 		$this->id = 0;//аноним
 
+		daf('session');daf($_SESSION);daf('cookies');daf($_COOKIE);
 		if (isset($_SESSION['log_id']) && intval($_SESSION['log_id']) > 0)
 		{
 			$this->id = $_SESSION['log_id'];
+			daf('continue old session with user id = '.$this->id);
 			$this->loadCurrentData();
 		}
 		elseif (isset($_COOKIE[$this->options['autologin_cookie_name']]))
 		{
-			//da($this);
+			daf('continue on cookies');
 			$id = $this->getIdByUniqueField($this->options['autologin_field_name'], $_COOKIE[$this->options['autologin_cookie_name']]);
 			if ($id !== false)
 			{
-				$this->loadCurrentData();
+				daf('found id '.$id. ' by cookie '.$_COOKIE[$this->options['autologin_cookie_name']]);
 				if (!isset($_SESSION)){ session_start();}
 				$this->id = $_SESSION['log_id'] = $id;
 				session_write_close();//to avoid locking
+				$this->loadCurrentData();
+				daf('got user id from cookies '.$this->id);
 				$this->notifyOnContinueCurrentSession();
 			}
 			else
@@ -246,16 +269,21 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
 		{
 			$this->destroyCurrentSession();
 		}
+		daf('user data after attempts to get user ID');
+		daf($this->data);
 
 		$this->setAutologin();//just extend cookie's time
 
 		//нашли юзера под номером $this->id ?
-		if (($this->data === false) || //какой-то неправильный юзер
-			//а не force logout случай?
-			(strpos($this->data[$this->options['autologin_field_name']], $this->options['logout_magic_string']) >= 0))//logout. magic string. set in UserModel->forceLogout
-		{//LOG OUT
-			$this->destroyCurrentSession();
-		}
+		if ($this->id > 0)
+		{
+			if (($this->data === false) || //какой-то неправильный юзер
+				//а не force logout случай?
+				(strpos($this->data[$this->options['autologin_field_name']], $this->options['logout_magic_string'])))//logout. magic string. set in UserModel->forceLogout
+			{//LOG OUT
+				$this->destroyCurrentSession();
+			}
+		}// else - анонимов не трогаем
 
 		//не забанили ещё?
 		if (!$this->isUserAllowedToLogin())
@@ -272,6 +300,7 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
  */
 	public function destroyCurrentSession()
 	{
+		daf(__METHOD__);
 //стираем куки
 		setcookie($this->options['autologin_cookie_name'], '', time() - 3600, '/', COOKIE_DOMAIN);
 //останавливаем текущую сессию
@@ -309,9 +338,12 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
  */
 	public function setAutologin()
 	{
+		daf(__METHOD__);
 		if ($this->id > 0)
 		{
 			$autologinkey = $this->data[$this->options['autologin_field_name']];
+			//da('$autologinkey from base:');
+			//da($autologinkey);
 			if ($autologinkey == '')
 			{
 				$autologinkey = $this->generateNewAutologin();
@@ -397,9 +429,18 @@ CREATE TABLE public.user_activity_logs
  */
 	public function loadCurrentData()
 	{
+		daf(__METHOD__);
 		//загружаем данные юзера в память их СУБД.
 //@TODO: тут же можно грузить какие-то данные из кукиёв, а можно отдать это наследникам.
-		$this->data = $this->getRow($this->id);
+		if ($this->id > 0)
+		{
+			$this->data = $this->getRow($this->id);
+		}
+		else
+		{
+			$this->data = (isset($_COOKIE['user_data'])) ? unserialize(stripslashes($_COOKIE['user_data'])) : [];
+		}
+		//if (($this->data === false) && ($this->id == 0)) die("You must create an anonymous user with ID == 0");
 		//загружаем настройки юзера - нормальному юзеру из базы, анониму из кукиёв.
 		$this->loadSettings();
 		return $this;
