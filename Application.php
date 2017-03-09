@@ -91,6 +91,18 @@ function da($v)
 	print "<xmp>".var_export($v, true)."</xmp>";
 }
 
+/** DumpArray in temp File - специально для отладки кукиев и сессий
+ */
+function daf($v)
+{
+	if ($_SERVER['APPLICATION_ENV'] != 'production')
+	{
+		$l = fopen('/tmp/'.$_SERVER['SERVER_NAME'].'__'.date('Y_m_d__H_i_s').'.log', 'a+');
+		fwrite($l, var_export($v, true)."\n");
+		fclose($l);
+	}
+}
+
 /** Обертка над print_backtrace
  */
 function __getBacktrace()

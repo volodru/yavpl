@@ -57,19 +57,6 @@ if (!defined('COOKIE_DOMAIN'))
 	die($msg);
 }
 
-/** DumpArray in temp File - специально для отладки кукиев и сессий
- */
-function daf($v)
-{
-	if ($_SERVER['APPLICATION_ENV'] != 'production')
-	{
-		$l = fopen('/tmp/'.$_SERVER['SERVER_NAME'].'__'.date('Y_m_d__H_i_s').'.log', 'a+');
-		//fwrite($l, "\n---".date('Y-m-d H:i:s')."\n".var_export($v, true)."\n");
-		fwrite($l, var_export($v, true)."\n");
-		fclose($l);
-	}
-}
-
 class BasicUserModel extends SimpleDictionaryModel
 {
 	// нужен для реализации шаблона Singleton
