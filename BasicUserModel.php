@@ -3,15 +3,11 @@
  * @NAME: BasicUserModel
  * @DESC: Prototype for users models
  * @AUTHOR: Vladimir Nikiforov aka Volod (volod@volod.ru)
- * @COPYRIGHT (C) 2009- Vladimir Nikiforov
+ * @COPYRIGHT (C) 2017- Vladimir Nikiforov
  * @LICENSE LGPLv3 - http://www.gnu.org/licenses/lgpl-3.0.html
  */
 
 /** CHANGELOG
-
- * 1.01
- * DATE: 2017-03-07
-
 
  * 1.00
  * DATE: 2017-02-23
@@ -44,6 +40,7 @@ class UserModel extends BasicUserModel
  */
 
 // @TODO: на фиг не надо тут эти 2 константы, т.к. используется это дело строго 1 раз в жизни.
+// разве, что для красоты, чтобы не плодить magic strings.
 // оставим на подумать.
 define('BASIC_USER_TABLE_NAME', 'public.users');
 define('BASIC_USER_TABLE_KEY_FIELD', 'id');
@@ -63,7 +60,7 @@ class BasicUserModel extends SimpleDictionaryModel
 	private static $current_instance;
 
 	// 0 - anonymous, запись может физически присутствовать в базе! Например, под именем Anonymous.
-	// и как правило она там и должна присутсвовать, т.к. должен быть внешний ключ на таблицу юзеров с таблицу логов активностей.
+	// и как правило она там и должна присутсвовать, т.к. должен быть внешний ключ на таблицу юзеров с таблицы логов активностей.
 	public $id = 0;
 
 	// данные из select * по юзеру. использовать: $this->user->data['name_r'], например.
@@ -558,7 +555,8 @@ CREATE TABLE public.user_activity_logs
 
 /** Использование: $this->user = UserModel::getCurrentInstance();
  */
-	public static function getCurrentInstance() {
+	public static function getCurrentInstance()
+	{
 		if (is_null(self::$current_instance))
 		{
 			self::$current_instance = new UserModel();
