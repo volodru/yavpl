@@ -8,6 +8,10 @@
 
 /** CHANGELOG
  *
+ * 1.01
+ * DATE: 2017-05-30
+ * добавлена поддержка внешних ключей (пример - catalog/propvalues)
+ *
  * 1.00
  * DATE: 2016-10-31
  * собран прототип
@@ -22,6 +26,11 @@ interface iSimpleDictionaryController
 
 trait SimpleDictionaryController
 {
+	public function getListParams()
+	{
+		return [];
+	}
+
 	public function getList()
 	{
 		$this->isAJAX();
@@ -29,7 +38,7 @@ trait SimpleDictionaryController
 		print json_encode([
 			'status'	=> 'OK',
 			'meta_data'	=> $model_instance->getMetaData(),
-			'data'		=> $model_instance->getList(),
+			'data'		=> $model_instance->getList($this->getListParams()),
 		]);
 	}
 
