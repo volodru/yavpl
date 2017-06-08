@@ -11,6 +11,13 @@
 
 /** CHANGELOG
  *
+ * 1.07
+ * В параметры хоста добавлен адрес админа СУБД - db_admin_email.
+ * Именно на этот адрес будут идти фатальные ошибки БД.
+ * Нужно, чтобы разделить для некототорых проектов db_admin_email и ADMIN_EMAIL.
+ * По умолчанию как раньше используется глобальная константа ADMIN_EMAIL.
+ * Соответственно поправлен конструктор и showErrorMessage.
+ *
  * 1.06
  * ошибки по почте отправляются через класс Mail (mail.php), а не через функцию php - mail()
  *
@@ -79,6 +86,7 @@ class Db
 	public function __construct(array $host_params)
 	{
 		$this->host_params = $host_params;
+		$this->db_admin_email = isset($host_params['db_admin_email']) ? $host_params['db_admin_email'] : ADMIN_EMAIL;
 		//!!!!!!!$this->connect() - используем lazy evaluation, коннектимся не в конструкторе, а по мере необходимости.
 	}
 
@@ -236,7 +244,7 @@ class Db
 			{
 				//mail(ADMIN_EMAIL, 'Critical error on '.$_SERVER['SERVER_NAME'], strip_tags($debug_info));
 				$m = new Mail(
-					ADMIN_EMAIL,
+					$this->db_admin_email,
 					'Critical error on '.$_SERVER['SERVER_NAME'],
 					strip_tags($debug_info));
 				$m->send();
