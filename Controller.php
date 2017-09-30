@@ -9,6 +9,10 @@
 
 /** CHANGELOG
 
+ * 1.07
+ * DATE: 2017-09-30
+ * добавлены функции isEventStream и sendEventStreamMessage для поддержки Server Side Events (https://learn.javascript.ru/server-sent-events)
+ *
  * 1.06
  * DATE: 2015-10-30
  * кодировка установлена в UTF8
@@ -214,13 +218,34 @@ class Controller
 
 /**
  * Для аджаксных вызовов
- * TODO: рещить вопрос с местом хранения кодировки проекта
+ * TODO: решить вопрос с местом хранения кодировки проекта
  */
 	public function isAJAX()
 	{
-		//obsolete, utf now,  header("Content-type: text/html; charset=windows-1251");
 		$this->disableRender();
 		return $this;
+	}
+
+/**
+ * Для вызовов text/event-stream
+ */
+	public function isEventStream()
+	{
+		header('Content-Type: text/event-stream');
+		// recommended to prevent caching of event data.
+		header('Cache-Control: no-cache');
+		$this->disableRender();
+		return $this;
+	}
+
+/**
+ * Для вызовов text/event-stream
+ */
+	public function sendEventStreamMessage($id, $data)
+	{
+	    print "id: $id" . PHP_EOL . "data: " . json_encode($data) . PHP_EOL . PHP_EOL;
+	    ob_flush();
+	    flush();
 	}
 
 /**
