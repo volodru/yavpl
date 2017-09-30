@@ -225,8 +225,7 @@ class Db
 		<div style='color: #0FF; padding: 5px;'>{$notice_msg}</div>
 		<div style='color: #00F; padding: 5px;'><pre>{$backtrace}</pre></div>
 		<div><xmp>SESSION: ".print_r($_SESSION, true)."</xmp></div>
-<div><xmp>SERVER: ".print_r($_SERVER, true)."</xmp></div>
-";
+";//<div><xmp>SERVER: ".print_r($_SERVER, true)."</xmp></div>
 
 		if (APPLICATION_ENV == 'production')
 		{
@@ -248,7 +247,6 @@ class Db
 					'Critical error on '.$_SERVER['SERVER_NAME'],
 					strip_tags($debug_info));
 				$m->send();
-
 				$user_message = 'Fatal DB error occured. eMail to the system administrator already has been sent.';
 			}
 		}
@@ -256,7 +254,8 @@ class Db
 		{
 			$user_message = $debug_info;
 		}
-		die($user_message);
+		//die($user_message);
+		throw new Exception($user_message);
 	}
 
 /**

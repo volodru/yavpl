@@ -180,6 +180,11 @@ function __my_shutdown_handler()
 }
 register_shutdown_function('__my_shutdown_handler');
 
+function __my_exception_handler($exception) {
+  sendBugReport('Uncaught exception', $exception->getMessage());
+}
+set_exception_handler('__my_exception_handler');
+
 class Application
 {
 	public $controller;
