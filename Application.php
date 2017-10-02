@@ -184,8 +184,19 @@ function __my_shutdown_handler()
 }
 register_shutdown_function('__my_shutdown_handler');
 
-function __my_exception_handler($exception) {
-  sendBugReport('Uncaught exception', $exception->getMessage());
+function __my_exception_handler($exception)
+{
+	$message = $exception->getMessage();
+	sendBugReport('Uncaught exception', $message);
+	if ($_SERVER['APPLICATION_ENV'] != 'production')
+	{
+		print '<h1>Uncaught exception</h1>';
+		print $message;
+	}
+	else
+	{
+		print '<h1>Uncaught exception. eMail to the system administrator already has been sent.</h1>';
+	}
 }
 set_exception_handler('__my_exception_handler');
 
