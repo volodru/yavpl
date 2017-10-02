@@ -232,35 +232,19 @@ class Db
 		<div><xmp>SESSION: ".print_r($_SESSION, true)."</xmp></div>
 ";//<div><xmp>SERVER: ".print_r($_SERVER, true)."</xmp></div>
 
-		if (APPLICATION_ENV == 'production')
-		{
-			if ($this->show_error_messages)
-			{
-				$user_message = "
+		if ($this->show_error_messages)
+		{//@TODO: это мутный момент когда и как показывать ошибки БД для случаев,
+			//когда они допустимы.
+			//и решить что это за случаи.
+			print "
 <h1>Ошибка в запросе</h1>
 <h2>Ваш запрос</h2>
 <xmp>".htmlspecialchars($this->query)."</xmp>
 		<h2>Ответ от базы данных</h2>
 		<xmp style='color: #F00;'>$err_msg</xmp>
 		<xmp style='color: #0FF;'>$notice_msg</xmp>";
-			}
-			else
-			{
-				//mail(ADMIN_EMAIL, 'Critical error on '.$_SERVER['SERVER_NAME'], strip_tags($debug_info));
-				$m = new Mail(
-					$this->db_admin_email,
-					'Critical error on '.$_SERVER['SERVER_NAME'],
-					strip_tags($debug_info));
-				$m->send();
-				$user_message = 'Fatal DB error occured. eMail to the system administrator already has been sent.';
-			}
 		}
-		else
-		{
-			$user_message = $debug_info;
-		}
-		//die($user_message);
-		throw new Exception($user_message);
+		throw new Exception($debug_info);
 	}
 
 /**
