@@ -192,6 +192,7 @@ function __my_exception_handler($exception)
 	{
 		print '<h1>Uncaught exception</h1>';
 		print $message;
+		print "<div style=''>TRACE\n".__getBacktrace()."</div>";
 	}
 	else
 	{
