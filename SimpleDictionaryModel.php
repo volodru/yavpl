@@ -8,6 +8,10 @@
 
 /** CHANGELOG
  *
+ * * 1.00
+ * DATE: 2016-11-01
+ * Удалено логгирование ins-upd-del по-умолчанию.
+ *
  * 1.00
  * DATE: 2016-11-01
  * файл опубликован в библиотеке
@@ -179,8 +183,6 @@ ORDER BY $order
 			return $message;
 		}
 
-		$this->log('Saving row');
-
 		if ($action == 'insert')
 		{
 			$data[$this->key_field] = $this->db->nextVal($this->getSeqName());
@@ -212,7 +214,6 @@ ORDER BY $order
 
 	public function updateField($key_value, $field_name, $value)
 	{
-		$this->log('Updating field');
 		$data[$this->key_field] = $key_value;
 		$data[$field_name] = $value;
 		if (!in_array($field_name, $this->fields))
@@ -290,8 +291,6 @@ ORDER BY $order
 		{
 			return $message;
 		}
-		$this->log('Deleting row');//начали логгирование если мы вообще собираемся что-то удалять
-
 //делаем что надо ДО удаления
 		$message = $this->beforeDeleteRow($key_value);
 		if (isset($message) && $message != '')
