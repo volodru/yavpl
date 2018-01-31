@@ -128,10 +128,12 @@ trait SimpleDictionaryController
 			print json_encode(['status' => "Объект под номером {$this->id} не найден"]);
 			return;
 		}
+		$field = $this->getParam('field', 'string');
+		$field_type = $model_instance->getMetaData()['fields'][$field]['type'];
 		$this->message = $model_instance->updateField(
 			$this->id,
-			$this->getParam('field', 'string'),
-			$this->getParam('value', 'string'));
+			$field,
+			$this->getParam('value', $field_type));
 
 		if ($this->message == '')
 		{
