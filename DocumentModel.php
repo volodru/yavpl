@@ -27,6 +27,7 @@ fields - список полей для каждого типа документ
 fields_values - значения полей для документа
 values_dicts - словарь для словарных полей
 attachments - прицепленные файлы
+attachment_types - типы прикрепляемых файлов
 
 Каждый документ имеет родителя по ссылке в parent_id в таблице documents.
 Т.е. в рамках проекта можно констрэйнтами связать дерево документов в единое целое.
@@ -52,7 +53,6 @@ class DocumentModel extends SimpleDictionaryModel
 			'document_type',
 			'owner_id',
 			'creation_ts',
-			'ts',
 		]);
 		$this->scheme = $scheme;
 		$this->document_type = $document_type;
@@ -74,7 +74,10 @@ CREATE TABLE {$this->scheme}.documents
   parent_id integer NOT NULL DEFAULT 0,
   owner_id integer NOT NULL DEFAULT 0,
   creation_ts timestamp without timezone DEFAULT now(),
-  CONSTRAINT documents_pkey PRIMARY KEY (id)
+  CONSTRAINT documents_pkey PRIMARY KEY (id),
+  CONSTRAINT documents_parent_id_fkey FOREIGN KEY (parent_id)
+      REFERENCES {$this->scheme}.documents (id) MATCH SIMPLE
+      ON UPDATE CASCADE ON DELETE CASCADE
 )
 WITH (
   OIDS=FALSE
@@ -180,9 +183,9 @@ CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.d
 		return [
 			'id'			=> 0,
 			'document_type'	=> $this->document_type,
+			'parent_id'		=> 0,
 			'owner_id'		=> 0,
 			'creation_ts'	=> date('Y-m-d G:i:s'),
-			'ts'			=> date('Y-m-d G:i:s'),
 		];
 	}
 
