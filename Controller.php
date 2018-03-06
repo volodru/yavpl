@@ -160,34 +160,19 @@ class Controller
  * По-умолчанию вообще ничего не делаем,
  * чтобы для статических страниц не писать липовых контроллеров.
  * Если хочется чуть упростить отладку, можно наследовать метод:
- * public function defaultMethod($method_name)
- * {
- * 		die("Declare method [$method_name] or defaultMetod() in descendant controller");
- * }
+public function defaultMethod($method_name)
+{
+		die("Declare method [$method_name] or defaultMetod() in descendant controller");
+}
  * */
 	public function defaultMethod($method_name)
 	{
 	}
 
 /**
- * 2013-03-19 поле controller->user все равно стало публичным, так что надо рефакторить аддок и
- * удалять этот метод.
- *
- * странный метод. стоит его удалить, наверное. 2013-03-04
- *
- * используется на 2013-03-04 только в addoc/models/chlog.php
- * правда без него, пока не будет общего синглтона CurrentUser
- * chlog не сможет работать, а делать controller->user публичным не хочется.
- */
-	public function getUser()
-	{
-		return $this->user;
-	}
-
-/**
  * Для проектов с ACL
  */
-	protected function getResourceId()//ACL related
+	protected function getResourceId()
 	{
 		return $this->default_resource_id;
 	}
@@ -218,7 +203,6 @@ class Controller
 
 /**
  * Для аджаксных вызовов
- * TODO: решить вопрос с местом хранения кодировки проекта
  */
 	public function isAJAX()
 	{

@@ -10,7 +10,6 @@ Yet Another Volod's PHP Library
 Обучить кого-то этому фреймворку - полдня.
 Ядро для реализации MVC - 50Кб (Application/Controller/Model/View).
 Классы для СУБД/Почты/ActiveRecord/User самостоятельны и не зависят от MVC ядра.
-Ну, от прото модели, разве что. :)
 
 
 
