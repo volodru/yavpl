@@ -146,10 +146,10 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 SELECT
 	$select
 FROM
-$from
-".((count($where) > 0) ? "WHERE ".join(" AND ", $where):'')."
-$group
-$having
+	$from
+".((count($where) > 0) ? "WHERE ".join(" AND ", $where):'')
+.(($group != '') ? "\n$group" : '')
+.(($having != '') ? "\n$having" : '')."
 ORDER BY $order
 ".(($limit >= 0) ? "\nLIMIT $limit" : '')."
 ".(($offset >= 0) ? "\nOFFSET $offset" : ''));//->print_r();

@@ -111,10 +111,14 @@ function daf($v)
  */
 function __getBacktrace()
 {
+	/*OBSOLETE, proposed for deletion 2018-03-14
 	ob_start();
 	debug_print_backtrace();
 	$backtrace = ob_get_contents();
-	ob_end_clean();
+	ob_end_clean();*/
+
+	$backtrace = print_r(debug_backtrace(), true);
+
 	return $backtrace;
 }
 
@@ -191,8 +195,8 @@ function __my_exception_handler($exception)
 	if ($_SERVER['APPLICATION_ENV'] != 'production')
 	{
 		print '<h1>Uncaught exception</h1>';
-		print $message;
-		print "<div style=''>TRACE\n".__getBacktrace()."</div>";
+		print "<h2>$message</h2>";
+		print "<div>BACKTRACE\n<xmp>".__getBacktrace()."</xmp></div>";
 	}
 	else
 	{
@@ -332,7 +336,7 @@ class Application
 		if (in_array($class_name, [
 			'Db', 'DbPg', 'DbPgSingleton', 'DbMy',//СУБД
 			'Mail',//Почта
-			'Model', 'SimpleDictionaryModel', 'BasicUserModel',//модельки
+			'Model', 'SimpleDictionaryModel', 'BasicUserModel', 'DocumentModel',//модельки
 			'Controller', 'View', 'ViewHelper', //ядро
 			'ToolBar', 'Test',//плюшки
 		]))

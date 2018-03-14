@@ -20,6 +20,9 @@
 3. дерево документов
 4. для каждого проекта таблица с документами и полями может быть своя (в своей схеме)
 
+Модель толстая и, в отличии от предка, манипулирует сразу несколькими таблицами, потому в этом файле
+сразу 3 класса и все наследники от simpleDictionary.
+
 Таблицы с документами, полями, значениями полей, прицепленными файлами, словарями полей и т.п.
 имеют фиксированные названия в пределах схемы проекта:
 documents - документы
@@ -30,9 +33,10 @@ documents_attachments - прицепленные файлы
 ?? (пока пусть будет массивом прямо в коде) attachment_types - типы прикрепляемых файлов
 
 document_type_id - тип документа. по-умолчанию = 0, если надо в схеме реализовать несколько
-разных документов и соеденить их в иерархию через parent_id, то вот тут то и надо использовать
+разных документов и соединить их в иерархию через parent_id, то вот тут то и надо использовать
 разные document_type_id для разных типов в рамках одной таблицы.
-Типы документов пока только хардкодить, т.к. по дефолту их может и не быть, т.е. будет всего один тип с id=0 и
+
+Типы документов и их проверки пока только хардкодить, т.к. по дефолту их может и не быть, т.е. будет всего один тип с id=0 и
 ради него не стоит каждый раз городить таблицу вида document_types с одной строкой только для того,
 чтобы сделать 2 констрэйнта с documents и documents_fields.
 Целостность проверяем в коде модели, т.е. при модификации списка полей и модификации documents.document_type_id)
@@ -45,18 +49,12 @@ document_type_id - тип документа. по-умолчанию = 0, ес�
 Т.е. в рамках проекта можно констрэйнтами связать дерево документов в единое целое.
 Для констрэйнта надо в пустой таблице с документами создать пустой документ с ID=0 (как бы root :) )
 
-Каждый документ имеет текущего владельца, констрэйнтом завязанного на таблицу public.users.
-owner_id==0 - anonymous вполне себе валидный владелец.
-
-Статус документа (status_id) - целое число - интерпретация на совести класса-наследника, т.к. это уже бизнес логика
-и в этом классе ее нет совсем.
-
 Документы наследуются от SimpleDictionary, но их поведение более сложное, поэтому parent::saveRow() запрещен.
 Для создания нового документа применять надо метод creatRow().
 Модификация документа допустима через изменение атрибутов и поштучный вызов updateField().
 
 Для инициализации проекта имеет смысл использовать вывод функции
-__getDataStructureScript();
+print $this->__getDataStructureScript();die('stopped');
 см. её код.
 */
 
@@ -67,17 +65,26 @@ class DocumentModel extends SimpleDictionaryModel
 
 	function __construct($scheme, $document_type_id = 0)
 	{
-		parent::__construct($scheme_name.'.documents', 'id', [
+		parent::__construct($scheme.'.documents', 'id', [
 			'document_type_id',
-			'status_id',
 			'parent_id',
-			'owner_id',
-			'creation_ts',
 		]);
 		$this->scheme = $scheme;
 		$this->document_type_id = $document_type_id;
+
+		$this->fields_model = new Document_fieldsModel($scheme, $document_type_id);
+		$this->fields_model->__parent = $this;
+
+		$this->values_dicts_model = new Document_values_dictsModel($scheme, $document_type_id);
+		$this->values_dicts_model->__parent = $this;
 	}
 
+/** USAGE:
+print $this->__getDataStructureScript();die('stopped');
+потом открыть исходник и скопировать отформатированный скрипт.
+копия из браузера - идет без форматирования, а PgAdmin ругается на одну длинную строку.
+не использовать da(); - там в коде есть ' который экранируется при выводе print_r() и который не нужен в SQL
+ */
 	public function __getDataStructureScript()
 	{
 		return "
@@ -95,13 +102,15 @@ CREATE TABLE {$this->scheme}.documents
   CONSTRAINT documents_pkey PRIMARY KEY (id),
   CONSTRAINT documents_parent_id_fkey FOREIGN KEY (parent_id)
       REFERENCES {$this->scheme}.documents (id) MATCH SIMPLE
-      ON UPDATE CASCADE ON DELETE CASCADE,
+      ON UPDATE CASCADE ON DELETE CASCADE
 )
 WITH (
   OIDS=FALSE
 );
 ALTER TABLE {$this->scheme}.documents
   OWNER TO postgres;
+INSERT INTO {$this->scheme}.documents (id, document_type_id, parent_id) VALUES (0, 0, 0);
+
 
 CREATE TABLE {$this->scheme}.documents_fields
 (
@@ -117,7 +126,7 @@ CREATE TABLE {$this->scheme}.documents_fields
 WITH (
   OIDS=FALSE
 );
-ALTER TABLE {$this->scheme}.fields
+ALTER TABLE {$this->scheme}.documents_fields
   OWNER TO postgres;
 
 CREATE TABLE {$this->scheme}.documents_fields_values
@@ -146,6 +155,7 @@ ALTER TABLE {$this->scheme}.documents_fields_values
 CREATE TABLE {$this->scheme}.documents_values_dicts
 (
   id serial NOT NULL,
+  document_type_id integer NOT NULL DEFAULT 0,
   field_id integer NOT NULL,
   value text,
   CONSTRAINT documents_values_dicts_pkey PRIMARY KEY (id),
@@ -168,14 +178,14 @@ CREATE OR REPLACE FUNCTION {$this->scheme}.documents_fields_values_ins_func()
   RETURNS trigger AS
 \$BODY\$
 DECLARE
-    field_info {$this->scheme}.fields%ROWTYPE;
+    field_info {$this->scheme}.documents_fields%ROWTYPE;
 BEGIN
 	SELECT * INTO field_info FROM {$this->scheme}.documents_fields WHERE id = NEW.field_id;
 	NEW.value = CASE WHEN field_info.value_type = 'K'
 	THEN
 		(SELECT value FROM {$this->scheme}.documents_values_dicts AS d WHERE d.field_id = NEW.field_id AND d.id = NEW.int_value)
 	ELSE
-		COALESCE(NEW.int_value::text, NEW.float_value::text, NEW.char_value, to_char(NEW.date_value, 'DD-MM-YYYY'))
+		COALESCE(NEW.int_value::text, NEW.float_value::text, NEW.text_value, to_char(NEW.date_value, 'DD-MM-YYYY'))
 	END AS value;
 	RETURN NEW;
 END;\$BODY\$
@@ -226,17 +236,7 @@ CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.d
 			'id'			=> 0,
 			'document_type_id'	=> $this->document_type_id,
 			'parent_id'		=> 0,
-			'owner_id'		=> 0,
-			'creation_ts'	=> date('Y-m-d G:i:s'),
 		];
-	}
-
-	public function getFieldsList()
-	{
-		return $this->db->exec("
-SELECT f.*, f.id AS field_id
-FROM {$this->scheme}.documents_fields AS f
-ORDER BY f.sort_order")->fetchAll('field_id');
 	}
 
 	public function getFieldsValues($document_id)
@@ -263,7 +263,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 
 		if (!isset($params['index']))
 		{
-			$params['index'] = 'd.id';
+			$params['index'] = 'id';//не надо тут d.id!
 		}
 
 		if (!isset($params['order']))
@@ -282,6 +282,9 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 				$params['order'] = 'v.value DESC NULLS LAST, d.id DESC';
 			}
 		}
+
+		//чтобы не было в выдаче рутового документа
+		$params['where'][] = "d.id > 0";
 
 		if (isset($params['parent_id']) && $params['parent_id'] > 0)
 		{
@@ -302,6 +305,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 				}
 			}
 		}
+		//da($params);
 
 		$params['select'] = isset($params['select']) ? $params['select'] : "d.*";
 
@@ -326,7 +330,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 		if ($document_id == 0){die('DocumentModel.saveFieldsValue: $document_id == 0');}	// - absolutely
 		if ($field_id == 0){die('DocumentModel.saveFieldsValue: $field_id == 0');}			// - barbaric!
 
-		$field_info = $this->__parent->shipmentsfields->getRow($field_id);
+		$field_info = $this->fields_model->getRow($field_id);
 		//$delete_clause = "DELETE FROM {$this->scheme}.documents_fields_values WHERE document_id = $document_id AND field_id = $field_id";
 		$delete_clause = "DELETE FROM {$this->scheme}.documents_fields_values WHERE document_id = $1 AND field_id = $2";
 		//установка value -> null - удаляет поле
@@ -380,7 +384,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			}
 			if (!isset($field_info['values'][$value]))
 			{
-				return "Значение $value не найдено в словаре для этого поля";
+				return "Значение $value не найдено в словаре для поля {$field_info['title']}";
 			}
 			//$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, int_value) VALUES ($document_id , $field_id, $value)";
 			$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, int_value) VALUES ($1,$2,$3)";
@@ -405,7 +409,11 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 
 		if ($result == '')
 		{
-			$this->db->exec("BEGIN; $delete_clause; $insert_clause; COMMIT;", $document_id ,$field_id, $value);
+			//$this->db->exec("BEGIN; $delete_clause; $insert_clause; COMMIT;", $document_id ,$field_id, $value);
+			$this->db->exec("BEGIN");
+			$this->db->exec($delete_clause, $document_id ,$field_id);
+			$this->db->exec($insert_clause, $document_id ,$field_id, $value);
+			$this->db->exec("COMMIT");
 		}
 		return $result;
 	}
@@ -435,8 +443,194 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 		}
 		$data['parent_id'] = $data['parent_id'] ?? 0;
 		$data['document_type_id'] = $this->document_type_id;
-		$this->document_id = $this->db->nextVal($this->getSeqName());
+		$this->document_id = $data['id'] = $this->db->nextVal($this->getSeqName());
 		$ar = $this->db->insert($this->table_name, $this->key_field, $this->fields, $data)->affectedRows();
 		return ($ar == 1) ? '' : "Произошла ошибка при сохранении документа [#{$this->document_id}]: количество измененных записей = {$ar}";
+	}
+}
+
+class Document_fieldsModel extends SimpleDictionaryModel
+{
+	private $data_cash = [];
+
+	public $value_types = [
+		'A'	=> 'Строковый', // alphabet
+		'I'	=> 'Целый', // integer
+		'F'	=> 'Вещественный', // float
+		'D'	=> 'Дата', // date
+		'K'	=> 'Словарный', // key values
+	];
+
+	function __construct($scheme, $document_type_id = 0)
+	{
+		parent::__construct($scheme.'.documents_fields', 'id', [
+			'title', 'field_type', 'value_type', 'measure', 'sort_order',
+		]);
+		$this->scheme = $scheme;
+		$this->document_type_id = $document_type_id;
+	}
+
+	public function getValues($key_value)
+	{
+		return $this->__parent->values_dicts_model->getList([
+			'field_id'	=> $key_value,
+		]);
+	}
+
+	public function getRow($key_value)
+	{
+		if ($key_value == 0)
+		{
+			return $this->getEmptyRow();
+		}
+		else
+		{
+			if (!isset($this->data_cash[$key_value]))
+			{
+				$this->data_cash[$key_value] = $this->db->exec("
+SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->fetchRow();
+				$this->data_cash[$key_value]['values'] = $this->getValues($key_value);
+			}
+			return $this->data_cash[$key_value];
+		}
+	}
+
+	public function getList($params = [])
+	{
+		if (!isset($params['order']) || $params['order'] == '')
+		{
+			$params['order'] = 'sort_order';
+		}
+		$list = parent::getList($params);
+		foreach ($list as $id => $r)
+		{
+			if ($r['value_type'] == 'K')
+			{
+				$list[$id]['values'] = $this->getValues($id);
+			}
+		}
+		return $list;
+	}
+
+	public function getMetaData()
+	{
+		return [
+			'pk'	=> $this->key_field,
+			'fields'=> [
+				'title'	=> [
+					'title'	=> 'Название',
+					'width' => 200,
+					'type'	=> 'string',
+				],
+				'field_type'	=> [
+					'title'	=> 'Тип',
+					'width' => 50,
+					'type'	=> 'string',
+				],
+				'value_type'	=> [
+					'title'	=> 'Тип значения',
+					'width' => 50,
+					'type'	=> 'string',
+				],
+				'measure'	=> [
+					'title'	=> 'Ед.изм.',
+					'width' => 20,
+					'type'	=> 'string',
+				],
+				'sort_order'	=> [
+					'title'	=> 'Сортировка',
+					'width' => 10,
+					'type'	=> 'integer',
+				],
+			]//fields
+		];
+	}
+
+	public function saveRow($data)
+	{
+		if (!isset($data['id']) || intval($data['id']) == 0)
+		{
+			return "Потерян ID поля.";
+		}
+		if (!isset($data['sort_order']))
+		{
+			$data['sort_order'] = 0;
+		}
+		if (trim($data['title']) == '')
+		{
+			return "Описание поля не может быть пустым";
+		}
+		$ar = $this->db->exec("UPDATE {$this->scheme}.documents_fields SET title = $2, measure = $3, sort_order = $4 WHERE id = $1",
+			$data['id'], trim($data['title']), trim($data['measure']), $data['sort_order'])->affectedRows();
+		if ($ar != 1)
+		{
+			return "Ошибка при сохранении атрибутов поля. Возможно, поле ID={$data['id']} уже не существует";
+		}
+		return '';
+	}
+
+}
+
+class Document_values_dictsModel extends SimpleDictionaryModel
+{
+	function __construct($scheme, $document_type_id = 0)
+	{
+		parent::__construct($scheme.'.documents_values_dicts', 'id', [
+			'field_id', 'value',
+		]);
+		$this->scheme = $scheme;
+		$this->document_type_id = $document_type_id;
+	}
+
+	public function getList($params = [])
+	{
+		if (!isset($params['order']) || $params['order'] == '')
+		{
+			$params['order'] = 'value';
+		}
+		if (!isset($params['where']))
+		{
+			$params['where'] = [];
+		}
+		$params['where'][] = "document_type_id = {$this->document_type_id}";
+
+		if (isset($params['field_id']))
+		{
+			$params['where'][] = "field_id = {$params['field_id']}";
+		}
+
+		return parent::getList($params);
+	}
+
+	public function canDeleteRow($key_value)
+	{
+		if ($this->db->exec("
+SELECT f.id
+FROM {$this->scheme}.documents_fields_values AS v
+JOIN {$this->scheme}.documents_fields AS f ON (f.id = v.field_id)
+WHERE f.value_type='K' AND v.int_value = $key_value LIMIT 1")->rows > 0)
+		{
+			return "На удаляемое значение ссылаются какие-то документы. Нужно их ВСЕХ отредактировать перед удалением значения.";
+		}
+		return '';
+	}
+
+	public function getMetaData()
+	{
+		return [
+			'pk'	=> $this->key_field,
+			'fields'=> [
+				'field_id'	=> [
+					'title'	=> 'Поле',
+					'hidden' => true,
+					'type'	=> 'string',
+				],
+				'value'	=> [
+					'title'	=> 'Значение',
+					'width' => 400,
+					'type'	=> 'string',
+				],
+			]//fields
+		];
 	}
 }
