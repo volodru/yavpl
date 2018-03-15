@@ -62,7 +62,7 @@ class DocumentModel extends SimpleDictionaryModel
 {
 	protected $document_type_id;//TODO: а оно вообще надо тут?
 
-	function __construct($scheme, $document_type_id = 0)
+	function __construct($scheme, $document_type_id = 0, $storage_path = '', $allowed_extensions = [], $max_file_size = 0)
 	{
 		parent::__construct($scheme.'.documents', 'id', [
 			'document_type_id',
@@ -76,6 +76,13 @@ class DocumentModel extends SimpleDictionaryModel
 
 		$this->values_dicts_model = new Document_values_dictsModel($scheme, $document_type_id);
 		$this->values_dicts_model->__parent = $this;
+
+		if ($storage_path == '')
+		{
+			$storage_path = HOME_DIR.'/'.$scheme;
+		}
+		$this->files_model = new Document_filesModel($scheme, $storage_path, $allowed_extensions, $max_file_size);
+		$this->files_model->__parent = $this;
 	}
 
 /** USAGE:
@@ -204,10 +211,10 @@ CREATE TABLE {$this->scheme}.documents_files
 (
   id serial NOT NULL,
   document_id integer,
+  file_type_id integer, --тип файла - (например: отчет, скан запроса, скан кредитноты), ссылка на таблицу или массив в коде
   file_name text,
   file_ext character varying,
   file_size integer,
-  file_type integer, --тип файла - (например: отчет, скан запроса, скан кредитноты), ссылка на таблицу или массив в коде
   CONSTRAINT documents_files_pkey PRIMARY KEY (id),
   CONSTRAINT documents_files_document_id_fkey FOREIGN KEY (document_id)
       REFERENCES {$this->scheme}.documents (id) MATCH SIMPLE
@@ -247,22 +254,23 @@ WHERE document_id = $1
 ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 	}
 
+	public function getFiles($document_id)
+	{
+		return $this->files_model->getList([
+			'document_id'	=> $document_id,
+		]);
+	}
+
 /**
  * without_fields = true - не грузить атрибуты
  */
 	public function getList($params = [])
 	{
-		$params['from'] = "{$this->table_name} AS d";
+		$params['from'] = $params['from'] ?? "{$this->table_name} AS d";
 
-		if (!isset($params['where']))
-		{
-			$params['where'] = [];
-		}
+		$params['where'] = $params['where'] ?? [];
 
-		if (!isset($params['index']))
-		{
-			$params['index'] = 'id';//не надо тут d.id!
-		}
+		$params['index'] = $params['index'] ?? 'id';//не надо тут d.id!
 
 		if (!isset($params['order']))
 		{
@@ -314,6 +322,10 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			if (!isset($params['without_fields']))
 			{
 				$list[$row['id']]['fields'] = $this->getFieldsValues($row['id']);
+			}
+			if (!isset($params['without_files']))
+			{
+				$list[$row['id']]['files'] = $this->getFiles($row['id']);
 			}
 		}
 		return $list;
@@ -422,6 +434,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 		if ($row !== false)
 		{
 			$row['fields'] = $this->getFieldsValues($row['id']);
+			$row['files'] = $this->getFiles($row['id']);
 		}
 		return $row;
 	}
@@ -499,6 +512,10 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		{
 			$params['order'] = 'sort_order';
 		}
+		$params['where'] = $params['where'] ?? [];
+
+		$params['where'][] = "document_type_id = {$this->document_type_id}";
+
 		$list = parent::getList($params);
 		foreach ($list as $id => $r)
 		{
@@ -570,13 +587,13 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 
 class Document_values_dictsModel extends SimpleDictionaryModel
 {
-	function __construct($scheme, $document_type_id = 0)
+	function __construct($scheme /*, $document_type_id = 0*/)
 	{
 		parent::__construct($scheme.'.documents_values_dicts', 'id', [
 			'field_id', 'value',
 		]);
 		$this->scheme = $scheme;
-		$this->document_type_id = $document_type_id;
+		//delete $this->document_type_id = $document_type_id;
 	}
 
 	public function getList($params = [])
@@ -585,11 +602,8 @@ class Document_values_dictsModel extends SimpleDictionaryModel
 		{
 			$params['order'] = 'value';
 		}
-		if (!isset($params['where']))
-		{
-			$params['where'] = [];
-		}
-		$params['where'][] = "document_type_id = {$this->document_type_id}";
+		$params['where'] = $params['where'] ?? [];
+		//not need! $params['where'][] = "document_type_id = {$this->document_type_id}";
 
 		if (isset($params['field_id']))
 		{
@@ -632,14 +646,31 @@ WHERE f.value_type='K' AND v.int_value = $key_value LIMIT 1")->rows > 0)
 	}
 }
 
-
 class Document_filesModel extends SimpleFilesModel
 {
-	function __construct($scheme, $document_type_id = 0)
+	function __construct($scheme, $storage_path, $allowed_extensions = [], $max_file_size = 0)
 	{
 		parent::__construct($scheme.'.documents_files', 'id', [
-			'file_type', 'value',
-		]);
+				'document_id', 'file_type_id', 'file_name', 'file_ext', 'file_size',
+			],
+				$storage_path, $allowed_extensions, $max_file_size
+		);
 		$this->scheme = $scheme;
 	}
+
+	public function getList($params = [])
+	{
+		if (!isset($params['order']) || $params['order'] == '')
+		{
+			$params['order'] = 'file_type_id, file_name';
+		}
+		$params['where'] = $params['where'] ?? [];
+
+		if (isset($params['document_id']))
+		{
+			$params['where'][] = "document_id = {$params['document_id']}";
+		}
+		return parent::getList($params);
+	}
+
 }

@@ -43,16 +43,15 @@ class SimpleFilesModel extends SimpleDictionaryModel
 		$this->allowed_extensions = $allowed_extensions;
 		$this->max_file_size = $max_file_size;
 
-		//array_walk($this->allowed_extensions, "strtolower");
 		array_walk($this->allowed_extensions, function(&$value, $key){$value = strtolower($value);});
 	}
 
 /** $data может содержать доп поля для правильного формирования пути.
- * если оно надо и не было передано, то кому-то придется делать getRow($key_value)
+ * если оно надо и не было передано, то кому-то придется делать getRow($key_value).
  * по-умолчанию оно в общем-то и не надо.
  */
 	function getStoragePath($key_value, $data = false)
-	{//перекрыть этот метод, если надо путь исходя из каких-то данных в $data
+	{//перекрыть этот метод, если надо иметь путь к файлу исходя из каких-то данных в $data
 		return $this->storage_path;
 	}
 
@@ -128,13 +127,14 @@ class SimpleFilesModel extends SimpleDictionaryModel
 			$data['file_ext'] = strtolower($matches[2]);
 			if (!in_array($data['file_ext'], $this->allowed_extensions))
 			{
-				$this->log[] = "Расширение файла {$data['file_ext']} не входит в список разрешенных: ".join(', ', $this->allowed_extensions);
+				$this->log[] = "Расширение файла {$data['file_ext']} не входит в список разрешенных: [".join(', ', $this->allowed_extensions)."]";
 			}
 		}
 		else
 		{
 			$this->log[] = "Не удалось распознать расширение файла";
 		}
+		if (count($this->log) > 0) return false;//stage check point
 
 
 		if ($i_file['error'] == UPLOAD_ERR_INI_SIZE)//1
