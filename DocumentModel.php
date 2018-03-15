@@ -29,8 +29,7 @@ documents - документы
 documents_fields - список полей для каждого типа документа
 documents_fields_values - значения полей для документа
 documents_values_dicts - словарь для словарных полей
-documents_attachments - прицепленные файлы
-?? (пока пусть будет массивом прямо в коде) attachment_types - типы прикрепляемых файлов
+documents_files - прицепленные файлы
 
 document_type_id - тип документа. по-умолчанию = 0, если надо в схеме реализовать несколько
 разных документов и соединить их в иерархию через parent_id, то вот тут то и надо использовать
@@ -88,7 +87,7 @@ print $this->__getDataStructureScript();die('stopped');
 	public function __getDataStructureScript()
 	{
 		return "
-DROP TABLE {$this->scheme}.documents_attachments;
+DROP TABLE {$this->scheme}.documents_files;
 DROP TABLE {$this->scheme}.documents_values_dicts;
 DROP TABLE {$this->scheme}.documents_fields_values;
 DROP TABLE {$this->scheme}.documents_fields;
@@ -201,7 +200,7 @@ CREATE TRIGGER documents_fields_values_ins_trg
   EXECUTE PROCEDURE {$this->scheme}.documents_fields_values_ins_func();
 
 
-CREATE TABLE {$this->scheme}.documents_attachments
+CREATE TABLE {$this->scheme}.documents_files
 (
   id serial NOT NULL,
   document_id integer,
@@ -209,16 +208,15 @@ CREATE TABLE {$this->scheme}.documents_attachments
   file_ext character varying,
   file_size integer,
   file_type integer, --тип файла - (например: отчет, скан запроса, скан кредитноты), ссылка на таблицу или массив в коде
-  title text,--заголовок для списков
-  CONSTRAINT documents_attachments_pkey PRIMARY KEY (id),
-  CONSTRAINT documents_attachments_document_id_fkey FOREIGN KEY (document_id)
+  CONSTRAINT documents_files_pkey PRIMARY KEY (id),
+  CONSTRAINT documents_files_document_id_fkey FOREIGN KEY (document_id)
       REFERENCES {$this->scheme}.documents (id) MATCH SIMPLE
       ON UPDATE CASCADE ON DELETE CASCADE
 )
 WITH (
   OIDS=FALSE
 );
-ALTER TABLE {$this->scheme}.documents_attachments
+ALTER TABLE {$this->scheme}.documents_files
   OWNER TO postgres;
 
 
@@ -226,7 +224,7 @@ CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.d
 CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.documents_fields FOR EACH ROW EXECUTE PROCEDURE log_history();
 CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.documents_fields_values FOR EACH ROW EXECUTE PROCEDURE log_history();
 CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.documents_values_dicts FOR EACH ROW EXECUTE PROCEDURE log_history();
-CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.documents_attachments FOR EACH ROW EXECUTE PROCEDURE log_history();
+CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.documents_files FOR EACH ROW EXECUTE PROCEDURE log_history();
 ";
 	}
 
@@ -568,7 +566,6 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		}
 		return '';
 	}
-
 }
 
 class Document_values_dictsModel extends SimpleDictionaryModel
@@ -632,5 +629,17 @@ WHERE f.value_type='K' AND v.int_value = $key_value LIMIT 1")->rows > 0)
 				],
 			]//fields
 		];
+	}
+}
+
+
+class Document_filesModel extends SimpleFilesModel
+{
+	function __construct($scheme, $document_type_id = 0)
+	{
+		parent::__construct($scheme.'.documents_files', 'id', [
+			'file_type', 'value',
+		]);
+		$this->scheme = $scheme;
 	}
 }

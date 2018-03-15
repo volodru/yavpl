@@ -336,7 +336,7 @@ class Application
 		if (in_array($class_name, [
 			'Db', 'DbPg', 'DbPgSingleton', 'DbMy',//СУБД
 			'Mail',//Почта
-			'Model', 'SimpleDictionaryModel', 'BasicUserModel', 'DocumentModel',//модельки
+			'Model', 'SimpleDictionaryModel', 'SimpleFilesModel', 'BasicUserModel', 'DocumentModel',//модельки
 			'Controller', 'View', 'ViewHelper', //ядро
 			'ToolBar', 'Test',//плюшки
 		]))
