@@ -270,6 +270,11 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 
 		$params['where'] = $params['where'] ?? [];
 
+		//эти поля будут прицеплены через
+		//LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v ON (v.document_id = d.id AND v.field_id = FIELD_ID
+		//ожадается просто массив номеров (ID) полей
+		$params['fields_to_join'] = $params['fields_to_join'] ?? [];
+
 		$params['index'] = $params['index'] ?? 'id';//не надо тут d.id!
 
 		if (!isset($params['order']))
@@ -284,7 +289,8 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			}
 			else
 			{
-				$params['from'] .= "\n\tLEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v ON (v.document_id = d.id AND v.field_id = {$params['order']})";
+				//delete $params['from'] .= "\n\tLEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v ON (v.document_id = d.id AND v.field_id = {$params['order']})";
+				$params['fields_to_join'][] = $params['order'];
 				$params['order'] = 'v.value DESC NULLS LAST, d.id DESC';
 			}
 		}
@@ -307,11 +313,17 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 				if ($value != '')
 				{
 					$params['where'][] = "v{$field_id}.value = '{$value}'";
-					$params['from'] .= "\n\tLEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id} ON (v{$field_id}.document_id = d.id AND v{$field_id}.field_id = {$field_id})";
+					$params['fields_to_join'][] = $field_id;
+					//delete $params['from'] .= "\n\tLEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id} ON (v{$field_id}.document_id = d.id AND v{$field_id}.field_id = {$field_id})";
 				}
 			}
 		}
 		//da($params);
+
+		foreach (array_unique($params['fields_to_join']) as $field_id)
+		{
+			$params['from'] .= "\n\tLEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id} ON (v{$field_id}.document_id = d.id AND v{$field_id}.field_id = {$field_id})";
+		}
 
 		$params['select'] = isset($params['select']) ? $params['select'] : "d.*";
 
