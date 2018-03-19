@@ -57,7 +57,6 @@ print $this->__getDataStructureScript();die('stopped');
 см. её код.
 */
 
-
 class DocumentModel extends SimpleDictionaryModel
 {
 	protected $document_type_id;//TODO: а оно вообще надо тут?
@@ -341,6 +340,33 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			}
 		}
 		return $list;
+	}
+
+	public function generateFieldValue($field_id, $value)
+	{
+	    $result['id'] = $field_id;
+	    $field_info = $this->fields_model->getRow($field_id);
+		if ($field_info['value_type'] == 'A')
+		{
+		    $result['value'] = $result['text_value'] = $value;
+		}
+		if ($field_info['value_type'] == 'I')
+		{
+		    $result['value'] = $result['int_value'] = $value;
+		}
+		if ($field_info['value_type'] == 'F')
+		{
+		    $result['value'] = $result['float_value'] = $value;
+		}
+		if ($field_info['value_type'] == 'K')
+		{
+		    $result['value'] = $result['int_value'] = $value;
+		}
+		if ($field_info['value_type'] == 'D')
+		{
+		    $result['value'] = $result['date_value'] = $value;
+		}
+		return $result;
 	}
 
 	public function saveFieldValue($document_id = 0, $field_id = 0, $value = null)
