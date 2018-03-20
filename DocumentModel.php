@@ -379,7 +379,6 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 		if ($field_id == 0){die('DocumentModel.saveFieldsValue: $field_id == 0');}			// - barbaric!
 
 		$field_info = $this->fields_model->getRow($field_id);
-		//$delete_clause = "DELETE FROM {$this->scheme}.documents_fields_values WHERE document_id = $document_id AND field_id = $field_id";
 		$delete_clause = "DELETE FROM {$this->scheme}.documents_fields_values WHERE document_id = $1 AND field_id = $2";
 		//установка value -> null - удаляет поле
 		if (!isset($value) || trim($value) == '')
@@ -397,7 +396,6 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			{
 				return "{$field_info['title']} - [$value]: Ожидается непустая строка";
 			}
-			//$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, text_value) VALUES ($document_id , $field_id, '$value')";
 			$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, text_value) VALUES ($1,$2,$3)";
 			$result = '';
 		}
@@ -408,18 +406,17 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			{
 				return "{$field_info['title']} - [$value]: Ожидается целое число";
 			}
-			//$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, int_value) VALUES ($document_id , $field_id, $value)";
 			$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, int_value) VALUES ($1,$2,$3)";
 			$result = '';
 		}
 		if ($field_info['value_type'] == 'F')
 		{
 			$value = preg_replace("/\,/", '.', $value);
+			$value = preg_replace("/\s+/", '', $value);
 			if (!is_numeric($value + 0))
 			{
 				return "{$field_info['title']} - [$value]: Ожидается вещественное число";
 			}
-			//$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, float_value) VALUES ($document_id , $field_id, $value)";
 			$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, float_value) VALUES ($1,$2,$3)";
 			$result = '';
 		}
@@ -434,7 +431,6 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			{
 				return "Значение $value не найдено в словаре для поля {$field_info['title']}";
 			}
-			//$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, int_value) VALUES ($document_id , $field_id, $value)";
 			$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, int_value) VALUES ($1,$2,$3)";
 			$result = '';
 		}
@@ -450,14 +446,12 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 				return "{$field_info['title']} - [$value]: Неверная дата. Формат даты ДД-ММ-ГГГГ";
 			}
 			$value = $matches[1].'.'.$matches[2].'.'.$matches[3];
-			//$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, date_value) VALUES ($document_id , $field_id, '$value')";
 			$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, date_value) VALUES ($1,$2,$3)";
 			$result = '';
 		}
 
 		if ($result == '')
 		{
-			//$this->db->exec("BEGIN; $delete_clause; $insert_clause; COMMIT;", $document_id ,$field_id, $value);
 			$this->db->exec("BEGIN");
 			$this->db->exec($delete_clause, $document_id ,$field_id);
 			$this->db->exec($insert_clause, $document_id ,$field_id, $value);
