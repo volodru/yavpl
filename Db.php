@@ -161,7 +161,7 @@ class Db
 				$this->params = $args[0];//передали массив - хорошо
 			}
 			else
-			{//передали много аргкументов - собираем из них тот же массив
+			{//передали много аргументов - собираем из них тот же массив
 				//for ($i = 1; $i < count($args); $i++)
 				foreach ($args as $arg)
 				{
@@ -222,7 +222,7 @@ class Db
 		<br />URL {$url} (URI {$_SERVER['REQUEST_URI']})
 		<br />AGENT: {$_SERVER['HTTP_USER_AGENT']}
 		<br />REFERER: {$ref}
-		<br />query:
+		<br />QUERY ON HOST {$this->host_params['host']}:{$this->host_params['port']} TO DB [{$this->host_params['dbname']}] AS USER [{$this->host_params['user']}]:
 		<br /><xmp>QUERY: ".htmlspecialchars($this->query)."</xmp>
 <br /><xmp>PARAMS: ".print_r($this->params, true)."</xmp>
 		<br />PostgresQL's response:
