@@ -9,6 +9,19 @@
 
 /** CHANGELOG
  *
+ * 1.07
+ * DATE: 2018-05-24
+ * Добавлена поддержка API контроллеров
+ * Концепция: index.php разбирает URL и если видит, что домен похож на API вызов, то определяет
+ * глобальную константу APPLICATION_RUNNING_MODE и
+ * контроллеры грузятся не из папки controllers, а из папки api.
+ * Через глобальную переменную пришлось делать, т.к. __autoload у нас статический, а делать его не статическим - значить менять
+ * index.php во всех проектах. В данном случае проекты, в которых нет API трогать не надо. А в тех у которых есть - надо определить
+ * константу APPLICATION_RUNNING_MODE в зависимости, от того, как реализован выхов API (по домену, по URL и т.д.)
+ *
+ * Наименования классов контроллеров такое же, представлений нет в принципе.
+ * Котроллеры API пользуются теми же моделями проекта, но отдают данные через JSON|XML|etc.
+ *
  * 1.06
  * DATE: 2017-09-30
  * Добавлен перехват исключений с посылкой письма админу __my_exception_handler
@@ -84,6 +97,23 @@
  * и вообще, представление ничего не знает о моделях.
  *
  */
+
+if (!defined('APPLICATION_RUNNING_MODE') || trim(APPLICATION_RUNNING_MODE) == '')
+{
+	define('APPLICATION_RUNNING_MODE', 'ui');
+}
+if (APPLICATION_RUNNING_MODE == 'api')
+{
+	define('CONTROLLERS_BASE_PATH', 'api');
+}
+elseif (APPLICATION_RUNNING_MODE == 'ui')
+{
+	define('CONTROLLERS_BASE_PATH', 'controllers');
+}
+else
+{
+	die('Wrong APPLICATION_RUNNING_MODE: '.APPLICATION_RUNNING_MODE);
+}
 
 //регистрируем автозагрузчик для классов библиотеки
 spl_autoload_register('Application::__autoload');
@@ -220,7 +250,7 @@ class Application
 
 	public function loadController()
 	{
-		$file_name = "controllers/".(($this->module_name != '') ? $this->module_name."/" : '')."{$this->class_name}.php";
+		$file_name = CONTROLLERS_BASE_PATH.'/'.(($this->module_name != '') ? $this->module_name."/" : '')."{$this->class_name}.php";
 		if (file_exists(APPLICATION_PATH.'/'.$file_name))
 		{
 			require_once($file_name);//it does not depend on __autoload
@@ -287,6 +317,11 @@ class Application
 		{
 			$this->controller->defaultMethod($this->method_name);
 		}
+
+		if (APPLICATION_RUNNING_MODE == 'api')
+		{
+			return;//хватит для API
+		}
 //создали представление - вызвали контруктор
 		$this->loadView();
 //вызвали рисовалку представления
@@ -309,9 +344,8 @@ class Application
 				$this->view->{$this->method_name}();
 			}
 			else
-			{//сюда попадаем, если есть аджаксовый код, но без представления.
-			//скорее всего это вопрос к опечаткам, т.к. в реальности такого быть не может.
-			//вопрос на рефакторинг, может тут тоже что-то вызвать?
+			{// сюда попадаем, если есть аджаксовый код, но без представления.
+			// скорее всего, контроллер сам отдал данные в виде файла или JSON
 			}
 		}
 		return $this;
@@ -356,7 +390,7 @@ class Application
 		}
 		elseif ($class_name == 'defaultController')
 		{
-			$file_name = "controllers/_default.php";
+			$file_name = CONTROLLERS_BASE_PATH."/_default.php";
 		}
 		elseif ($class_name == 'defaultView')
 		{
