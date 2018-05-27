@@ -266,8 +266,8 @@ public function defaultMethod($method_name)
 
 /**
  * добавить хлебную крошку
- * @param $title заголовок
- * @param $link гиперссылка (лучше локальная, без протокола)
+ * $title заголовок
+ * $link гиперссылка (лучше локальная, без протокола)
  */
 	protected function addBreadcrumb($title, $link = '')
 	{
