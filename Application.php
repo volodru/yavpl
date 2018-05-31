@@ -141,15 +141,7 @@ function daf($v)
  */
 function __getBacktrace()
 {
-	/*OBSOLETE, proposed for deletion 2018-03-14
-	ob_start();
-	debug_print_backtrace();
-	$backtrace = ob_get_contents();
-	ob_end_clean();*/
-
-	$backtrace = print_r(debug_backtrace(), true);
-
-	return $backtrace;
+	return print_r(debug_backtrace(0, 10), true);
 }
 
 /** Обертка для вывода только на девелопе/тесте, короче, кроме продакшн
