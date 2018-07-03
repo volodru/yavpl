@@ -101,6 +101,13 @@ class Controller
 	}
 
 /**
+ * ничего не делаем
+ */
+	function __destruct()
+	{
+	}
+
+/**
  * Устанавливается после вызова конструктора контроллера в Application
  */
 	public function setDefaultResourceId($resource_id)
