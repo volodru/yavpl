@@ -271,7 +271,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 
 		//эти поля будут прицеплены через
 		//LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v ON (v.document_id = d.id AND v.field_id = FIELD_ID
-		//ожадается просто массив номеров (ID) полей
+		//ожидается просто массив номеров (ID) полей
 		$params['fields_to_join'] = $params['fields_to_join'] ?? [];
 
 		$params['index'] = $params['index'] ?? 'id';//не надо тут d.id!
@@ -288,9 +288,11 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			}
 			else
 			{
-				//delete $params['from'] .= "\n\tLEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v ON (v.document_id = d.id AND v.field_id = {$params['order']})";
-				$params['fields_to_join'][] = $params['order'];
-				$params['order'] = 'v.value DESC NULLS LAST, d.id DESC';
+				$params['fields_to_join'][] = $params['order']; // ожидается в $params['order'] ID поля для сортировки
+				$field_info = $this->fields_model->getRow($params['order']);
+				$field_name = $this->fields_model->value_field_names[$field_info['value_type']];
+				//так будет работать всё, кроме словарных полей
+				$params['order'] = "v{$params['order']}.{$field_name} DESC NULLS LAST, d.id DESC";
 			}
 		}
 
@@ -313,7 +315,6 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 				{
 					$params['where'][] = "v{$field_id}.value = '{$value}'";
 					$params['fields_to_join'][] = $field_id;
-					//delete $params['from'] .= "\n\tLEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id} ON (v{$field_id}.document_id = d.id AND v{$field_id}.field_id = {$field_id})";
 				}
 			}
 		}
@@ -346,6 +347,12 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 	{
 	    $result['id'] = $field_id;
 	    $field_info = $this->fields_model->getRow($field_id);
+
+	    $field_name = $this->fields_model->value_field_names[$field_info['value_type']];
+
+	    $result['value'] = $result[$field_name] = $value;
+
+	    /* delete it
 		if ($field_info['value_type'] == 'A')
 		{
 		    $result['value'] = $result['text_value'] = $value;
@@ -365,7 +372,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 		if ($field_info['value_type'] == 'D')
 		{
 		    $result['value'] = $result['date_value'] = $value;
-		}
+		}*/
 		return $result;
 	}
 
@@ -502,6 +509,14 @@ class Document_fieldsModel extends SimpleDictionaryModel
 		'F'	=> 'Вещественный', // float
 		'D'	=> 'Дата', // date
 		'K'	=> 'Словарный', // key values
+	];
+
+	public $value_field_names = [
+		'A'	=> 'text_value', // alphabet
+		'I'	=> 'int_value', // integer
+		'F'	=> 'float_value', // float
+		'D'	=> 'date_value', // date
+		'K'	=> 'int_value', // key values
 	];
 
 	function __construct($scheme, $document_type_id = 0)
