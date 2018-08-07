@@ -142,6 +142,18 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 			$where = $params['where'];
 		}
 
+		if (isset($params['ids']))//либо массив, либо сразу список через запятую
+		{
+			if (is_array($params['ids']))
+			{
+				$where[] = "{$this->table_name}.{$this->key_field} IN (".join(',',$params['ids']).")";
+			}
+			else
+			{
+				$where[] = "{$this->table_name}.{$this->key_field} IN ({$params['ids']})";
+			}
+		}
+
 		$this->db->exec("-- ".get_class($this).", method: ".__METHOD__."
 SELECT
 	$select
