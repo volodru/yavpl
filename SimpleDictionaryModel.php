@@ -146,11 +146,17 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		{
 			if (is_array($params['ids']))
 			{
-				$where[] = "{$this->table_name}.{$this->key_field} IN (".join(',',$params['ids']).")";
+				if (count($params['ids']) > 0)
+				{
+					$where[] = "{$this->table_name}.{$this->key_field} IN (".join(',',$params['ids']).")";
+				}
 			}
 			else
 			{
-				$where[] = "{$this->table_name}.{$this->key_field} IN ({$params['ids']})";
+				if ($params['ids'] != '')
+				{
+					$where[] = "{$this->table_name}.{$this->key_field} IN ({$params['ids']})";
+				}
 			}
 		}
 
