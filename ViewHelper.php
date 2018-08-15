@@ -9,6 +9,10 @@
 
 /** CHANGELOG
  *
+ * 1.03
+ * DATE: 2018-08-15
+ * добавлена магия __set - теперь в хелпере можно устанавливать значения для родительского View
+ *
  * 1.02
  * DATE: 2015-10-30
  * кодировка установлена в UTF8
@@ -25,11 +29,19 @@ class ViewHelper
 	{
 	}
 
-	function __get($name)
+	public function __get($name)
 	{
 		if (isset($this->view))
 		{
 			return $this->view->$name;
+		}
+	}
+
+	public function __set($name, $value)
+	{
+		if (isset($this->view))
+		{
+			$this->view->$name = $value;
 		}
 	}
 
