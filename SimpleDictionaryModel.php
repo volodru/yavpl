@@ -144,18 +144,26 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 
 		if (isset($params['ids']))//либо массив, либо сразу список через запятую
 		{
+			if (!isset($params['pkey']))//$params['pkey'] надо устанавливать в перекрытых методах getList, т.к. только там понятно какой алиас у PK
+			{// в секцию WHERE надо указывать алиас и поле, например FROM genarts AS g ..... WHERE g.id IN (...)
+			// а оно у всех разное.
+				$params['pkey'] = $this->key_field;//но если просто выборка по одной таблице без JOIN то и так сработает.
+				$msg = 'When passing ids array - the $params[pkey] value should be set.';
+				sendBugReport($msg);
+				//die($msg);
+			}
 			if (is_array($params['ids']))
 			{
 				if (count($params['ids']) > 0)
 				{
-					$where[] = "{$this->table_name}.{$this->key_field} IN (".join(',',$params['ids']).")";
+					$where[] = "{$params['pkey']} IN (".join(',',$params['ids']).")";
 				}
 			}
 			else
 			{
 				if ($params['ids'] != '')
 				{
-					$where[] = "{$this->table_name}.{$this->key_field} IN ({$params['ids']})";
+					$where[] = "{$params['pkey']} IN ({$params['ids']})";
 				}
 			}
 		}
