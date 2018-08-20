@@ -560,6 +560,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		{
 			$params['order'] = 'sort_order';
 		}
+		$params['pkey'] = 'id';
 		$params['where'] = $params['where'] ?? [];
 
 		$params['where'][] = "document_type_id = {$this->document_type_id}";
