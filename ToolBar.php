@@ -44,9 +44,9 @@ class ToolBar
 
 /**
  * добавить кнопку на тублар
- * @param $header заголовок
- * @param $action ссылка/URL или функция на JS
- * @param $options разные опции, каждая емеет право быть неопределена и должна иметь значение по умолчанию.
+ * @param $header string заголовок
+ * @param $action string ссылка/URL или функция на JS
+ * @param $options string разные опции, каждая емеет право быть неопределена и должна иметь значение по умолчанию.
  */
 	public function addButton($header, $action, $options = [])
 	{
