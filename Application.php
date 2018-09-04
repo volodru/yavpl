@@ -9,6 +9,10 @@
 
 /** CHANGELOG
  *
+ * 1.08
+ * DATE: 2018-09-04
+ * В sendBugReport() добавлен третий параметр - (....., $is_fatal = false)
+ *
  * 1.07
  * DATE: 2018-05-24
  * Добавлена поддержка API контроллеров
@@ -156,7 +160,7 @@ function __printBacktrace()
 
 /** Еще один мегаотладчик
  */
-function sendBugReport($subject = 'Bug Report', $message = 'common bug')
+function sendBugReport($subject = 'Bug Report', $message = 'common bug', $is_fatal = false)
 {
 	if (!isset($_SESSION)){session_start();}
 
@@ -174,6 +178,11 @@ COOKIE\n" . print_r($_COOKIE, true) ."
 
 SESSION\n" . print_r($_SESSION, true));
 	$m->send();
+	if ($is_fatal)
+	{
+		print $subject.CRLF.$message;
+		die();
+	}
 }
 
 /** Ошибки надо исправлять. Непроверенный индекс в массиве или неинициализированная переменная - это ошибки!
