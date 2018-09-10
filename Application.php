@@ -403,6 +403,10 @@ class Application
 			if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
 			{
 				$file_name = "models/".strtolower(preg_replace("/_/", '/', $r[1])).".php";
+				if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
+				{
+					die("Cannot find file: $file_name");
+				}
 			}
 		}
 		elseif (preg_match("/(.+)(Helper)/", $class_name, $r))
