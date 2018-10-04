@@ -7,6 +7,9 @@
 */
 
 /** CHANGELOG
+ * 1.01
+ * DATE: 2018-10-04
+ * в словаре полей (Document_fieldsModel) убрано поле field_type, добавлено поле field_group_id integer
  *
  * 1.00
  * DATE: 2018-03-06
@@ -43,6 +46,9 @@ document_type_id - тип документа. по-умолчанию = 0, ес�
 Вариант отдать редактирование типов документов юзеру не рассматривается даже в перспективе.
 
 Поля для документов сгруппированы по типу документа, т.е. в таблице documents_fields есть ссылка на тип документа.
+
+Поля имеют атрибут field_group_id integer - тип поля с т.з. функционала, отображения и т.п. (hidden, например),
+либо _группы_ полей с т.з. автоматизируемого процесса, если полей слишком много и их надо как-то раскидывать по экрану/формам и т.п.
 
 Каждый документ имеет родителя по ссылке в parent_id в таблице documents.
 Т.е. в рамках проекта можно констрэйнтами связать дерево документов в единое целое.
@@ -116,13 +122,12 @@ ALTER TABLE {$this->scheme}.documents
   OWNER TO postgres;
 INSERT INTO {$this->scheme}.documents (id, document_type_id, parent_id) VALUES (0, 0, 0);
 
-
 CREATE TABLE {$this->scheme}.documents_fields
 (
   id serial NOT NULL,
   document_type_id integer NOT NULL DEFAULT 0,
   title character varying, -- заголовок поля для форм и таблиц
-  field_type integer NOT NULL DEFAULT 0,-- тип поля с т.з. функционала, отображения и т.п. (hidden, например)
+  field_group_id integer NOT NULL DEFAULT 0,-- тип поля с т.з. функционала, отображения и т.п. (hidden, например), либо группы полей с т.з. автоматизируемого процесса, если полей слишком много
   value_type character(1), -- тип значения
   measure character varying, -- ед.изм. значения. например длина в метрах, кредит-нота в долларах
   sort_order integer NOT NULL DEFAULT 0, -- для сортировки в списке полей
@@ -204,7 +209,6 @@ CREATE TRIGGER documents_fields_values_ins_trg
   ON {$this->scheme}.documents_fields_values
   FOR EACH ROW
   EXECUTE PROCEDURE {$this->scheme}.documents_fields_values_ins_func();
-
 
 CREATE TABLE {$this->scheme}.documents_files
 (
@@ -386,7 +390,9 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 		if ($document_id == 0){die('DocumentModel.saveFieldsValue: $document_id == 0');}	// - absolutely
 		if ($field_id == 0){die('DocumentModel.saveFieldsValue: $field_id == 0');}			// - barbaric!
 
+		da($field_id);
 		$field_info = $this->fields_model->getRow($field_id);
+		da($field_info);
 		$delete_clause = "DELETE FROM {$this->scheme}.documents_fields_values WHERE document_id = $1 AND field_id = $2";
 		//установка value -> null - удаляет поле
 		if (!isset($value) || trim($value) == '')
@@ -396,7 +402,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 		}
 		//далее value уже точно не null
 		$value = trim($value);
-		$result = "{$field_info['title']} - [$value]: Unknown value_type [{$field_info['value_type']}]";//ошибка по-умолчанию
+		$result = "Field [{$field_info['title']}] with value [$value]: Unknown value_type [{$field_info['value_type']}]";//ошибка по-умолчанию
 		$insert_clause = '';
 		if ($field_info['value_type'] == 'A')
 		{
@@ -523,7 +529,7 @@ class Document_fieldsModel extends SimpleDictionaryModel
 	function __construct($scheme, $document_type_id = 0)
 	{
 		parent::__construct($scheme.'.documents_fields', 'id', [
-			'title', 'field_type', 'value_type', 'measure', 'sort_order',
+			'title', 'field_group_id', 'value_type', 'measure', 'sort_order',
 		]);
 		$this->scheme = $scheme;
 		$this->document_type_id = $document_type_id;
@@ -565,6 +571,11 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 
 		$params['where'][] = "document_type_id = {$this->document_type_id}";
 
+		if (isset($params['field_group_id']) && $params['field_group_id'] > 0)
+		{
+			$params['where'][] = "field_group_id = {$params['field_group_id']}";
+		}
+
 		$list = parent::getList($params);
 		foreach ($list as $id => $r)
 		{
@@ -586,10 +597,10 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 					'width' => 200,
 					'type'	=> 'string',
 				],
-				'field_type'	=> [
-					'title'	=> 'Тип',
-					'width' => 50,
-					'type'	=> 'string',
+				'field_group_id'	=> [
+					'title'	=> 'Группа',
+					'width' => 10,
+					'type'	=> 'integer',
 				],
 				'value_type'	=> [
 					'title'	=> 'Тип значения',
@@ -620,6 +631,10 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		{
 			$data['sort_order'] = 0;
 		}
+		if (!isset($data['field_group_id']))
+		{
+			$data['field_group_id'] = 0;
+		}
 		if (trim($data['title']) == '')
 		{
 			return "Описание поля не может быть пустым";
@@ -636,13 +651,12 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 
 class Document_values_dictsModel extends SimpleDictionaryModel
 {
-	function __construct($scheme /*, $document_type_id = 0*/)
+	function __construct($scheme)
 	{
 		parent::__construct($scheme.'.documents_values_dicts', 'id', [
 			'field_id', 'value',
 		]);
 		$this->scheme = $scheme;
-		//delete $this->document_type_id = $document_type_id;
 	}
 
 	public function getList($params = [])
@@ -652,7 +666,6 @@ class Document_values_dictsModel extends SimpleDictionaryModel
 			$params['order'] = 'value';
 		}
 		$params['where'] = $params['where'] ?? [];
-		//not need! $params['where'][] = "document_type_id = {$this->document_type_id}";
 
 		if (isset($params['field_id']))
 		{
@@ -670,7 +683,7 @@ FROM {$this->scheme}.documents_fields_values AS v
 JOIN {$this->scheme}.documents_fields AS f ON (f.id = v.field_id)
 WHERE f.value_type='K' AND v.int_value = $key_value LIMIT 1")->rows > 0)
 		{
-			return "На удаляемое значение ссылаются какие-то документы. Нужно их ВСЕХ отредактировать перед удалением значения.";
+			return "На удаляемое значение [{$key_value}] ссылаются какие-то документы. Нужно их ВСЕХ отредактировать перед удалением значения.";
 		}
 		return '';
 	}
@@ -721,5 +734,4 @@ class Document_filesModel extends SimpleFilesModel
 		}
 		return parent::getList($params);
 	}
-
 }
