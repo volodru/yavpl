@@ -393,7 +393,8 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 		$field_info = $this->fields_model->getRow($field_id);
 		$delete_clause = "DELETE FROM {$this->scheme}.documents_fields_values WHERE document_id = $1 AND field_id = $2";
 		//установка value -> null - удаляет поле
-		if (!isset($value) || trim($value) == '')
+		if (!isset($value) || trim($value) == '' ||
+			(($field_info['value_type'] == 'K') && ($value == 0)))
 		{
 			$this->db->exec($delete_clause, $document_id, $field_id);
 			return;
@@ -575,11 +576,20 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		}
 
 		$list = parent::getList($params);
+		if (isset($params['add_default_value']))
+		{
+			$default_value_title = $params['default_value_title'] ?? '-- Выберите --';
+		}
+
 		foreach ($list as $id => $r)
 		{
 			if ($r['value_type'] == 'K')
 			{
 				$list[$id]['values'] = $this->getValues($id);
+				if (isset($params['add_default_value']))
+				{
+					$list[$id]['values'] = [0 => $default_value_title] + $list[$id]['values'];
+				}
 			}
 		}
 		return $list;
