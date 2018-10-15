@@ -7,6 +7,17 @@
 */
 
 /** CHANGELOG
+ * 1.02
+ * DATE: 2018-10-15
+ * В добавлены параметры:
+ * add_default_value - к списку значений из словаря добавлять нулевое значение - типа НЕ ВЫБРАНО
+ * default_value_title - заголовок для нулевого значения
+	пример для controller->edit():
+	$this->shipments->documents->fields_model->getList([
+		'add_default_value'		=> 1,
+		'default_value_title'	=> '-- Значение не выбрано --',
+	]);
+ *
  * 1.01
  * DATE: 2018-10-04
  * в словаре полей (Document_fieldsModel) убрано поле field_type, добавлено поле field_group_id integer
