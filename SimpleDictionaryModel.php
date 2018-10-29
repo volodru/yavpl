@@ -158,12 +158,20 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 				{
 					$where[] = "{$params['pkey']} IN (".join(',',$params['ids']).")";
 				}
+				else
+				{//если массив передали, но пустой - значит ожидаем явно не весь каталог в случае пустого массива!
+					return [];
+				}
 			}
 			else
 			{
 				if ($params['ids'] != '')
 				{
 					$where[] = "{$params['pkey']} IN ({$params['ids']})";
+				}
+				else
+				{//если массив передали, но пустой - значит ожидаем явно не весь каталог в случае пустого массива!
+					return [];
 				}
 			}
 		}
