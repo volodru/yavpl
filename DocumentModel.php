@@ -291,6 +291,8 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 
 		$params['index'] = $params['index'] ?? 'id';//не надо тут d.id!
 
+		$params['order_direction'] = $params['order_direction'] ?? 'DESC';
+
 		if (!isset($params['order']))
 		{
 			$params['order'] = 'd.id DESC';
@@ -307,7 +309,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 				$field_info = $this->fields_model->getRow($params['order']);
 				$field_name = $this->fields_model->value_field_names[$field_info['value_type']];
 				//так будет работать всё, кроме словарных полей
-				$params['order'] = "v{$params['order']}.{$field_name} DESC NULLS LAST, d.id DESC";
+				$params['order'] = "v{$params['order']}.{$field_name} {$params['order_direction']} NULLS LAST, d.id DESC";
 			}
 		}
 

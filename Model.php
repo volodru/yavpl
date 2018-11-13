@@ -117,6 +117,7 @@ class Model
 		}
 		elseif (in_array($name, $this->__sub_models))
 		{
+			//da('__get model '.$name);
 			preg_match("/^(.+)Model/", get_class($this), $r);
 			$s = $r[1].'_'.ucfirst($name).'Model';
 			$this->__sub_models_cache[$name] = new $s();
