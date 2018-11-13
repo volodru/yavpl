@@ -295,13 +295,13 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 
 		if (!isset($params['order']))
 		{
-			$params['order'] = 'd.id DESC';
+			$params['order'] = 'd.id '.$params['order_direction'];
 		}
 		else
 		{// - $params['order'] ID поля для сортировки
 			if ($params['order'] == 0)
 			{
-				$params['order'] = 'd.id DESC';
+				$params['order'] = 'd.id '.$params['order_direction'];
 			}
 			else
 			{
