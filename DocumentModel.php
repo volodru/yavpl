@@ -645,7 +645,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 	public function saveRow($data)
 	{
 		if (!isset($data['id']) || intval($data['id']) == 0)
-		{
+		{//запрет создания полей
 			return "Потерян ID поля.";
 		}
 		if (!isset($data['sort_order']))
