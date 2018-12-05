@@ -50,22 +50,22 @@ class SimpleFilesModel extends SimpleDictionaryModel
  * если оно надо и не было передано, то кому-то придется делать getRow($key_value).
  * по-умолчанию оно в общем-то и не надо.
  */
-	function getStoragePath($key_value, $data = false)
+	public function getStoragePath($key_value, $data = false)
 	{//перекрыть этот метод, если надо иметь путь к файлу исходя из каких-то данных в $data
 		return $this->storage_path;
 	}
 
-	function getFilePath($key_value, $data = false)
+	public function getFilePath($key_value, $data = false)
 	{
 		return $this->getStoragePath($key_value, $data).'/'.$key_value;
 	}
 
-	function getFileSize($key_value)
+	public function getFileSize($key_value)
 	{
 		return filesize($this->getFilePath($key_value));
 	}
 
-	function beforeDeleteRow($key_value)
+	public function beforeDeleteRow($key_value)
 	{
 		$f = $this->getFilePath($key_value);
 
@@ -92,7 +92,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 * Возвращает true|false, а для подробностей смотреть $this->log,
 * т.к. там может быть набор ошибок, которые надо исправлять оптом.
 */
-	function saveFile(&$data, $i_file)
+	public function saveFile(&$data, $i_file)
 	{
 		$this->clearLog();
 
@@ -242,7 +242,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 <input type='submit' name='ok' value='Загрузить' />
 
  */
-	function saveFiles(&$data, $i_files)
+	public function saveFiles(&$data, $i_files)
 	{
 		//каждая сохранялка отдельного файла ($this->saveFile(&$data, $i_file)) чистит лог. поэтому тут набираем общий лог и его уже отдаем
 		$overall_log = [];
