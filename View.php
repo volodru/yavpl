@@ -9,6 +9,12 @@
 
 /** CHANGELOG
  *
+ * 1.04
+ * DATE: 2018-12-10
+ * изменена магия __get -
+ * если поля нет в представлении - берем его из контроллера, а если его нет и в контроллере - берем через магию контроллера
+ * в протоконтроллер (класс Controller) добавлена магия по умолчанию - всегда возвращает null.
+ *
  * 1.03
  * DATE: 2015-10-30
  * кодировка установлена в UTF8
@@ -93,7 +99,7 @@ class View
 /**
  * Если нет поля, то берем его из своего контроллера
  */
-	function __get($name)
+	public function __get($name)
 	{
 		if (!isset($this->controller))
 		{
@@ -105,14 +111,14 @@ class View
 		}
 		else
 		{
-			return null;
+			return $this->controller->__get($name);
 		}
 	}
 
 /**
  * Если нет поля, то берем его из своего контроллера
  */
-	function __isset($name)
+	public function __isset($name)
 	{
 		return isset($this->controller->$name);
 	}

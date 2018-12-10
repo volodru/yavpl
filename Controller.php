@@ -9,6 +9,10 @@
 
 /** CHANGELOG
 
+ * 1.08
+ * DATE: 2018-12-10
+ * добавлена магия __get($name) по умолчанию. на нее ссылается магия View - если не находит прямо в контроллере, она ищет переменную в магии самого контроллера.
+ *
  * 1.07
  * DATE: 2017-09-30
  * добавлены функции isEventStream и sendEventStreamMessage для поддержки Server Side Events (https://learn.javascript.ru/server-sent-events)
@@ -433,5 +437,14 @@ public function defaultMethod($method_name)
 	{
 		$this->title = $title;
 		return $this;
+	}
+
+/**
+ * магия по-умолчанию. на нее ссылается View.
+ */
+	public function __get($name)
+	{
+		sendBugReport("CONTROLLER: variable is undefined", $name);
+		return null;
 	}
 }
