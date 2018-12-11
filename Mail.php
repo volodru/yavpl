@@ -47,7 +47,7 @@ if (!defined('ADMIN_EMAIL'))
 
 if (!defined('TECH_SUPPORT_EMAIL'))
 {
-	define('TECH_SUPPORT_EMAIL', 'ADMIN_EMAIL');
+	define('TECH_SUPPORT_EMAIL', ADMIN_EMAIL);
 }
 
 if (!defined('REMOTE_ADDR'))
