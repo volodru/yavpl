@@ -441,6 +441,7 @@ public function defaultMethod($method_name)
 
 /**
  * магия по-умолчанию. на нее ссылается View.
+ * тут же можно посылать уведомления о неициализированных переменных.
  */
 	public function __get($name)
 	{
