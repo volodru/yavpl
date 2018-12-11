@@ -444,7 +444,7 @@ public function defaultMethod($method_name)
  */
 	public function __get($name)
 	{
-		sendBugReport("CONTROLLER: variable is undefined", $name);
+		sendBugReport("CONTROLLER: variable {$name} is undefined", $name);
 		return null;
 	}
 }

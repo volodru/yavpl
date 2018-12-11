@@ -164,6 +164,12 @@ function sendBugReport($subject = 'Bug Report', $message = 'common bug', $is_fat
 {
 	if (!isset($_SESSION)){session_start();}
 
+	if ($_SERVER['APPLICATION_ENV'] != 'production')
+	{
+		print "<h1>BUG REPORT</h1><div>$subject</div><div>$message</div>";
+		exit();
+	}
+
 	$m = new Mail(
 		ADMIN_EMAIL,
 		"[{$_SERVER['SERVER_NAME']}] ".$subject,
