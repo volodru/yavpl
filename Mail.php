@@ -9,6 +9,13 @@
 
 /** CHANGELOG
  *
+ * 1.07
+ * @DATE: 2018-12-11
+ * добавлено понятие "адрес техподдержки" - TECH_SUPPORT_EMAIL
+ * по умолчанию - оно совпадает с ADMIN_EMAIL
+ * в проектах туда стоит отправлять все технические письма (ошибки и т.п.)
+ * админский емэйл - от кого по дефолту посылаются письма - желательно с адреса проекта (...@adrussia.ru, volod@volod.ru, tech@parslovar.ru)
+ *
  * 1.06
  * @DATE: 2015-10-30
  * кодировка установлена в UTF8
@@ -36,7 +43,11 @@
 if (!defined('ADMIN_EMAIL'))
 {
 	define('ADMIN_EMAIL', $_SERVER['SERVER_ADMIN']);
-	//obsolete die('ADMIN_EMAIL is undefined. Set ADMIN_EMAIL to something real before loading class Mail');
+}
+
+if (!defined('TECH_SUPPORT_EMAIL'))
+{
+	define('TECH_SUPPORT_EMAIL', 'ADMIN_EMAIL');
 }
 
 if (!defined('REMOTE_ADDR'))
@@ -245,24 +256,22 @@ class Mail
 
 		if ($this->from_email == '')
 		{
-			$this->from_email = ADMIN_EMAIL;//$_SERVER['SERVER_NAME'];
+			$this->from_email = ADMIN_EMAIL;
 		}
 
-		//$from_line = ($this->from_name != '') ? '"'.$this->encodeCyr($this->from_name)."\" <{$this->from_email}>" : $this->from_email;
 		$from_line = $this->convertFieldToLine([[$this->from_email, $this->from_name]]);
-
 		$to_line = $this->convertFieldToLine($this->to);
 
 		if (count($this->to) == 0)
 		{
-			$to_line = ADMIN_EMAIL;
+			$to_line = TECH_SUPPORT_EMAIL;
 			$this->content = "Field 'TO:' is undefined!\n\n".$this->content;
 			$this->subj = "!_TO_ field is undefined! ".$this->subj;
 		}
 
 		$subj = $this->encodeCyr($this->subj);
 
-		$errors_to = ADMIN_EMAIL;
+		$errors_to = TECH_SUPPORT_EMAIL;
 
 		$letter = "MIME-Version: 1.0
 Content-Language: ru

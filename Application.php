@@ -165,23 +165,26 @@ function sendBugReport($subject = 'Bug Report', $message = 'common bug', $is_fat
 	if (!isset($_SESSION)){session_start();}
 
 	if ($_SERVER['APPLICATION_ENV'] != 'production')
-	{
-		print "<h1>BUG REPORT</h1><div>$subject</div><div>$message</div>";
+	{//на девелопе убивать баги на месте, а с продакшена пусть придет письмо
+		print "
+<h1>BUG REPORT</h1>
+<h2>$subject</h2>
+<h2>$message</h2>
+<div>TRACE:<xmp>".__getBacktrace()."</xmp></div>";
 		exit();
 	}
 
 	$m = new Mail(
-		ADMIN_EMAIL,
+		TECH_SUPPORT_EMAIL,
 		"[{$_SERVER['SERVER_NAME']}] ".$subject,
 		$message."
 ____________________________________________________
-
 TRACE\n".__getBacktrace()."
-
+--------------------------
 SERVER\n" . print_r($_SERVER, true) ."
-
+--------------------------
 COOKIE\n" . print_r($_COOKIE, true) ."
-
+--------------------------
 SESSION\n" . print_r($_SESSION, true));
 	$m->send();
 	if ($is_fatal)
