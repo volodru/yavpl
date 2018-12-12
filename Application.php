@@ -9,6 +9,10 @@
 
 /** CHANGELOG
  *
+ * 1.09
+ * DATE: 2018-12-12
+ * Добавлена уведомлялка sendNotification() - просто посылает письмо без остановки процесса.
+ *
  * 1.08
  * DATE: 2018-09-04
  * В sendBugReport() добавлен третий параметр - (....., $is_fatal = false)
@@ -174,10 +178,7 @@ function sendBugReport($subject = 'Bug Report', $message = 'common bug', $is_fat
 		exit();
 	}
 
-	$m = new Mail(
-		TECH_SUPPORT_EMAIL,
-		"[{$_SERVER['SERVER_NAME']}] ".$subject,
-		$message."
+	(new Mail(TECH_SUPPORT_EMAIL, "[{$_SERVER['SERVER_NAME']}] ".$subject, $message."
 ____________________________________________________
 TRACE\n".__getBacktrace()."
 --------------------------
@@ -185,13 +186,24 @@ SERVER\n" . print_r($_SERVER, true) ."
 --------------------------
 COOKIE\n" . print_r($_COOKIE, true) ."
 --------------------------
-SESSION\n" . print_r($_SESSION, true));
-	$m->send();
+SESSION\n" . print_r($_SESSION, true)))->send();
 	if ($is_fatal)
 	{
 		print $subject.CRLF.$message;
 		die();
 	}
+}
+
+/** Инструмент для посылки уведомлений. Уведомления предполагаются административного характера, бизнес-процессы и т.п.
+ * Не для ошибочных ситуаций! Для потециальных ошибок и предупреждений использовать sendBugReport()
+ */
+function sendNotification($subject = 'Notification', $message = 'Message')
+{
+	if (!isset($_SESSION)){session_start();}
+
+	(new Mail(TECH_SUPPORT_EMAIL, "[{$_SERVER['SERVER_NAME']}] ".$subject, $message."
+____________________________________________________
+SESSION\n" . print_r($_SESSION, true)))->send();
 }
 
 /** Ошибки надо исправлять. Непроверенный индекс в массиве или неинициализированная переменная - это ошибки!
