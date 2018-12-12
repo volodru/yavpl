@@ -168,7 +168,7 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 					//OLD CODE was unsafe : $code .= (is_string($row[$index])) ? "['{$row[$index]}']" : "[{$row[$index]}]";
 					if (!isset($row[$index]))
 					{
-						sendBugReport('Wrong index in fetchAll()');
+						sendBugReport('Wrong index in fetchAll()', "index: {$hash_index}", true);
 					}
 					if (is_string($row[$index]))
 					{
