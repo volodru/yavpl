@@ -166,6 +166,10 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 				{
 					//проверку делать именно на string!, а не на целое и т.п.
 					//OLD CODE was unsafe : $code .= (is_string($row[$index])) ? "['{$row[$index]}']" : "[{$row[$index]}]";
+					if (!isset($row[$index]))
+					{
+						sendBugReport('Wrong index in fetchAll()');
+					}
 					if (is_string($row[$index]))
 					{
 						$row[$index] = str_replace("'", '', $row[$index]);//we have to do it

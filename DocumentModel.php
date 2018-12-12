@@ -497,7 +497,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 		return $row;
 	}
 
-	public function saveRow()
+	public function saveRow($data)
 	{
 		$msg = "DocumentModel::saveRow() is disabled, Use DocumentModel::createRow() and DocumentModel::updateField() instead!";
 		sendBugReport($msg);
