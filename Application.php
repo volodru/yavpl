@@ -179,7 +179,7 @@ function sendBugReport($subject = 'Bug Report', $message = 'common bug', $is_fat
 	}
 
 	(new Mail(TECH_SUPPORT_EMAIL, "[{$_SERVER['SERVER_NAME']}] ".$subject, $message."
-{$_SERVER['SCRIPT_URI']}
+{$_SERVER['SCRIPT_URI']}".((isset($_SERVER['QUERY_STRING']) && $_SERVER['QUERY_STRING'] != '') ? '?'.$_SERVER['QUERY_STRING'] : '')."
 ____________________________________________________
 TRACE\n".__getBacktrace()."
 --------------------------
