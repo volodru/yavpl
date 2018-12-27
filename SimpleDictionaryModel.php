@@ -97,7 +97,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		$from = $this->table_name;
 		$index = $order = $this->key_field;
 		$group = $having = '';
-		$this->params = $params;//на случай если контроллер захочет сохранить себе сформированные параметры вызова getList() для следующего раза.
+		$this->__last_list_params = $params;//на случай если контроллер захочет сохранить себе сформированные параметры вызова getList() для следующего раза.
 		if (isset($params['order']) && $params['order'] != '')
 		{
 			$order = $params['order'];
