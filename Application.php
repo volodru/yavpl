@@ -329,7 +329,7 @@ class Application
 //создали экземпляр контроллера - вызвали конструктор
 		if (!$this->loadController())
 		{
-			$this->fatalError("Cannot load appropriate controller for URI: [{$_SERVER['REQUEST_URI']}]");
+			$this->fatalError("Cannot load appropriate controller for URI: [{$_SERVER['REQUEST_URI']}].<br/><br/>Seems that page is not avilable anymore.<br/><br/>Try again from <a href='/'>the main page</a>.");
 		}
 //вызвали нужный метод контроллера
 		if (method_exists($this->controller, $this->method_name))
