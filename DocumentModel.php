@@ -554,6 +554,18 @@ class Document_fieldsModel extends SimpleDictionaryModel
 		]);
 	}
 
+	public function getEmptyRow()
+	{
+		return [
+			'id'				=> 0,
+			'title'				=> '',
+			'measure'			=> '',
+			'field_group_id'	=> 0,
+			'value_type'		=> 'I',
+			'sort_order'		=> 0,
+		];
+	}
+
 	public function getRow($key_value)
 	{
 		if ($key_value == 0)
