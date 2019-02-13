@@ -153,6 +153,9 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 				sendBugReport($msg);
 				//die($msg);
 			}
+
+			/* delete it.
+			 * the better code is below.
 			if (is_array($params['ids']))
 			{
 				if (count($params['ids']) > 0)
@@ -174,6 +177,17 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 				{//если массив передали, но пустой - значит ожидаем явно не весь каталог в случае пустого массива!
 					return [];
 				}
+			}*/
+
+			$ids = is_array($params['ids']) ? $params['ids'] : explode(',',$params['ids']);
+			$ids = array_filter($ids, function($v){return ($v > 0);});
+			if (count($ids) > 0)
+			{
+				$where[] = "{$params['pkey']} IN (".join(',',$ids).")";
+			}
+			else
+			{//если массив передали, но пустой - значит ожидаем явно не весь каталог в случае пустого массива!
+				return [];
 			}
 		}
 
