@@ -404,6 +404,8 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 		if ($field_id == 0){die('DocumentModel.saveFieldsValue: $field_id == 0');}			// - barbaric!
 
 		$field_info = $this->fields_model->getRow($field_id);
+		//da($field_info);
+		if ($field_info == false){die("DocumentModel.saveFieldsValue: UNKNOWN field_id = $field_id");}
 		$delete_clause = "DELETE FROM {$this->scheme}.documents_fields_values WHERE document_id = $1 AND field_id = $2";
 		//установка value -> null - удаляет поле
 		if (!isset($value) || trim($value) == '' ||
@@ -578,7 +580,10 @@ class Document_fieldsModel extends SimpleDictionaryModel
 			{
 				$this->data_cash[$key_value] = $this->db->exec("
 SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->fetchRow();
-				$this->data_cash[$key_value]['values'] = $this->getValues($key_value);
+				if ($this->data_cash[$key_value] !== false)
+				{
+					$this->data_cash[$key_value]['values'] = $this->getValues($key_value);
+				}
 			}
 			return $this->data_cash[$key_value];
 		}
