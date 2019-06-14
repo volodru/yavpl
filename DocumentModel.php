@@ -405,7 +405,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 
 		$field_info = $this->fields_model->getRow($field_id);
 		//da($field_info);
-		if ($field_info == false){die("DocumentModel.saveFieldsValue: UNKNOWN field_id = $field_id");}
+		if ($field_info == false){die("DocumentModel.saveFieldsValue: UNKNOWN field_id = {$field_id}");}
 		$delete_clause = "DELETE FROM {$this->scheme}.documents_fields_values WHERE document_id = $1 AND field_id = $2";
 		//установка value -> null - удаляет поле
 		if (!isset($value) || trim($value) == '' ||
@@ -416,13 +416,13 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 		}
 		//далее value уже точно не null
 		$value = trim($value);
-		$result = "Field [{$field_info['title']}] with value [$value]: Unknown value_type [{$field_info['value_type']}]";//ошибка по-умолчанию
+		$result = "Field [{$field_info['title']}] with value [{$value}]: Unknown value_type [{$field_info['value_type']}]";//ошибка по-умолчанию
 		$insert_clause = '';
 		if ($field_info['value_type'] == 'A')
 		{
 			if ($value == '')
 			{
-				return "{$field_info['title']} - [$value]: Ожидается непустая строка";
+				return "{$field_info['title']} - [{$value}]: Ожидается непустая строка";
 			}
 			$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, text_value) VALUES ($1,$2,$3)";
 			$result = '';
@@ -432,7 +432,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			$value = preg_replace("/\D/", '', $value);
 			if ($value == '')
 			{
-				return "{$field_info['title']} - [$value]: Ожидается целое число";
+				return "{$field_info['title']} - [{$value}]: Ожидается целое число";
 			}
 			$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, int_value) VALUES ($1,$2,$3)";
 			$result = '';
@@ -443,7 +443,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			$value = preg_replace("/\s+/", '', $value);
 			if (!is_numeric($value + 0))
 			{
-				return "{$field_info['title']} - [$value]: Ожидается вещественное число";
+				return "{$field_info['title']} - [{$value}]: Ожидается вещественное число";
 			}
 			$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, float_value) VALUES ($1,$2,$3)";
 			$result = '';
@@ -453,11 +453,11 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			$value = preg_replace("/\D/", '', $value);
 			if ($value == '')
 			{
-				return "{$field_info['title']} - [$value]: Ожидается индекс в словаре";
+				return "{$field_info['title']} - [{$value}]: Ожидается индекс в словаре";
 			}
 			if (!isset($field_info['values'][$value]))
 			{
-				return "Значение $value не найдено в словаре для поля {$field_info['title']}";
+				return "Значение {$value} не найдено в словаре для поля {$field_info['title']}";
 			}
 			$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, int_value) VALUES ($1,$2,$3)";
 			$result = '';
@@ -467,11 +467,11 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			$value = trim($value);
 			if (!preg_match("/(\d{1,2})[\.\-](\d{1,2})[\.\-](\d{4})/", $value, $matches))
 			{
-				return "{$field_info['title']} - [$value]: Ожидается формат даты ДД-ММ-ГГГГ";
+				return "{$field_info['title']} - [{$value}]: Ожидается формат даты ДД-ММ-ГГГГ";
 			}
 			if (!checkdate($matches[2],$matches[1],$matches[3]))
 			{
-				return "{$field_info['title']} - [$value]: Неверная дата. Формат даты ДД-ММ-ГГГГ";
+				return "{$field_info['title']} - [{$value}]: Неверная дата. Формат даты ДД-ММ-ГГГГ";
 			}
 			$value = $matches[1].'.'.$matches[2].'.'.$matches[3];
 			$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, date_value) VALUES ($1,$2,$3)";
