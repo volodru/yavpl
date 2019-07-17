@@ -31,8 +31,6 @@ class View
 {
 	public $controller;
 
-	//"<meta http-equiv='Content-Type' content='text/html; charset=Windows-1251' />",
-
 	private $__header_tags = [
 "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />",
 "<meta http-equiv='Content-Language' content='ru' />",
@@ -145,7 +143,9 @@ class View
  */
 	public function getHeaderTags()
 	{
-		return (isset($this->controller->title)) ? array_merge(["<title>{$this->controller->title}</title>"], $this->__header_tags) : $this->__header_tags;
+		return array_merge(
+			["<title>".($this->controller->getTitle())."</title>"],
+			$this->__header_tags);
 	}
 
 /**

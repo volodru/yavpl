@@ -9,6 +9,11 @@
 
 /** CHANGELOG
 
+ * 1.09
+ * DATE: 2019-07-17
+ * Убрано поле Controller->title,
+ * Поле Controller->__title - доступно через геттер/сеттер и только так (getTitle()/setTitle($title)).
+ *
  * 1.08
  * DATE: 2018-12-10
  * добавлена магия __get($name) по умолчанию. на нее ссылается магия View - если не находит прямо в контроллере, она ищет переменную в магии самого контроллера.
@@ -79,7 +84,6 @@ class Controller
 	//!!!
 	//все поля, которые может видеть представление с помощью магии, должны быть публичными!
 	//
-	public $title = 'THIS IS THE TITLE OF THE PROJECT';
 	public $breadcrumbs_delimiter = " &raquo;&raquo;\n\t";
 
 	public $user = null;//текущий залогиненный юзер. рекомендуется синглтон, как правило - наследник или экземпляр UserModel
@@ -90,6 +94,8 @@ class Controller
 	//public $__toolbar_elements = [];
 
 	protected $default_resource_id;
+
+	private $__title = 'THIS IS THE TITLE OF THE PROJECT';
 
 	private $__params_array = [];
 	private $__document_ts = 0;
@@ -429,14 +435,20 @@ public function defaultMethod($method_name)
 		}
 	}
 
-/**
- *  Устанавливает title Документа. Но удобнее сразу писать в $this->title, т.к. один хрен оно публичное.
- *  Надо для совместимости с совсем уж старым кодом или на неопределенную перспективу.
+/**  Устанавливает title Документа.
  */
 	public function setTitle($title)
 	{
-		$this->title = $title;
+		$this->__title = $title;
 		return $this;
+	}
+
+/**  Возвращает title Документа.
+ * "public Морозов", по сути.
+ */
+	public function getTitle()
+	{
+		return $this->__title;
 	}
 
 /**
