@@ -118,12 +118,14 @@ function __runToolbarButton(e, action, type)
 					if (isset($element['enabled_hint']))
 					{
 						$hint = preg_replace("/\'/", '`', $element['enabled_hint']);
-						$hint_attr = "title='$hint'";
+						$hint_attr = "title='{$hint}'";
 					}
-					$header = "<a onclick='__stopPropagation(event)' href='{$element['action']}'>{$element['header']}</a>";
-					if (preg_match("/^javascript:(.+?)$/", $element['action'], $res))
+					//$header = "<a onclick='__stopPropagation(event)' href='{$element['action']}'>{$element['header']}</a>";
+					$header = $element['header'];
+					$matches = [];
+					if (preg_match("/^javascript:(.+?)$/", $element['action'], $matches))
 					{
-						$onclick = "onclick=\"__runToolbarButton(event,'{$res[1]}','')\"";
+						$onclick = "onclick=\"__runToolbarButton(event,'{$matches[1]}','')\"";
 					}
 					else
 					{
@@ -134,11 +136,11 @@ function __runToolbarButton(e, action, type)
 				{
 					$class = 'disabled';
 					$hint = (isset($element['disabled_hint'])) ? preg_replace("/\'/", '`', $element['disabled_hint']) : 'Disabled';
-					$hint_attr = "title='$hint'";
+					$hint_attr = "title='{$hint}'";
 					$header = $element['header'];
-					$onclick = "onclick=\"alert('$hint')\"";
+					$onclick = "onclick=\"alert('{$hint}')\"";
 				}
-				$buf .= "\n<td class='$class' $hint_attr style='width: {$element['width']}'><div $onclick class='button'>$header</div></td>";
+				$buf .= "\n<td class='{$class}' {$hint_attr} style='width: {$element['width']}'><div {$onclick} class='button'>{$header}</div></td>";
 			}
 			if ($element['type'] == 'divider')
 			{
