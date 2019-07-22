@@ -57,7 +57,7 @@ class ToolBar
 			'enabled'		=> isset($options['enabled']) ? $options['enabled'] : true,
 			'enabled_hint'	=> isset($options['enabled_hint']) ? $options['enabled_hint'] : null,
 			'disabled_hint'	=> isset($options['disabled_hint']) ? $options['disabled_hint'] : null,
-			'width'			=> isset($options['width']) ? $options['width'] : round(strlen($header) * 0.6).'em',//magic factor!
+			'width'			=> isset($options['width']) ? $options['width'] : round(strlen($header) * 0.5).'em',//magic factor!
 		];
 		return $this;
 	}

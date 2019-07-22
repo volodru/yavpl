@@ -229,8 +229,11 @@ class Db
 		<div style='color: #F00; padding: 5px;'>{$err_msg}</div>
 		<div style='color: #0FF; padding: 5px;'>{$notice_msg}</div>
 		<div style='color: #00F; padding: 5px;'><pre>{$backtrace}</pre></div>
-		<div><xmp>SESSION: ".print_r($_SESSION, true)."</xmp></div>
 ";//<div><xmp>SERVER: ".print_r($_SERVER, true)."</xmp></div>
+		if (isset($_SESSION))
+		{
+			$debug_info .= "<div><xmp>SESSION: ".print_r($_SESSION, true)."</xmp></div>";
+		}
 
 		if ($this->show_error_messages)
 		{//@TODO: это мутный момент когда и как показывать ошибки БД для случаев,
