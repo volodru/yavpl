@@ -57,7 +57,7 @@ class ToolBar
 			'enabled'		=> isset($options['enabled']) ? $options['enabled'] : true,
 			'enabled_hint'	=> isset($options['enabled_hint']) ? $options['enabled_hint'] : null,
 			'disabled_hint'	=> isset($options['disabled_hint']) ? $options['disabled_hint'] : null,
-			'width'			=> isset($options['width']) ? $options['width'] : round(strlen($header) * 0.5).'em',//magic factor!
+			'width'			=> isset($options['width']) ? $options['width'] : '0',
 		];
 		return $this;
 	}
@@ -140,7 +140,7 @@ function __runToolbarButton(e, action, type)
 					$header = $element['header'];
 					$onclick = "onclick=\"alert('{$hint}')\"";
 				}
-				$buf .= "\n<td class='{$class}' {$hint_attr} style='width: {$element['width']}'><div {$onclick} class='button'>{$header}</div></td>";
+				$buf .= "\n<td class='{$class}' style='width: {$element['width']}' {$hint_attr}><div {$onclick} class='button' >{$header}</div></td>";
 			}
 			if ($element['type'] == 'divider')
 			{
