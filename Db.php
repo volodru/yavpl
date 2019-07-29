@@ -395,10 +395,6 @@ SELECT * FROM $table WHERE (".join(') AND (', $w).")", $v)->fetchRow();
  */
 	//abstract public function fetchAll($hash_index = '');
 
-/** OBSOLETE, user fetchAll($field) instead
- */
-	//abstract function fetchAllWithId($index);
-
 /**
  * Извлечение очередной строки результата, как правило в виде структуры
  */

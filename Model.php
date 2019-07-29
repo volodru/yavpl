@@ -100,6 +100,7 @@ class Model
 
 	function setSubModel(Model $sub_model)
 	{
+		$r = [];
 		preg_match("/^(.+)Model/", get_class($this), $r);//главная модель
 		$this_class_name = $r[1];
 //@TODO - поправить для работы с вложенными субмоделями, буде таковые когда-нибудь понадобятся.
@@ -118,6 +119,7 @@ class Model
 		elseif (in_array($name, $this->__sub_models))
 		{
 			//da('__get model '.$name);
+			$r = [];
 			preg_match("/^(.+)Model/", get_class($this), $r);
 			$s = $r[1].'_'.ucfirst($name).'Model';
 			$this->__sub_models_cache[$name] = new $s();

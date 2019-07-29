@@ -363,34 +363,10 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 
 	public function generateFieldValue($field_id, $value)
 	{
-	    $result['id'] = $field_id;
+	    $result = ['id' => $field_id];
 	    $field_info = $this->fields_model->getRow($field_id);
-
 	    $field_name = $this->fields_model->value_field_names[$field_info['value_type']];
-
 	    $result['value'] = $result[$field_name] = $value;
-
-	    /* delete it
-		if ($field_info['value_type'] == 'A')
-		{
-		    $result['value'] = $result['text_value'] = $value;
-		}
-		if ($field_info['value_type'] == 'I')
-		{
-		    $result['value'] = $result['int_value'] = $value;
-		}
-		if ($field_info['value_type'] == 'F')
-		{
-		    $result['value'] = $result['float_value'] = $value;
-		}
-		if ($field_info['value_type'] == 'K')
-		{
-		    $result['value'] = $result['int_value'] = $value;
-		}
-		if ($field_info['value_type'] == 'D')
-		{
-		    $result['value'] = $result['date_value'] = $value;
-		}*/
 		return $result;
 	}
 
@@ -465,6 +441,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 		if ($field_info['value_type'] == 'D')
 		{
 			$value = trim($value);
+			$matches = [];
 			if (!preg_match("/(\d{1,2})[\.\-](\d{1,2})[\.\-](\d{4})/", $value, $matches))
 			{
 				return "{$field_info['title']} - [{$value}]: Ожидается формат даты ДД-ММ-ГГГГ";

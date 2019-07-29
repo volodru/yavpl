@@ -87,6 +87,7 @@ class DbPg extends Db implements iDb
 				}
 				$this->explain = $explain;
 
+				$res1 = $res2 = [];
 				preg_match("/offset\s+(\d+)/sim", $query, $res1);
 				//preg_match("/(sort)/sim", $explain, $res1);
 				preg_match("/cost=(\d+)\.\d+\.\.\d+\.\d+/", $explain, $res2);
@@ -94,8 +95,8 @@ class DbPg extends Db implements iDb
 				if (isset($res2[1]) && ($res2[1] > $this->min_cost_to_save_log) &&(!(isset($res1[1])) ||((isset($res1[1])) && ($res1[1]>=0))))
 				{
 					$a = explode('.', $_SERVER['SERVER_NAME']);
-					$fn = (isset($a[count($a)-2])) ? $a[count($a)-2] : $_SERVER['SERVER_NAME'];
-					if ($f = fopen($this->log_path."long_sqls_$fn.log",'a'))
+					$fn = $this->log_path."long_sqls_".((isset($a[count($a)-2])) ? $a[count($a)-2] : $_SERVER['SERVER_NAME']).".log";
+					if (is_writable($fn) && $f = fopen($fn,'a'))
 					{
 						fwrite($f, "
 #----------------------------------------------------

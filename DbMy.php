@@ -254,38 +254,7 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
  */
 	public function fetchAll($type = PGSQL_ASSOC)
 	{
-		$t = [];
-		for($r = 0; $r < $this->rows; $r++)
-		{
-			$t[] = pg_fetch_array($this->sth, $r, $type);
-		}
-		return $t;
-	}
-
-	public function fetchAllWithId($index_src, $type = PGSQL_ASSOC)
-	{
-		$t = [];
-		for ($row_num = 0; $row_num < $this->rows; $row_num++)
-		{
-			$row = pg_fetch_array($this->sth, $row_num, $type);
-			$code = '';
-			foreach (preg_split("/,\s*/", $index_src) as $index)
-			{
-				//проверку делать именно на string!, а не на целое и т.п.
-				//OLD CODE was unsafe : $code .= (is_string($row[$index])) ? "['{$row[$index]}']" : "[{$row[$index]}]";
-				if (is_string($row[$index]))
-				{
-					$row[$index] = str_replace("'", '', $row[$index]);//we have to do it
-					$code .= "['".$row[$index]."']" ;
-				}
-				else
-				{
-					$code .= "[{$row[$index]}]";
-				}
-			}
-			eval("\$t$code = \$row;");
-		}
-		return $t;
+//TODO
 	}
 
 /**
