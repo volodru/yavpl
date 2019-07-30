@@ -64,7 +64,26 @@ class SimpleDictionaryModel extends MainModel
 		//override!
 	}
 
+/** максимально быстрый и корректный способ проверить наличие строки в базе.
+ * в теории - оно работает только по индексу, т.е. не трогает файлы с данными.
+ */
+	public function rowExists($key_value)
+	{
+		return ($this->db->exec("SELECT {$this->key_field} FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->fetchRow() !== false);
+	}
+
+/** Возвращает сырую запись из таблицы по ключу.
+ * Перекрывать этот метод нежелательно, все join и экзотику в селектах надо писать в перекрываемом getRow($key_value)
+ */
+	public function getRawRow($key_value)
+	{
+		return $this->db->exec("-- ".get_class($this).", method: ".__METHOD__."
+SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->fetchRow();
+	}
+
 /** Отдает запись по ключу, если ключ == 0, отдает дефолтную запись из getEmptyRow
+ * Наследники могут добавлять в селект что угодно и join-нить как угодно с чем угодно.
+ * Для оригинальной записи всегда останется getRawRow($key_value)
  */
 	public function getRow($key_value)
 	{
@@ -74,8 +93,7 @@ class SimpleDictionaryModel extends MainModel
 		}
 		else
 		{
-			return $this->db->exec("-- ".get_class($this).", method: ".__METHOD__."
-SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->fetchRow();
+			return $this->getRawRow($key_value);
 		}
 	}
 
@@ -91,7 +109,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 
 	public function getList($params = [])
 	{
-		$values = $where = [];
+		$where = [];
 		$limit = $offset = -1;
 		$select = '*';
 		$from = $this->table_name;
@@ -153,32 +171,6 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 				sendBugReport($msg);
 				//die($msg);
 			}
-
-			/* delete it.
-			 * the better code is below.
-			if (is_array($params['ids']))
-			{
-				if (count($params['ids']) > 0)
-				{
-					$where[] = "{$params['pkey']} IN (".join(',',$params['ids']).")";
-				}
-				else
-				{//если массив передали, но пустой - значит ожидаем явно не весь каталог в случае пустого массива!
-					return [];
-				}
-			}
-			else
-			{
-				if ($params['ids'] != '')
-				{
-					$where[] = "{$params['pkey']} IN ({$params['ids']})";
-				}
-				else
-				{//если массив передали, но пустой - значит ожидаем явно не весь каталог в случае пустого массива!
-					return [];
-				}
-			}*/
-
 			$ids = is_array($params['ids']) ? $params['ids'] : explode(',',$params['ids']);
 			$ids = array_filter($ids, function($v){return ($v > 0);});
 			if (count($ids) > 0)
@@ -193,15 +185,16 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 
 		$this->db->exec("-- ".get_class($this).", method: ".__METHOD__."
 SELECT
-	$select
+	{$select}
 FROM
-	$from
+	{$from}
 ".((count($where) > 0) ? "WHERE ".join(" AND ", $where):'')
-.(($group != '') ? "\n$group" : '')
-.(($having != '') ? "\n$having" : '')."
-ORDER BY $order
-".(($limit >= 0) ? "\nLIMIT $limit" : '')."
-".(($offset >= 0) ? "\nOFFSET $offset" : ''));//->print_r();
+.(($group != '') ? "\n".$group : '')
+.(($having != '') ? "\n".$having : '')."
+ORDER BY
+	{$order}
+".(($limit >= 0) ? "\nLIMIT ".$limit : '')."
+".(($offset >= 0) ? "\nOFFSET ".$offset : ''));//->print_r();
 		return $this->db->fetchAll($index);
 	}
 
@@ -263,8 +256,10 @@ ORDER BY $order
 
 	public function updateField($key_value, $field_name, $value)
 	{
-		$data[$this->key_field] = $key_value;
-		$data[$field_name] = $value;
+		$data = [
+			$this->key_field	=> $key_value,
+			$field_name			=> $value,
+		];
 		if (!in_array($field_name, $this->fields))
 		{//ошибка на этапе разработки. в продакшене это недопустимо.
 			die('Wrong field name passed to updateField()');
@@ -273,9 +268,9 @@ ORDER BY $order
 		{
 			return "Переданный первичный ключ равен нулю.";
 		}
-		elseif ($this->getRow($key_value) === false)
+		elseif (!$this->rowExists($key_value))
 		{
-			return "По переданному первичному ключу ($key_value) не найдена запись в базе.";
+			return "По переданному первичному ключу ({$key_value}) не найдена запись в базе.";
 		}
 		else
 		{
@@ -347,7 +342,7 @@ ORDER BY $order
 			return $message;
 		}
 //удаляем запись
-		$data[$this->key_field] = $key_value;
+		$data = [$this->key_field => $key_value];
 		$this->affected_rows = $this->db->delete($this->table_name, $this->key_field, $data)->affectedRows();
 
 // т.к. удаление делается по ключу, то если $ar > 1 - это ошибка, если == 0 тоже фигня,

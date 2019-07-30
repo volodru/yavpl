@@ -402,13 +402,14 @@ class Application
 			return true;
 		}
 
-		if (preg_match("/(.+)_(.+)(Controller|View)/", $class_name, $r))
+		$matches = [];
+		if (preg_match("/(.+)_(.+)(Controller|View)/", $class_name, $matches))
 		{
-			if ($r[2] == 'default') $r[2] = '_default';
-			$file_name = strtolower($r[3])."s/{$r[1]}/{$r[2]}.php";
+			if ($matches[2] == 'default') {$matches[2] = '_default';}
+			$file_name = strtolower($matches[3])."s/{$matches[1]}/{$matches[2]}.php";
 			if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
 			{
-				$file_name = strtolower($r[3])."s/".strtolower($r[1])."/".strtolower($r[2]).".php";
+				$file_name = strtolower($matches[3])."s/".strtolower($matches[1])."/".strtolower($matches[2]).".php";
 			}
 		}
 		elseif ($class_name == 'defaultController')
@@ -419,24 +420,24 @@ class Application
 		{
 			$file_name = "views/_default.php";
 		}
-		elseif (preg_match("/(.+)(Model)/", $class_name, $r))
+		elseif (preg_match("/(.+)(Model)/", $class_name, $matches))
 		{
-			$file_name = "models/".preg_replace("/_/", '/', $r[1]).".php";
+			$file_name = "models/".preg_replace("/_/", '/', $matches[1]).".php";
 			if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
 			{
-				$file_name = "models/".strtolower(preg_replace("/_/", '/', $r[1])).".php";
+				$file_name = "models/".strtolower(preg_replace("/_/", '/', $matches[1])).".php";
 				if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
 				{
 					die("Cannot find file: $file_name");
 				}
 			}
 		}
-		elseif (preg_match("/(.+)(Helper)/", $class_name, $r))
+		elseif (preg_match("/(.+)(Helper)/", $class_name, $matches))
 		{
-			$file_name = "helpers/{$r[1]}.php";
+			$file_name = "helpers/{$matches[1]}.php";
 			if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
 			{
-				$file_name = "helpers/".strtolower($r[1]).".php";
+				$file_name = "helpers/".strtolower($matches[1]).".php";
 			}
 		}
 		else
