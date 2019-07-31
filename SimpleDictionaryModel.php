@@ -40,6 +40,11 @@
  *
  * 3. если нужны сложные выборки, то лучше сразу перекрыть getList и вообще не вызывать parent::getList()
  *
+ * Концепция обработки ошибок:
+ * Методы с проверками возвращают строку.
+ * Если строка не пустая - то это сообщение об ошибке.
+ * Если строка пустая - значит всё хорошо пока.
+ *
  */
 
 class SimpleDictionaryModel extends MainModel
@@ -203,9 +208,22 @@ ORDER BY
 		return $this->table_name.'_'.$this->key_field.'_seq';
 	}
 
+/** при перекрытии не забываем вызывать предка, чтобы запустить проверку по отдельным полям.
+ */
 	public function beforeSaveRow($action, &$data, $old_data)
 	{
-		return '';//override
+		if ($action == 'update')
+		{
+			foreach ($this->fields as $field_name)
+			{
+				$message = $this->beforeUpdateField($field_name, $data);
+				if (isset($message) && ($message != ''))
+				{
+					return $message;
+				}
+			}
+		}
+		return '';
 	}
 
 	public function afterSaveRow($action, &$data, $old_data)
@@ -254,6 +272,11 @@ ORDER BY
 		}
 	}
 
+	public function beforeUpdateField($field_name, &$data)
+	{
+		return '';//override
+	}
+
 	public function updateField($key_value, $field_name, $value)
 	{
 		$data = [
@@ -262,7 +285,7 @@ ORDER BY
 		];
 		if (!in_array($field_name, $this->fields))
 		{//ошибка на этапе разработки. в продакшене это недопустимо.
-			die('Wrong field name passed to updateField()');
+			die("Wrong field name [{$field_name}] passed to updateField()");
 		}
 		elseif ($key_value == 0)
 		{
@@ -274,6 +297,11 @@ ORDER BY
 		}
 		else
 		{
+			$message = $this->beforeUpdateField($field_name, $data);
+			if (isset($message) && ($message != ''))
+			{
+				return $message;
+			}
 			$this->affected_rows = $this->db->update($this->table_name, $this->key_field, $field_name, $data)->affectedRows();
 			return ($this->affected_rows == 1) ?
 				'' ://все хорошо

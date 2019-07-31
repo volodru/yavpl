@@ -100,14 +100,14 @@ class Model
 
 	function setSubModel(Model $sub_model)
 	{
-		$r = [];
-		preg_match("/^(.+)Model/", get_class($this), $r);//главная модель
-		$this_class_name = $r[1];
+		$matches = [];
+		preg_match("/^(.+)Model/", get_class($this), $matches);//главная модель
+		$this_class_name = $matches[1];
 //@TODO - поправить для работы с вложенными субмоделями, буде таковые когда-нибудь понадобятся.
 //!!это не будет работать на вложенных подмоделях!!!
-		preg_match("/^{$this_class_name}_(.+)Model/", get_class($sub_model), $r);//имя подмодели
+		preg_match("/^{$this_class_name}_(.+)Model/", get_class($sub_model), $matches);//имя подмодели
 		$sub_model->__parent = $this;
-		return $this->__sub_models_cache[$r[1]] = $sub_model;
+		return $this->__sub_models_cache[$matches[1]] = $sub_model;
 	}
 
 	function __get($name)
@@ -118,15 +118,18 @@ class Model
 		}
 		elseif (in_array($name, $this->__sub_models))
 		{
-			//da('__get model '.$name);
-			$r = [];
-			preg_match("/^(.+)Model/", get_class($this), $r);
-			$s = $r[1].'_'.ucfirst($name).'Model';
+			$matches = [];
+			preg_match("/^(.+)Model/", get_class($this), $matches);
+			$s = $matches[1].'_'.ucfirst($name).'Model';
 			$this->__sub_models_cache[$name] = new $s();
 			$this->__sub_models_cache[$name]->__parent = $this;
 			return $this->__sub_models_cache[$name];
 		}
-		return;
+		else
+		{
+			//da('__get model '.$name);
+			return;//null
+		}
 		//в наследнике делать что-то вроде:
 		//$result = parent::__get($name);
 		//if (isset($result)) return $result;
