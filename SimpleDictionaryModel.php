@@ -8,11 +8,16 @@
 
 /** CHANGELOG
  *
+ * * 1.01
+ * DATE: 2019-07-31
+ * beforeSaveRow - теперь пытается сделать проверки всех полей через метод checkFieldValue.
+ * Если этого не надо - например, для ускорения работы, то не надо вызывать предка parent::beforeSaveRow.
+ * Иначе, если перекрыт checkFieldValue для хоть каких-то полей, то предка вызывать как раз необходимо.
+ *
  * * 1.00
  * DATE: 2016-11-01
  * Удалено логгирование ins-upd-del по-умолчанию.
  *
- * 1.00
  * DATE: 2016-11-01
  * файл опубликован в библиотеке
 */
@@ -87,7 +92,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 	}
 
 /** Отдает запись по ключу, если ключ == 0, отдает дефолтную запись из getEmptyRow
- * Наследники могут добавлять в селект что угодно и join-нить как угодно с чем угодно.
+ * Наследники могут добавлять в селект всё, что угодно и join-нить как угодно с чем угодно.
  * Для оригинальной записи всегда останется getRawRow($key_value)
  */
 	public function getRow($key_value)
@@ -212,15 +217,12 @@ ORDER BY
  */
 	public function beforeSaveRow($action, &$data, $old_data)
 	{
-		if ($action == 'update')
-		{
-			foreach ($this->fields as $field_name)
+		foreach ($this->fields as $field_name)
+		{//данные ($data) передаются по ссылке, так что overhead от пустых выхзовов должен быть минимальным.
+			$message = $this->checkFieldValue($action, $field_name, $data);
+			if (isset($message) && ($message != ''))
 			{
-				$message = $this->beforeUpdateField($field_name, $data);
-				if (isset($message) && ($message != ''))
-				{
-					return $message;
-				}
+				return $message;
 			}
 		}
 		return '';
@@ -272,7 +274,12 @@ ORDER BY
 		}
 	}
 
-	public function beforeUpdateField($field_name, &$data)
+/** метод может корректировать данные.
+ * для сравнения с предыдущими данными наследник может по $data[$this->key_field] получить старое значение.
+ * $old_data = $this->getRawRow($data[$this->key_field]);
+ * штука редкая - пусть наследники этим занимаются.
+ */
+	public function checkFieldValue($action, $field_name, &$data)
 	{
 		return '';//override
 	}
@@ -297,7 +304,7 @@ ORDER BY
 		}
 		else
 		{
-			$message = $this->beforeUpdateField($field_name, $data);
+			$message = $this->checkFieldValue('update', $field_name, $data);
 			if (isset($message) && ($message != ''))
 			{
 				return $message;
@@ -387,11 +394,11 @@ ORDER BY
 			{
 				return $message;
 			}
-			return '';//все хорошо
 		}
 		else
 		{
 			return "Что-то не так: affected rows = {$this->affected_rows}";
 		}
+		return '';//все хорошо, а ошибки уходят по early return
 	}
 }
