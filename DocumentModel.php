@@ -321,6 +321,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			$params['where'][] = "parent_id = {$params['parent_id']}";
 		}
 
+
 		if (isset($params['filter']) && (count($params['filter']) > 0))
 		{
 			//структура: $params['filter']
@@ -328,13 +329,27 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			foreach ($params['filter'] as $field_id => $value)
 			{
 				$value = trim($value);
-				if ($value != '')
+				if ($value == '' || $value == 0) continue;
+
+				$field_info = $this->fields_model->getRow($field_id);
+				//da($field_info);
+
+				if (($field_info['value_type'] == 'I') || ($field_info['value_type'] == 'K'))
+				{
+					$params['where'][] = "v{$field_id}.int_value = {$value}";
+				}
+				elseif ($field_info['value_type'] == 'F')
+				{
+					$params['where'][] = "v{$field_id}.float_value = {$value}";
+				}
+				else
 				{
 					$params['where'][] = "v{$field_id}.value = '{$value}'";
-					$params['fields_to_join'][] = $field_id;
 				}
+				$params['fields_to_join'][] = $field_id;
 			}
 		}
+		//da($params['where']);
 		//da($params);
 
 		foreach (array_unique($params['fields_to_join']) as $field_id)
