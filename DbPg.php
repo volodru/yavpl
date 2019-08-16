@@ -11,6 +11,9 @@
 
 /** CHANGELOG
  *
+ * 1.01
+ * добавлен метод для работы через команду COPY - bulkLoad($table_name, $fields_list, $data)
+ *
  * 1.00
  * выделен класс для работы с Постгресом
  */
@@ -252,5 +255,35 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 		print "</xmp>";
 		return $this;
 	}
-}
 
+/** $table_name таблица со схемой,
+ * $fields_list - массив полей,
+ * $data - массив массивов.
+ * осмысленные проверки надо делать на стороне вызывающей стороны!
+ * тут заменяются \t в строках и null элементы на \N
+ */
+	public function bulkLoad($table_name, $fields_list, $data)
+	{
+		$buf = "";
+		foreach ($data as $line)
+		{
+			foreach($line as $k => $v)
+			{
+				if (isset($v))
+				{
+					$line[$k] = preg_replace("/[\t]/", '\T', $v);
+				}
+				else
+				{
+					$line[$k] = '\N';
+				}
+			}
+			$buf .= join("\t", $line)."\n";
+		}
+		//da($fields_list);da($buf);
+		$this->exec("COPY {$table_name} (".join(',',$fields_list).") FROM stdin;");
+		//тут делаем строго один вызов - надо при удалении сервера СУБД от апача, иначе можно было бы просто сделать count($data) вызовов pg_put_line
+		pg_put_line($this->pg_dbh, "{$buf}\\.\n");
+		pg_end_copy($this->pg_dbh);
+	}
+}
