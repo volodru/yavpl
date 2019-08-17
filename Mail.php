@@ -212,19 +212,22 @@ class Mail
 		return $this;
 	}
 
-	public function attach($file_path, $file_name)
+	public function attachData($content, $file_name)
 	{
-		$content = fread(fopen($file_path, 'r'), filesize($file_path));
-        $content = chunk_split(base64_encode($content));
-
-        $file_name = strtolower($file_name);
         $point_pos = strrpos($file_name, '.');
 		$this->attachments[] = [
 			'file_name'	=> basename($file_name),
-			'type'		=> $this->getTypeByExt(strtolower(substr($file_name, $point_pos + 1, strlen($file_name) - $point_pos))),
+			'type'		=> $this->getTypeByExt(strtolower(substr(strtolower($file_name), $point_pos + 1, strlen($file_name) - $point_pos))),
 			'content'	=> $content,
 		];
 		return $this;
+	}
+
+	public function attachFile($file_path, $file_name)
+	{
+		$content = fread(fopen($file_path, 'r'), filesize($file_path));
+        $content = chunk_split(base64_encode($content));
+        return $this->attachData($content, $file_name);
 	}
 
 	public function encodeCyr($str)
