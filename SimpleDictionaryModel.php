@@ -205,6 +205,11 @@ ORDER BY
 	{$order}
 ".(($limit >= 0) ? "\nLIMIT ".$limit : '')."
 ".(($offset >= 0) ? "\nOFFSET ".$offset : ''));//->print_r();
+
+		$this->last_query = [
+			'query'		=> $this->db->query,
+			'params'	=> $this->db->params,
+		];
 		return $this->db->fetchAll($index);
 	}
 
