@@ -354,7 +354,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 
 		foreach (array_unique($params['fields_to_join']) as $field_id)
 		{
-			$params['from'] .= "\nLEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id} ON (v{$field_id}.document_id = d.id AND v{$field_id}.field_id = {$field_id})\n";
+			$params['from'] .= "\nLEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id} ON (v{$field_id}.document_id = d.id AND v{$field_id}.field_id = {$field_id})";
 		}
 
 		$params['select'] = isset($params['select']) ? $params['select'] : "d.*";
