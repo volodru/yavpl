@@ -214,6 +214,7 @@ class Mail
 
 	public function attachData($content, $file_name)
 	{
+		$content = chunk_split(base64_encode($content));
         $point_pos = strrpos($file_name, '.');
 		$this->attachments[] = [
 			'file_name'	=> basename($file_name),
@@ -226,7 +227,7 @@ class Mail
 	public function attachFile($file_path, $file_name)
 	{
 		$content = fread(fopen($file_path, 'r'), filesize($file_path));
-        $content = chunk_split(base64_encode($content));
+
         return $this->attachData($content, $file_name);
 	}
 
