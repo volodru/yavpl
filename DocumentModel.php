@@ -293,23 +293,30 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 
 		$params['order_direction'] = $params['order_direction'] ?? 'DESC';
 
-		if (!isset($params['order']))
+		if (isset($params['raw_order']))
 		{
-			$params['order'] = 'd.id '.$params['order_direction'];
+			$params['order'] = $params['raw_order'];
 		}
 		else
-		{// - $params['order'] ID поля для сортировки
-			if ($params['order'] == 0)
+		{
+			if (!isset($params['order']))
 			{
 				$params['order'] = 'd.id '.$params['order_direction'];
 			}
 			else
-			{
-				$params['fields_to_join'][] = $params['order']; // ожидается в $params['order'] ID поля для сортировки
-				$field_info = $this->fields_model->getRow($params['order']);
-				$field_name = $this->fields_model->value_field_names[$field_info['value_type']];
-				//так будет работать всё, кроме словарных полей
-				$params['order'] = "v{$params['order']}.{$field_name} {$params['order_direction']} NULLS LAST, d.id DESC";
+			{// - $params['order'] ID поля для сортировки
+				if ($params['order'] == 0)
+				{
+					$params['order'] = 'd.id '.$params['order_direction'];
+				}
+				else
+				{
+					$params['fields_to_join'][] = $params['order']; // ожидается в $params['order'] ID поля для сортировки
+					$field_info = $this->fields_model->getRow($params['order']);
+					$field_name = $this->fields_model->value_field_names[$field_info['value_type']];
+					//так будет работать всё, кроме словарных полей
+					$params['order'] = "v{$params['order']}.{$field_name} {$params['order_direction']} NULLS LAST, d.id DESC";
+				}
 			}
 		}
 
