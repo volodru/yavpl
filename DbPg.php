@@ -265,8 +265,10 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 	public function bulkLoad($table_name, $fields_list, $data)
 	{
 		$buf = "";
+		da($data);
 		foreach ($data as $line)
 		{
+		da($line);
 			foreach($line as $k => $v)
 			{
 				if (isset($v))
