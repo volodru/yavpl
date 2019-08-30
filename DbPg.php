@@ -265,16 +265,16 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 	public function bulkLoad($table_name, $fields_list, $data)
 	{
 		$buf = "";
-		da($data);
 		foreach ($data as $line)
 		{
-		da($line);
 			foreach($line as $k => $v)
 			{
+			da($k);da($v);
 				if (isset($v))
 				{
 					$v = preg_replace("/[\t]/", '\T', $v);
 					$v = preg_replace("/[\\]/", '\\', $v);
+					da($v);
 					$line[$k] = $v;
 				}
 				else
