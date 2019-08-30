@@ -269,12 +269,10 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 		{
 			foreach($line as $k => $v)
 			{
-			da($k);da($v);
 				if (isset($v))
 				{
 					$v = preg_replace("/([\t])/", '\T', $v);
 					$v = preg_replace("/([\\\\])/", '\\', $v);
-					da($v);
 					$line[$k] = $v;
 				}
 				else
@@ -287,7 +285,7 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 		da($fields_list);da($buf);
 		$this->exec("COPY {$table_name} (".join(',',$fields_list).") FROM stdin;");
 		//тут делаем строго один вызов - надо при удалении сервера СУБД от апача, иначе можно было бы просто сделать count($data) вызовов pg_put_line
-		pg_put_line($this->pg_dbh, "{$buf}\\.\n");
+		pg_put_line($this->pg_dbh, $buf."\\.\n");
 		pg_end_copy($this->pg_dbh);
 	}
 }
