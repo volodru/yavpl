@@ -272,8 +272,8 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 			da($k);da($v);
 				if (isset($v))
 				{
-					$v = preg_replace("/[\t]/", '\T', $v);
-					$v = preg_replace("/[\\]/", '\\', $v);
+					$v = preg_replace("/([\t])/", '\T', $v);
+					$v = preg_replace("/([\\\\])/", '\\', $v);
 					da($v);
 					$line[$k] = $v;
 				}
