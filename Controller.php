@@ -405,9 +405,10 @@ public function defaultMethod($method_name)
 
 		if (is_array($value))
 		{
-			reset($value);
+			//reset($value);
 			$result = [];
-			while (list ($k, $v) = each($value))
+			//while (list ($k, $v) = each($value))
+			foreach ($value as $k => $v)
 			{
 				$result[$k] = $this->checkParamType($type, $v, $default_value);
 			}
