@@ -240,6 +240,7 @@ ORDER BY
 
 	public function saveRow($data)
 	{
+		//  ?? а надо ли? $data[$this->key_field] = $data[$this->key_field] ?? 0;
 		$action = ($data[$this->key_field] == 0) ? 'insert' : 'update';
 
 		$old_data = $this->getRow($data[$this->key_field]);
