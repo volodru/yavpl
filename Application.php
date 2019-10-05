@@ -394,7 +394,7 @@ class Application
 			'Db', 'DbPg', 'DbPgSingleton', 'DbMy',//СУБД
 			'Mail',//Почта
 			'Model', 'SimpleDictionaryModel', 'SimpleFilesModel', 'BasicUserModel', 'DocumentModel',//модельки
-			'Controller', 'View', 'ViewHelper', //ядро
+			'Controller', 'View', 'Helper', //ядро
 			'ToolBar', 'Test',//плюшки
 		]))
 		{

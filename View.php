@@ -78,19 +78,27 @@ class View
 /**
  * Регистрирует помощник.
  * Инициируется помощник, из него берутся все методы и складываются в кучку.
- * После этого все методы класса view могут пользоваться методами помощника как своими собственными.
+ * После этого все методы класса могут пользоваться методами помощника, как своими собственными.
  * Типичный помощник: helpers/html.php
  * Помощник сам может использовать методы вызвавшего его представления через магию __get()
+ *
  */
-	public function registerHelper($helper_class_name)//class
+	/*
+	public function registerHelper111($helper_class_name)//class
 	{//if register more than one helper with the same method - method of the last helper will be called. I guess. :)
 		$name = $helper_class_name.'Helper';
 		$helper = new $name();
-		$helper->setView($this);
+		$helper->setOwner($this);
 		foreach (get_class_methods($name) as $method)
 		{
 			$this->__methods[$method] = $helper;
 		}
+		return $this;
+	}*/
+
+	public function registerHelper($helper_class_name)//class
+	{
+		$this->__methods = array_merge($this->__methods, Helper::registerHelper($helper_class_name, $this));
 		return $this;
 	}
 
