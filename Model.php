@@ -9,6 +9,10 @@
 
 /** CHANGELOG
  *
+ * 1.03
+ * DATE: 2016-10-14
+ * добавлен RegisterHelper, теперь помощники могут быть и у представления и у модели.
+ *
  * 1.02
  * DATE: 2015-10-30
  * кодировка установлена в UTF8
@@ -93,12 +97,13 @@ class Model
 {
 	private $__sub_models_cache = [];
 	protected $__sub_models = [];
+	private $__methods = [];
 
  	function __construct()
 	{
 	}
 
-	function setSubModel(Model $sub_model)
+	public function setSubModel(Model $sub_model)
 	{
 		$matches = [];
 		preg_match("/^(.+)Model/", get_class($this), $matches);//главная модель
@@ -110,7 +115,7 @@ class Model
 		return $this->__sub_models_cache[$matches[1]] = $sub_model;
 	}
 
-	function __get($name)
+	public function __get($name)
 	{
 		if (isset($this->__sub_models_cache[$name]))
 		{
@@ -134,4 +139,29 @@ class Model
 		//$result = parent::__get($name);
 		//if (isset($result)) return $result;
 	}
+
+/**
+ * Обеспечение работы помощников.
+ * После регистрации помощника, все его методы доступны в представлении как свои собственные.
+ * Используется магия __call()
+ */
+	public function __call($method_name, $args)
+	{
+		if (isset($this->__methods[$method_name]))
+		{
+			$helper = $this->__methods[$method_name];
+			return call_user_func_array([$helper, $method_name], $args);
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	public function registerHelper($helper_class_name)//class
+	{
+		$this->__methods = array_merge($this->__methods, Helper::registerHelper($helper_class_name, $this));
+		return $this;
+	}
+
 }
