@@ -263,7 +263,7 @@ public function defaultMethod($method_name)
  */
 	protected function redirect($url = '/', $exit = true)
 	{
-		header("Location: $url");
+		header("Location: {$url}");
 		if ($exit)
 		{
 			exit(0);

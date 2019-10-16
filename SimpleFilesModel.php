@@ -122,6 +122,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 		$f = $this->getFilePath($key_value, $data);//file name in host OS
 
 		$data['file_name'] = $i_file['name'];
+		$matches = [];
 		if (preg_match("/^(.+)\.(.+?)$/", $data['file_name'], $matches))
 		{
 			$data['file_ext'] = strtolower($matches[2]);
