@@ -185,6 +185,10 @@ TRACE\n".__getBacktrace()."
 --------------------------
 SERVER\n" . print_r($_SERVER, true) ."
 --------------------------
+GET\n" . print_r($_GET, true) ."
+--------------------------
+POST\n" . print_r($_POST, true) ."
+--------------------------
 COOKIE\n" . print_r($_COOKIE, true) ."
 --------------------------
 SESSION\n" . print_r($_SESSION, true)))->send();
