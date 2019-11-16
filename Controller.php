@@ -9,6 +9,11 @@
 
 /** CHANGELOG
 
+ * 1.10
+ * DATE: 2019-11-16
+ * Метод setTitle без параметров генерирует дефолтный заголовок из хлебных крошек.
+ * Оно надо, когда надо отделить страницы одну от другой, а заголовки везде прописывать не хочется.
+ *
  * 1.09
  * DATE: 2019-07-17
  * Убрано поле Controller->title,
@@ -288,7 +293,7 @@ public function defaultMethod($method_name)
  */
 	protected function addBreadcrumb($title, $link = '')
 	{
-		$this->__breadcrumbs[] = ($link != '') ? "<a href='$link'>$title</a>" : $title;
+		$this->__breadcrumbs[] = ($link != '') ? "<a href='{$link}'>{$title}</a>" : $title;
 		return $this;
 	}
 
@@ -438,9 +443,25 @@ public function defaultMethod($method_name)
 
 /**  Устанавливает title Документа.
  */
-	public function setTitle($title)
+	public function setTitle($title = '')
 	{
-		$this->__title = $title;
+		if ($title != '')
+		{
+			$this->__title = $title;
+		}
+		else
+		{
+			$a = [];
+			foreach ($this->__breadcrumbs as $s)
+			{
+				$s = trim(strip_tags($s));
+				if ($s != '')
+				{
+					$a[] = $s;
+				}
+			}
+			$this->__title = join(' : ', array_reverse($a));
+		}
 		return $this;
 	}
 
