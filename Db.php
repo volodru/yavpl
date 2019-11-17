@@ -279,7 +279,7 @@ class Db
     		$i++;
     	}
 		return $this->exec("-- ".get_class($this).", method: ".__METHOD__."
-INSERT INTO $table (".join(', ', $ff).") VALUES (".join(', ', $p).")", $v);
+INSERT INTO $table (".join(', ', $ff).") VALUES (".join(', ', $p).")", $v);//->print_r();
     }
 
 /**

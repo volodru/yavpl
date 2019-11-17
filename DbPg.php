@@ -264,6 +264,9 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
  */
 	public function bulkLoad($table_name, $fields_list, $data)
 	{
+		if ((count($fields_list) == 0) ||
+			(count($data) == 0) ||
+		 	(trim($table_name) == '')) return;
 		$buf = [];
 		foreach ($data as $line)
 		{
@@ -282,7 +285,7 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 			}
 			$buf[] = join("\t", $line);
 		}
-		//da($fields_list);da($buf);
+		//da($fields_list);da($buf);return;
 		$this->exec("COPY {$table_name} (".join(',',$fields_list).") FROM stdin;");
 		//тут делаем строго один вызов - надо при удалении сервера СУБД от апача, иначе можно было бы просто сделать count($data) вызовов pg_put_line
 		pg_put_line($this->pg_dbh, join("\n", $buf)."\\.\n");
