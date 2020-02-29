@@ -149,7 +149,7 @@ function daf($v)
  */
 function __getBacktrace()
 {
-	return print_r(debug_backtrace(0, 10), true);
+	return print_r(debug_backtrace(0, 5), true);
 }
 
 /** Обертка для вывода только на девелопе/тесте, короче, кроме продакшн

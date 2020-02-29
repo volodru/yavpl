@@ -367,7 +367,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 		$params['select'] = isset($params['select']) ? $params['select'] : "d.*";
 
 		$list = parent::getList($params);
-		//$this->db->print_r();
+		//$this->db->print_r();die();
 
 		foreach ($list as $row)
 		{
