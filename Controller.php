@@ -9,6 +9,10 @@
 
 /** CHANGELOG
 
+ * 1.11
+ * DATE: 2020-03-21
+ * добавлен RegisterHelper, теперь помощники могут быть и у представления и у модели и у контроллеров.
+ *
  * 1.10
  * DATE: 2019-11-16
  * Метод setTitle без параметров генерирует дефолтный заголовок из хлебных крошек.
@@ -107,6 +111,8 @@ class Controller
 
 	private $__module_name;
 	private $__class_name;
+
+	private $__methods = [];//for Helper
 
 /**
  * ничего не делаем
@@ -481,5 +487,29 @@ public function defaultMethod($method_name)
 	{
 		sendBugReport("CONTROLLER: variable {$name} is undefined", $name);
 		return null;
+	}
+
+/**
+ * Обеспечение работы помощников.
+ * После регистрации помощника, все его методы доступны в представлении как свои собственные.
+ * Используется магия __call()
+ */
+	public function __call($method_name, $args)
+	{
+		if (isset($this->__methods[$method_name]))
+		{
+			$helper = $this->__methods[$method_name];
+			return call_user_func_array([$helper, $method_name], $args);
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	public function registerHelper($helper_class_name)//class
+	{
+		$this->__methods = array_merge($this->__methods, Helper::registerHelper($helper_class_name, $this));
+		return $this;
 	}
 }

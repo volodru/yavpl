@@ -83,19 +83,6 @@ class View
  * Помощник сам может использовать методы вызвавшего его представления через магию __get()
  *
  */
-	/*
-	public function registerHelper111($helper_class_name)//class
-	{//if register more than one helper with the same method - method of the last helper will be called. I guess. :)
-		$name = $helper_class_name.'Helper';
-		$helper = new $name();
-		$helper->setOwner($this);
-		foreach (get_class_methods($name) as $method)
-		{
-			$this->__methods[$method] = $helper;
-		}
-		return $this;
-	}*/
-
 	public function registerHelper($helper_class_name)//class
 	{
 		$this->__methods = array_merge($this->__methods, Helper::registerHelper($helper_class_name, $this));
