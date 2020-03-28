@@ -246,6 +246,9 @@ public function defaultMethod($method_name)
 		header('Content-Type: text/event-stream');
 		// recommended to prevent caching of event data.
 		header('Cache-Control: no-cache');
+		//header('Transfer-Encoding: identity');
+		header('X-Accel-Buffering: no');
+
 		$this->disableRender();
 		return $this;
 	}
@@ -255,9 +258,9 @@ public function defaultMethod($method_name)
  */
 	public function sendEventStreamMessage($id, $data)
 	{
-	    print "id: $id" . PHP_EOL . "data: " . json_encode($data) . PHP_EOL . PHP_EOL;
-	    ob_flush();
-	    flush();
+		print "id: $id" . PHP_EOL . "data: " . json_encode($data) . PHP_EOL . PHP_EOL;
+		ob_flush();
+		flush();
 	}
 
 /**
