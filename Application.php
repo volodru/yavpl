@@ -9,6 +9,11 @@
 
 /** CHANGELOG
  *
+ * 1.10
+ * DATE: 2020-04-12
+ * в методе run теперь вызывается метод для JSON вызовов
+ * if ($this->controller->__is_json) $this->view->default_JSON_Method();
+				}
  * 1.09
  * DATE: 2018-12-12
  * Добавлена уведомлялка sendNotification() - просто посылает письмо без остановки процесса.
