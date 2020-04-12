@@ -367,12 +367,15 @@ class Application
 		{//если Аджакс, рисуем сразу нужный метод без оберток
 			if (method_exists($this->view, $this->method_name))
 			{
-
 				$this->view->{$this->method_name}();
 			}
 			else
 			{// сюда попадаем, если есть аджаксовый код, но без представления.
 			// скорее всего, контроллер сам отдал данные в виде файла или JSON
+				if ($this->controller->__is_json)
+				{
+					$this->view->default_JSON_Method();
+				}
 			}
 		}
 		return $this;

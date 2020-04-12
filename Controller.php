@@ -8,7 +8,20 @@
  */
 
 /** CHANGELOG
-
+ * 1.12
+ * DATE: 2020-04-12
+ * isJSON() для вызовов ожидающих JSON. Для таких вызовов при отсутсвии представления выдается
+ * json по умолчанию
+ * 1. если есть переменная $this->result в виде json_encode($this->result);
+ * 2. иначе: если есть переменная $this->message в виде ['message' => $this->message]
+ * 2.1 если еще и логи есть, то ['message' => $this->message, 'log' => $this->log]
+ * 3. если ничего нет, то это считается вполне фатальной ошибкой
+ * т.е. после декларации $this->isJSON() надо сделать что-то из списка:
+ * 1. сделать нормальное представление
+ * 2. заполнить $this->result
+ * 3. заполнить $this->message чем-то отличным от null или пустой строки
+ *
+ *
  * 1.11
  * DATE: 2020-03-21
  * добавлен RegisterHelper, теперь помощники могут быть и у представления и у модели и у контроллеров.
@@ -99,6 +112,7 @@ class Controller
 
 	public $running_method_name;
 	public $__need_render = true;
+	public $__is_json = false;
 	public $__breadcrumbs = [];
 	//public $__toolbar_elements = [];
 
@@ -235,6 +249,16 @@ public function defaultMethod($method_name)
 	public function isAJAX()
 	{
 		$this->disableRender();
+		return $this;
+	}
+
+/**
+ * Для аджаксных вызовов ожидающих строго JSON формат
+ */
+	public function isJSON()
+	{
+		$this->disableRender();
+		$this->__is_json = true;
 		return $this;
 	}
 

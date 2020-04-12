@@ -297,4 +297,23 @@ class View
 		print "</body>
 </html>";
 	}
+
+/** Если установлен режим controler->isJSON() и в представлении нет нужного метода, то вызывается этот метод
+ */
+	public function default_JSON_Method()
+	{
+		if (isset($this->controller->result))//как правило это структура типа хеш
+		{
+			print json_encode($this->controller->result);
+		}
+		elseif ((isset($this->controller->message) && $this->controller->message != '') ||//просто сообщение с логами
+			(isset($this->controller->log) && count($this->log) > 0))
+		{
+			print json_encode(['message' => $this->controller->message ?? '', 'log' => $this->log ?? []]);
+		}
+		else
+		{
+			sendBugReport("Call of __default_JSON() without \$result or \$message", "FATALITY!", true);
+		}
+	}
 }
