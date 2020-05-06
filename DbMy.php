@@ -46,7 +46,6 @@ class DbMy extends Db implements iDb
 		}
 	}
 
-
 	public function exec()
 	{
 //имитация чего-то вроде $query, $params = array()
@@ -197,6 +196,7 @@ class DbMy extends Db implements iDb
 				}
 				$this->explain = $explain;
 
+				$res2 = $res1 = [];
 				preg_match("/offset\s+(\d+)/sim", $query, $res1);
 				//preg_match("/(sort)/sim", $explain, $res1);
 				preg_match("/cost=(\d+)\.\d+\.\.\d+\.\d+/", $explain, $res2);
@@ -226,8 +226,10 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 				//!!!!!!!!!!!!!
 				// end logging -------------------------------
 			}
-			global $executed_sql;
-			$executed_sql[] = $query.
+			//global $executed_sql;
+			global $application;
+			//$executed_sql[] = $query.
+			$application->executed_sql[] = $query.
 				"\nQuery returs {$this->rows} row(s)".
 				((count($this->params) > 0)?"\nPARAMS: ".print_r($this->params, true):'').
 				(($explain != '') ? "\n-----------\n$explain-----------" : '');

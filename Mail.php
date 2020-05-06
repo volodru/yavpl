@@ -255,8 +255,6 @@ class Mail
 
 	public function send()
 	{
-		$content = $this->content;
-
 		if ($this->from_email == '')
 		{
 			$this->from_email = ADMIN_EMAIL;
@@ -338,7 +336,8 @@ Content-ID: <{$attachment['file_name']}>
 			if ($f = popen("/usr/sbin/sendmail -t -i -f {$this->from_email}", 'w'))
 			{
 				fwrite($f, $letter);
-				$st = pclose($f);
+				pclose($f);
+				//$st = pclose($f);
 				/*if ($st != 0)
 				 	die(" (Mail status is: $st)");*/
 			}

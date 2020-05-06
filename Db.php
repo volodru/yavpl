@@ -11,6 +11,9 @@
 
 /** CHANGELOG
  *
+ * 1.09
+ * DATE: 2020-05-06
+ * $executed_sql - теперь в глобальной переменной $application
  *
  * 1.08
  * DATE: 2017-09-30
@@ -63,8 +66,6 @@ if (!defined('REMOTE_ADDR'))
 }
 
 DEFINE('MAX_REGISTER_EXECUTED_SQL_COUNT', 100);
-
-$executed_sql = [];//hence many instance of DB are allowed - global scope is required :(
 
 class Db
 {

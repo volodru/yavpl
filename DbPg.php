@@ -120,8 +120,9 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 				//!!!!!!!!!!!!!
 				// end logging -------------------------------
 			}
-			global $executed_sql;
-			$executed_sql[] = $query.
+			global $application;
+			//$executed_sql[] = $query.
+			$application->executed_sql[] = $query.
 				"\nQuery returs {$this->rows} row(s)".
 				((count($this->params) > 0)?"\nPARAMS: ".print_r($this->params, true):'').
 				(($explain != '') ? "\n-----------\n$explain-----------" : '');
