@@ -7,7 +7,7 @@
  * @LICENSE LGPLv3 - http://www.gnu.org/licenses/lgpl-3.0.html
  */
 
-/** CHANGELOG
+/* CHANGELOG
  * 1.12
  * DATE: 2020-04-12
  * isJSON() для вызовов ожидающих JSON. Для таких вызовов при отсутсвии представления выдается
