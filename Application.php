@@ -424,13 +424,22 @@ class Application
 		}
 
 		$matches = [];
-		if (preg_match("/(.+)_(.+)(Controller|View)/", $class_name, $matches))
+		if (preg_match("/(.+)_(.+)Controller/", $class_name, $matches))
 		{
 			if ($matches[2] == 'default') {$matches[2] = '_default';}
-			$file_name = strtolower($matches[3])."s/{$matches[1]}/{$matches[2]}.php";
+			$file_name = CONTROLLERS_BASE_PATH."/{$matches[1]}/{$matches[2]}.php";
 			if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
 			{
-				$file_name = strtolower($matches[3])."s/".strtolower($matches[1])."/".strtolower($matches[2]).".php";
+				$file_name = CONTROLLERS_BASE_PATH."/".strtolower($matches[1])."/".strtolower($matches[2]).".php";
+			}
+		}
+		elseif (preg_match("/(.+)_(.+)View/", $class_name, $matches))
+		{
+			if ($matches[2] == 'default') {$matches[2] = '_default';}
+			$file_name = "views/{$matches[1]}/{$matches[2]}.php";
+			if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
+			{
+				$file_name = "views/".strtolower($matches[1])."/".strtolower($matches[2]).".php";
 			}
 		}
 		elseif ($class_name == 'defaultController')
