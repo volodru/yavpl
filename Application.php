@@ -9,6 +9,10 @@
 
 /* CHANGELOG
  *
+ * 1.11
+ * DATE: 2020-05-22
+ * Добавлена возможность работы через CLI
+
  * 1.10
  * DATE: 2020-04-12
  * в методе run теперь вызывается метод для JSON вызовов
@@ -82,6 +86,10 @@ if (APPLICATION_RUNNING_MODE == 'api')
 {
 	define('CONTROLLERS_BASE_PATH', 'api');
 }
+elseif (APPLICATION_RUNNING_MODE == 'cli')
+{
+	define('CONTROLLERS_BASE_PATH', 'cli');
+}
 elseif (APPLICATION_RUNNING_MODE == 'ui')
 {
 	define('CONTROLLERS_BASE_PATH', 'controllers');
@@ -98,7 +106,14 @@ spl_autoload_register('Application::__autoload');
  */
 function da($v)
 {
-	print "<xmp>".var_export($v, true)."</xmp>";
+	if (APPLICATION_RUNNING_MODE == 'cli')
+	{
+		print var_export($v, true)."\n";
+	}
+	else
+	{
+		print "<xmp>".var_export($v, true)."</xmp>";
+	}
 }
 
 /** DumpArray in temp File - специально для отладки кукиев и сессий
@@ -107,7 +122,7 @@ function daf($v)
 {
 	if ($_SERVER['APPLICATION_ENV'] != 'production')
 	{
-		$l = fopen('/tmp/'.$_SERVER['SERVER_NAME'].'__'.date('Y_m_d__H_i_s').'.log', 'a+');
+		$l = fopen('/tmp/'.($_SERVER['SERVER_NAME']??'SERVER').'__'.date('Y_m_d__H_i_s').'.log', 'a+');
 		fwrite($l, var_export($v, true)."\n");
 		fclose($l);
 	}
@@ -281,6 +296,8 @@ class Application
 	public $default_class_name = 'index';
 	/** название метода по умолчанию*/
 	public $default_method_name = 'index';
+	/** URI как для CGI так и CLI*/
+	private $__request_uri;
 
 /** Загрузчик Контроллера */
 	public function loadController()
@@ -329,8 +346,17 @@ class Application
 
 /** Разборщик URI - если проект не ложится в схему Модуль->Класс->Метод перекрываем этот метод*/
 	public function parseURI()
-	{//берем все, что до знака вопроса, убираем последний и первый слэш и разрываем через слэш
-		$uri = explode('/', trim(preg_replace("/(.+?)\?.+/", "$1", $_SERVER['REQUEST_URI']), '/'));
+	{
+		if (APPLICATION_RUNNING_MODE == 'cli')
+		{
+			$this->__request_uri = $_SERVER['argv'][1];
+		}
+		else//Normal And API
+		{
+			$this->__request_uri = trim(preg_replace("/(.+?)\?.+/", "$1", $_SERVER['REQUEST_URI']), '/');
+		}
+//берем все, что до знака вопроса, убираем последний и первый слэш и разрываем через слэш
+		$uri = explode('/', $this->__request_uri);
 		$this->module_name = ($uri[0] != '') ? $uri[0] : $this->default_module_name;
 		$this->class_name = (count($uri) > 1) ? $uri[1] : $this->default_class_name;
 		$this->method_name = (count($uri) > 2) ? $uri[2] : $this->default_method_name;
@@ -344,7 +370,14 @@ class Application
 //создали экземпляр контроллера - вызвали конструктор
 		if (!$this->loadController())
 		{
-			$this->fatalError("Cannot load appropriate controller for page [{$_SERVER['REQUEST_URI']}].<br/><br/>It seems that page is not available anymore.<br/><br/>Please, try again from <a href='/'>the main page</a>.");
+			if (APPLICATION_RUNNING_MODE == 'cli')
+			{
+				$this->fatalError("Cannot load appropriate controller for URI [{$this->__request_uri}]");
+			}
+			else
+			{
+				$this->fatalError("Cannot load appropriate controller for page [{$this->__request_uri}].<br/><br/>It seems that page is not available anymore.<br/><br/>Please, try again from <a href='/'>the main page</a>.");
+			}
 		}
 //вызвали нужный метод контроллера
 		if (method_exists($this->controller, $this->method_name))
@@ -356,9 +389,9 @@ class Application
 			$this->controller->defaultMethod($this->method_name);
 		}
 
-		if (APPLICATION_RUNNING_MODE == 'api')
+		if (APPLICATION_RUNNING_MODE == 'api' || APPLICATION_RUNNING_MODE == 'cli')
 		{
-			return;//хватит для API
+			return;//хватит для API и CLI
 		}
 //создали представление - вызвали контруктор
 		$this->loadView();
@@ -401,7 +434,7 @@ class Application
 /** Обработчик фатальный ситуаций - можно перекрыть, чтобы посылать их себе на почту */
 	public function fatalError($msg)
 	{//override method fatalError to log errors or send them via an email
-		print $msg;
+		print $msg."\n";
 		exit(0);
 	}
 
