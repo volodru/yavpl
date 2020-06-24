@@ -329,6 +329,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 		}
 
 
+		//da('FILTER');		da($params['filter']);
 		if (isset($params['filter']) && (count($params['filter']) > 0))
 		{
 			//структура: $params['filter']
@@ -336,10 +337,10 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			foreach ($params['filter'] as $field_id => $value)
 			{
 				$value = trim($value);
-				if ($value == '' || $value == 0) continue;
+				if (is_string($value) && $value == ''){continue;}
+				if (is_numeric($value) && $value == 0) {continue;}
 
 				$field_info = $this->fields_model->getRow($field_id);
-				//da($field_info);
 
 				if (($field_info['value_type'] == 'I') || ($field_info['value_type'] == 'K'))
 				{
@@ -356,8 +357,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 				$params['fields_to_join'][] = $field_id;
 			}
 		}
-		//da($params['where']);
-		//da($params);
+		//da($params['where']);		da($params);
 
 		foreach (array_unique($params['fields_to_join']) as $field_id)
 		{
