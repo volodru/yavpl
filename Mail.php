@@ -274,10 +274,11 @@ class Mail
 
 		$errors_to = TECH_SUPPORT_EMAIL;
 
+		$x_user_ip = isset($_SERVER['REMOTE_ADDR']) ? "\nX-user_IP: {$_SERVER['REMOTE_ADDR']}" : '';
+
 		$letter = "MIME-Version: 1.0
 Content-Language: ru
-Organization: {$this->organization}
-X-user_IP: {$_SERVER['REMOTE_ADDR']}
+Organization: {$this->organization}{$x_user_ip}
 From: {$from_line}
 Reply-To: {$from_line}
 Errors-To: {$errors_to}
@@ -349,7 +350,8 @@ Content-ID: <{$attachment['file_name']}>
 		else
 		{
 			//obsolete $log_file_name = "/tmp/www_mail_sent_from_{$_SERVER['SERVER_NAME']}.log";
-			$log_file_name = "/tmp/mail_from_{$_SERVER['SERVER_NAME']}_".date('Y-m-d--H-i-s').'_'.rand(1,10000).".eml";
+			$server_name = $_SERVER['SERVER_NAME'] ?? 'local';
+			$log_file_name = "/tmp/mail_from_{$server_name}_".date('Y-m-d--H-i-s').'_'.rand(1,10000).".eml";
 			//obsolete if ($f = fopen($log_file_name, 'a+'))
 			if ($f = fopen($log_file_name, 'w'))
 			{
