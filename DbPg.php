@@ -95,7 +95,9 @@ class DbPg extends Db implements iDb
 				//preg_match("/(sort)/sim", $explain, $res1);
 				preg_match("/cost=(\d+)\.\d+\.\.\d+\.\d+/", $explain, $res2);
 				//preg_match("/Total runtime: (\d+)\.(\d+) msec/", $explain, $res);
-				if (isset($res2[1]) && ($res2[1] > $this->min_cost_to_save_log) &&(!(isset($res1[1])) ||((isset($res1[1])) && ($res1[1]>=0))))
+				if (
+					isset($_SERVER['SERVER_NAME']) && //not for CLI
+					isset($res2[1]) && ($res2[1] > $this->min_cost_to_save_log) &&(!(isset($res1[1])) ||((isset($res1[1])) && ($res1[1]>=0))))
 				{
 					$a = explode('.', $_SERVER['SERVER_NAME']);
 					$fn = $this->log_path."long_sqls_".((isset($a[count($a)-2])) ? $a[count($a)-2] : $_SERVER['SERVER_NAME']).".log";

@@ -120,7 +120,7 @@ function da($v)
  */
 function daf($v)
 {
-	if ($_SERVER['APPLICATION_ENV'] != 'production')
+	if (APPLICATION_ENV != 'production')
 	{
 		$l = fopen('/tmp/'.($_SERVER['SERVER_NAME']??'SERVER').'__'.date('Y_m_d__H_i_s').'.log', 'a+');
 		fwrite($l, var_export($v, true)."\n");
@@ -139,7 +139,7 @@ function __getBacktrace()
  */
 function __printBacktrace()
 {
-	if (isset($_SERVER['APPLICATION_ENV']) && ($_SERVER['APPLICATION_ENV'] != 'production'))
+	if (defined('APPLICATION_ENV') && (APPLICATION_ENV != 'production'))
 	{
 		da(__getBacktrace());
 	}
@@ -151,7 +151,7 @@ function sendBugReport($subject = 'Bug Report', $message = 'common bug', $is_fat
 {
 	if (!isset($_SESSION)){session_start();}
 
-	if ($_SERVER['APPLICATION_ENV'] != 'production')
+	if (APPLICATION_ENV != 'production')
 	{//на девелопе убивать баги на месте, а с продакшена пусть придет письмо
 		print "
 <h1>BUG REPORT</h1>
@@ -203,7 +203,7 @@ function __my_shutdown_handler()
 	if ($error !== NULL)
 	{
 		$info = "Fatal error: {$error['message']}\nfile: {$error['file']}, line :{$error['line']}";
-		if ($_SERVER['APPLICATION_ENV'] == 'production')
+		if (APPLICATION_ENV == 'production')
 		{
 			sendBugReport('FATAL Error', $info);
 		}
@@ -213,7 +213,7 @@ function __my_shutdown_handler()
 		}
 	}
 //включать тут по большим праздникам, т.к. все это пишется после </body> рушит валидность страницы и может покорежить дизайн.
-	if (0 && $_SERVER['APPLICATION_ENV'] != 'production')
+	if (0 && APPLICATION_ENV != 'production')
 	{
 		global $executed_sql;
 		if (isset($executed_sql))
@@ -235,7 +235,7 @@ function __my_exception_handler($exception)
 {
 	$message = $exception->getMessage();
 	sendBugReport('Uncaught exception', $message);
-	if ($_SERVER['APPLICATION_ENV'] != 'production')
+	if (APPLICATION_ENV != 'production')
 	{
 		print '<h1>Uncaught exception</h1>';
 		print "<h2>$message</h2>";
