@@ -246,6 +246,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 	public function saveFiles(&$data, $i_files)
 	{
 		//каждая сохранялка отдельного файла ($this->saveFile(&$data, $i_file)) чистит лог. поэтому тут набираем общий лог и его уже отдаем
+		$this->log = $this->log ?? [];
 		$overall_log = [];
 		$i = -1;
 		$result = true;
@@ -267,16 +268,17 @@ class SimpleFilesModel extends SimpleDictionaryModel
 			$data['id'] = 0;
 			if ($this->saveFile($data, $file_info))
 			{
-				$overall_log[] = "Файл $file_name успешно загружен.";
+				$overall_log[] = "Файл {$file_name} успешно загружен.";
 			}
 			else
 			{
 				$result = false;
-				$overall_log[] = "При загрузке файла $file_name произошла ошибка:";
+				$overall_log[] = "При загрузке файла {$file_name} произошла ошибка:";
 				$overall_log = array_merge($overall_log, $this->log);
 			}
 		}
 
+		da($overall_log);
 		$this->log = $overall_log;
 		return $result;
 	}
