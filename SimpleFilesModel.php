@@ -278,7 +278,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 			}
 		}
 
-		da($overall_log);
+		//da($overall_log);
 		$this->log = $overall_log;
 		return $result;
 	}
