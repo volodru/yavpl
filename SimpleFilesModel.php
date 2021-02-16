@@ -100,7 +100,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 		if ($key_value == 0)
 		{
 			$is_new_file = true;
-			$data[$this->key_field] = $key_value = $this->db->nextVal($this->getSeqName());
+			$data[$this->key_field] = $this->key_field_value = $key_value = $this->db->nextVal($this->getSeqName());
 		}
 		else
 		{
