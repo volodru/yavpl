@@ -360,7 +360,7 @@ public function defaultMethod($method_name)
 	{
 		if (in_array($type, ['integer', 'float', 'double']))
 		{//все числа, особенно из экселя, могут содержать форматирующие пробелы
-			$value = preg_replace("/[\s\xA0]/", '', $value);
+			$value = preg_replace("/[\s\xC2\xA0]/", '', $value);
 		}
 		if ($type == 'integer')
 		{
