@@ -631,6 +631,12 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		return $list;
 	}
 
+	public function getDistinctValues($key_value)
+	{
+		return array_keys($this->db->exec("SELECT DISTINCT(value) AS value  FROM {$this->scheme}.documents_fields_values WHERE field_id = $1",
+			$key_value)->fetchAll('value'));
+	}
+
 	public function getMetaData()
 	{
 		return [
