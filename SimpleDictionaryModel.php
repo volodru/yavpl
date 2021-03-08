@@ -299,7 +299,7 @@ ORDER BY
  */
 	public function checkFieldValue($action, $field_name, &$data)
 	{
-		return '';//override
+		return '';//override - не забыть вызвать родительский beforeSaveRow в beforeSaveRow!
 	}
 
 /** Обновляет одно поле в строке*/
