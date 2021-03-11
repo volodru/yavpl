@@ -144,23 +144,29 @@ function __printBacktrace()
 	}
 }
 
+
+
 /** Мегаотладчик по почте - в случае проблем высылаем ошибку по email
  */
-function sendBugReport($subject = 'Bug Report', $message = 'common bug', $is_fatal = false)
+function sendBugReport($subject = 'Bug report', $message = 'Common bug', $is_fatal = false)
 {
 	if (!isset($_SESSION)){session_start();}
+
+	$a = [];
+	exec('hostname', $a);
+	$server_name = $_SERVER['SERVER_NAME'] ?? trim(join('', $a));//именно имя сервера - чтобы отличать проекты друг от друга. для CLI уже пофигу
 
 	if (APPLICATION_ENV != 'production')
 	{//на девелопе убивать баги на месте, а с продакшена пусть придет письмо
 		print "
-<h1>BUG REPORT</h1>
-<h2>$subject</h2>
-<h2>$message</h2>
+<h1>BUG REPORT from [{$server_name}]</h1>
+<h2>{$subject}</h2>
+<h2>{$message}</h2>
 <div>TRACE:<xmp>".__getBacktrace()."</xmp></div>";
 		exit();
 	}
 
-	(new Mail(TECH_SUPPORT_EMAIL, "[{$_SERVER['SERVER_NAME']}] ".$subject, $message."
+	(new Mail(TECH_SUPPORT_EMAIL, "[{$server_name}] {$subject}", "{$message}
 {$_SERVER['SCRIPT_URI']}".((isset($_SERVER['QUERY_STRING']) && $_SERVER['QUERY_STRING'] != '') ? '?'.$_SERVER['QUERY_STRING'] : '')."
 ____________________________________________________
 TRACE\n".__getBacktrace()."
@@ -181,7 +187,7 @@ SESSION\n" . print_r($_SESSION, true)))->send();
 	}
 }
 
-/** Инструмент для посылки уведомлений.
+/** Инструмент для посылки технических уведомлений.
  * Уведомления предполагаются административного характера или бизнес-процессы и т.п.
  * Не для ошибочных ситуаций! Для потециальных ошибок и предупреждений использовать sendBugReport()
  */
@@ -189,7 +195,11 @@ function sendNotification($subject = 'Notification', $message = 'Message')
 {
 	if (!isset($_SESSION)){session_start();}
 
-	(new Mail(TECH_SUPPORT_EMAIL, "[{$_SERVER['SERVER_NAME']}] ".$subject, $message."
+	$a = [];
+	exec('hostname', $a);
+	$server_name = $_SERVER['SERVER_NAME'] ?? trim(join('', $a));//именно имя сервера - чтобы отличать проекты друг от друга. для CLI уже пофигу
+
+	(new Mail(TECH_SUPPORT_EMAIL, "[{$server_name}] {$subject}", "{$message}
 ____________________________________________________
 SESSION\n" . print_r($_SESSION, true)))->send();
 }
@@ -208,10 +218,10 @@ function __my_shutdown_handler()
 		}
 		else
 		{
-			print "<xmp>$info</xmp>";
+			print "<xmp>{$info}</xmp>";
 		}
 	}
-//включать тут по большим праздникам, т.к. все это пишется после </body> рушит валидность страницы и может покорежить дизайн.
+//включать тут по большим праздникам, т.к. все это пишется после </body>, рушит валидность страницы и может покорежить дизайн.
 	if (0 && APPLICATION_ENV != 'production')
 	{
 		global $executed_sql;
@@ -220,7 +230,7 @@ function __my_shutdown_handler()
 			$i = 0;
 			foreach ($executed_sql as $s)
 			{
-				print "<div  style='margin-top: 1em; padding: 1em; background-color: #EEE'><h1>".(++$i)."</h1><xmp>$s</xmp></div>";
+				print "<div  style='margin-top: 1em; padding: 1em; background-color: #EEE'><h1>".(++$i)."</h1><xmp>{$s}</xmp></div>";
 			}
 		}
 	}
@@ -237,7 +247,7 @@ function __my_exception_handler($exception)
 	if (APPLICATION_ENV != 'production')
 	{
 		print '<h1>Uncaught exception</h1>';
-		print "<h2>$message</h2>";
+		print "<h2>{$message}</h2>";
 		print "<div>BACKTRACE\n<xmp>".__getBacktrace()."</xmp></div>";
 	}
 	else
