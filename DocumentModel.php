@@ -80,7 +80,7 @@ print $this->__getDataStructureScript();die('stopped');
 
 class DocumentModel extends SimpleDictionaryModel
 {
-	protected $document_type_id;//TODO: а оно вообще надо тут?
+	protected $document_type_id;//TODO: а оно вообще надо тут? пока еще не было больше одного типа документов в одной схеме.
 
 	function __construct($scheme, $document_type_id = 0, $storage_path = '', $allowed_extensions = [], $max_file_size = 0)
 	{
@@ -91,11 +91,8 @@ class DocumentModel extends SimpleDictionaryModel
 		$this->scheme = $scheme;
 		$this->document_type_id = $document_type_id;
 
-		$this->fields_model = new Document_fieldsModel($scheme, $document_type_id);
-		$this->fields_model->__parent = $this;
-
-		$this->values_dicts_model = new Document_values_dictsModel($scheme, $document_type_id);
-		$this->values_dicts_model->__parent = $this;
+		$this->initFieldsModel($scheme, $document_type_id);
+		$this->initValuesDictsModel($scheme, $document_type_id);
 
 		if ($storage_path == '')
 		{
@@ -103,6 +100,26 @@ class DocumentModel extends SimpleDictionaryModel
 		}
 		$this->files_model = new Document_filesModel($scheme, $storage_path, $allowed_extensions, $max_file_size);
 		$this->files_model->__parent = $this;
+	}
+
+/** перекрыть, если используется своя модель для полей
+ */
+	public function initFieldsModel($scheme, $document_type_id)
+	{
+		//в перекрытом методе вызываем свою модель
+		$this->fields_model = new Document_fieldsModel($scheme, $document_type_id);
+		//не забыть прицепить ее к документам!
+		$this->fields_model->__parent = $this;
+	}
+
+/** перекрыть, если используется своя модель для значений полей
+ */
+	public function initValuesDictsModel($scheme, $document_type_id)
+	{
+		//в перекрытом методе вызываем свою модель
+		$this->values_dicts_model = new Document_values_dictsModel($scheme, $document_type_id);
+		//не забыть прицепить ее к документам!
+		$this->values_dicts_model->__parent = $this;
 	}
 
 /** USAGE:
