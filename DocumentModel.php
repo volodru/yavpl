@@ -82,7 +82,7 @@ class DocumentModel extends SimpleDictionaryModel
 {
 	protected $document_type_id;//TODO: а оно вообще надо тут? пока еще не было больше одного типа документов в одной схеме.
 
-	function __construct($scheme, $document_type_id = 0, $storage_path = '', $allowed_extensions = [], $max_file_size = 0)
+	function __construct($scheme, $document_type_id = 0)
 	{
 		parent::__construct($scheme.'.documents', 'id', [
 			'document_type_id',
@@ -93,13 +93,7 @@ class DocumentModel extends SimpleDictionaryModel
 
 		$this->initFieldsModel($scheme, $document_type_id);
 		$this->initValuesDictsModel($scheme, $document_type_id);
-
-		if ($storage_path == '')
-		{
-			$storage_path = HOME_DIR.'/'.$scheme;
-		}
-		$this->files_model = new Document_filesModel($scheme, $storage_path, $allowed_extensions, $max_file_size);
-		$this->files_model->__parent = $this;
+		$this->initFilesModel($scheme, $document_type_id);
 	}
 
 /** перекрыть, если используется своя модель для полей
@@ -120,6 +114,16 @@ class DocumentModel extends SimpleDictionaryModel
 		$this->values_dicts_model = new Document_values_dictsModel($scheme, $document_type_id);
 		//не забыть прицепить ее к документам!
 		$this->values_dicts_model->__parent = $this;
+	}
+
+/** перекрыть, если используется своя модель для файлов
+ */
+	public function initFilesModel($scheme, $document_type_id)
+	{
+		//в перекрытом методе вызываем свою модель
+		$this->files_model = new Document_filesModel($scheme, HOME_DIR.'/'.$scheme);
+		//не забыть прицепить ее к документам!
+		$this->files_model->__parent = $this;
 	}
 
 /** USAGE:
@@ -431,7 +435,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			(($field_info['value_type'] == 'K') && ($value == 0)))
 		{
 			$this->db->exec($delete_clause, $document_id, $field_id);
-			return;
+			return '';
 		}
 		//далее value уже точно не null
 		$value = trim($value);
