@@ -364,7 +364,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 				{
 					$params['fields_to_join'][] = $params['order']; // ожидается в $params['order'] ID поля для сортировки
 					$field_info = $this->fields_model->getRow($params['order']);
-					$field_name = $this->fields_model->value_field_names[$field_info['value_type']];
+					$field_name = $this->fields_model->sort_field_names[$field_info['value_type']];
 					//так будет работать всё, кроме словарных полей
 					$params['order'] = "v{$params['order']}.{$field_name} {$params['order_direction']} NULLS LAST, d.id DESC";
 				}
@@ -436,10 +436,10 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 
 	public function generateFieldValue($field_id, $value)
 	{
-	    $result = ['id' => $field_id];
-	    $field_info = $this->fields_model->getRow($field_id);
-	    $field_name = $this->fields_model->value_field_names[$field_info['value_type']];
-	    $result['value'] = $result[$field_name] = $value;
+		$result = ['id' => $field_id];
+		$field_info = $this->fields_model->getRow($field_id);
+		$field_name = $this->fields_model->value_field_names[$field_info['value_type']];
+		$result['value'] = $result[$field_name] = $value;
 		return $result;
 	}
 
@@ -599,6 +599,15 @@ class Document_fieldsModel extends SimpleDictionaryModel
 		'D'	=> 'date_value', // date
 		'K'	=> 'int_value', // key values
 		'X'	=> 'int_value', // key values
+	];
+
+	public $sort_field_names = [
+		'A'	=> 'text_value', // alphabet
+		'I'	=> 'int_value', // integer
+		'F'	=> 'float_value', // float
+		'D'	=> 'date_value', // date
+		'K'	=> 'value', // key values
+		'X'	=> 'value', // key values
 	];
 
 	function __construct($scheme, $document_type_id = 0)
