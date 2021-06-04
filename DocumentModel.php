@@ -7,6 +7,10 @@
 */
 
 /** CHANGELOG
+ * 1.04
+ * DATE: 2021-06-3
+ *
+
  * 1.03
  * DATE: 2021-04-14
  * в словаре полей (Document_fieldsModel) убрано поле field_group_id. за 3 года так и не пригодилось.
@@ -76,6 +80,22 @@ proposed for deletion 2021-04-14 Поля имеют атрибут field_group_
 Для инициализации проекта имеет смысл использовать вывод функции
 print $this->__getDataStructureScript();die('stopped');
 см. её код.
+
+Создание нового поля с внешним словарем.
+0. через интерфейс его как правило создать нельзя, ибо там поля которые прямо вставляются в запрос и это место для SQL-инъекций
+1. создаем новое поле целого типа, заполняем название, сортировку, единицы измерения - через интерфейс, если он есть.
+2. идем в базу и там к этому полю делаем (пусть наше новое поле с ID=60)
+shipments -- например
+update shipments.documents_fields
+set
+  value_type = 'X',
+  x_value_field_name = 'name',
+  x_table_name  = 'shipments.container_types',
+  x_table_order  = 'name',
+  x_list_url  = '/shipments/containertypes'
+where id = 60
+
+
 */
 
 class DocumentModel extends SimpleDictionaryModel
@@ -167,6 +187,10 @@ CREATE TABLE {$this->scheme}.documents_fields
   value_type character(1), -- тип значения
   measure character varying, -- ед.изм. значения. например длина в метрах, кредит-нота в долларах
   sort_order integer NOT NULL DEFAULT 0, -- для сортировки в списке полей
+  x_value_field_name text DEFAULT 'name', -- для типа Внешний словарь (X): название для поля с значением (как правило - name)
+  x_table_name text,-- для типа Внешний словарь (X): полное название таблицы - схема+таблица
+  x_table_order text,-- для типа Внешний словарь (X): сортировака значений
+  x_list_url text,-- для типа Внешний словарь (X): ссылка на список редактирования словаря
   CONSTRAINT documents_fields_pkey PRIMARY KEY (id)
 )
 WITH (
@@ -220,6 +244,7 @@ CREATE INDEX documents_values_dicts_field_id_idx
   USING btree
   (field_id);
 
+-- warning about trigger, see below
 CREATE OR REPLACE FUNCTION {$this->scheme}.documents_fields_values_ins_func()
   RETURNS trigger AS
 \$BODY\$
@@ -240,11 +265,12 @@ END;\$BODY\$
 ALTER FUNCTION {$this->scheme}.documents_fields_values_ins_func()
   OWNER TO postgres;
 
-CREATE TRIGGER documents_fields_values_ins_trg
-  BEFORE INSERT
-  ON {$this->scheme}.documents_fields_values
-  FOR EACH ROW
-  EXECUTE PROCEDURE {$this->scheme}.documents_fields_values_ins_func();
+-- avoid trigger to work field with type X, all through PHP!
+-- CREATE TRIGGER documents_fields_values_ins_trg
+--  BEFORE INSERT
+--  ON {$this->scheme}.documents_fields_values
+--  FOR EACH ROW
+--  EXECUTE PROCEDURE {$this->scheme}.documents_fields_values_ins_func();
 
 CREATE TABLE {$this->scheme}.documents_files
 (
@@ -432,13 +458,13 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 		$delete_clause = "DELETE FROM {$this->scheme}.documents_fields_values WHERE document_id = $1 AND field_id = $2";
 		//установка value -> null - удаляет значение поля
 		if (!isset($value) || trim($value) == '' ||
-			(($field_info['value_type'] == 'K') && ($value == 0)))
+			((in_array($field_info['value_type'], ['K', 'X'])) && ($value == 0)))
 		{
 			$this->db->exec($delete_clause, $document_id, $field_id);
 			return '';
 		}
 		//далее value уже точно не null
-		$value = trim($value);
+		$value = $hr_value = trim($value);
 		$result = "Field [{$field_info['title']}] with value [{$value}]: Unknown value_type [{$field_info['value_type']}]";//ошибка по-умолчанию
 		$insert_clause = '';
 		if ($field_info['value_type'] == 'A')
@@ -468,10 +494,11 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			{
 				return "{$field_info['title']} - [{$value}]: Ожидается вещественное число";
 			}
+			$hr_value = $value;
 			$db_field = 'float_value';
 			$result = '';
 		}
-		if ($field_info['value_type'] == 'K')
+		if (in_array($field_info['value_type'], ['K', 'X']))
 		{
 			$value = preg_replace("/\D/", '', $value);
 			if ($value == '')
@@ -482,6 +509,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			{
 				return "Значение {$value} не найдено в словаре для поля {$field_info['title']}";
 			}
+			$hr_value = $field_info['values'][$value]['value'];
 			$db_field = 'int_value';
 			$result = '';
 		}
@@ -509,10 +537,10 @@ SELECT document_id
 FROM {$this->scheme}.documents_fields_values
 WHERE document_id = $1 AND field_id = $2 AND {$db_field} = $3", $document_id, $field_id, $value)->rows == 0)
 			{
-				$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, {$db_field}) VALUES ($1,$2,$3)";
+				$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, {$db_field}, value) VALUES ($1,$2,$3,$4)";
 				$this->db->exec("BEGIN");
 				$this->db->exec($delete_clause, $document_id, $field_id);
-				$this->db->exec($insert_clause, $document_id, $field_id, $value);
+				$this->db->exec($insert_clause, $document_id, $field_id, $value, $hr_value);
 				$this->db->exec("COMMIT");
 			}
 		}
@@ -561,6 +589,7 @@ class Document_fieldsModel extends SimpleDictionaryModel
 		'F'	=> 'Вещественный', // float
 		'D'	=> 'Дата', // date
 		'K'	=> 'Словарный', // key values
+		'X'	=> 'Внешний словарь', // key values
 	];
 
 	public $value_field_names = [
@@ -569,22 +598,45 @@ class Document_fieldsModel extends SimpleDictionaryModel
 		'F'	=> 'float_value', // float
 		'D'	=> 'date_value', // date
 		'K'	=> 'int_value', // key values
+		'X'	=> 'int_value', // key values
 	];
 
 	function __construct($scheme, $document_type_id = 0)
 	{
 		parent::__construct($scheme.'.documents_fields', 'id', [
 			'title', 'value_type', 'measure', 'sort_order',
+			'x_value_field_name', 'x_table_name', 'x_table_order', 'x_list_url',
 		]);
 		$this->scheme = $scheme;
 		$this->document_type_id = $document_type_id;
 	}
 
-	public function getValues($key_value)
+	public function getValues($field_info)
 	{
-		return $this->__parent->values_dicts_model->getList([
-			'field_id'	=> $key_value,
-		]);
+		if ($field_info['value_type'] == 'K')
+		{
+			return $this->__parent->values_dicts_model->getList([
+				'field_id'	=> $field_info['id'],
+			]);
+		}
+		elseif ($field_info['value_type'] == 'X')
+		{
+			foreach (['x_value_field_name', 'x_table_name', 'x_table_order'] as $f)
+			{
+				if (!isset($field_info[$f]))
+				{
+					die("Для поля #{$field_info['id']} {$field_info['title']} типа Внешний словарь не задано поле [$f]");
+				}
+			}
+
+			return $this->db->exec("SELECT id, {$field_info['x_value_field_name']} AS value
+FROM {$field_info['x_table_name']}
+ORDER BY {$field_info['x_table_order']}")->fetchAll('id');
+		}
+		else
+		{
+			return [];
+		}
 	}
 
 	public function getEmptyRow()
@@ -612,7 +664,7 @@ class Document_fieldsModel extends SimpleDictionaryModel
 SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->fetchRow();
 				if ($this->data_cash[$key_value] !== false)
 				{
-					$this->data_cash[$key_value]['values'] = $this->getValues($key_value);
+					$this->data_cash[$key_value]['values'] = $this->getValues($this->data_cash[$key_value]);
 				}
 			}
 			return $this->data_cash[$key_value];
@@ -636,11 +688,11 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 			$default_value_title = $params['default_value_title'] ?? '-- Выберите --';
 		}
 
-		foreach ($list as $id => $r)
+		foreach ($list as $id => $field_info)
 		{
-			if ($r['value_type'] == 'K')
+			if (in_array($field_info['value_type'], ['K', 'X']))
 			{
-				$list[$id]['values'] = $this->getValues($id);
+				$list[$id]['values'] = $this->getValues($field_info);
 				if (isset($params['add_default_value']))
 				{
 					$list[$id]['values'] = [0 => $default_value_title] + $list[$id]['values'];
@@ -695,6 +747,19 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		{
 			$data['sort_order'] = 0;
 		}
+		$old_data = $this->getRow($data['id']);
+
+		$data['value_type'] = $old_data['value_type'];//тип не меняем из интерфейса.
+
+		if ($data['value_type'] == 'X')
+		{//эти атрибуты не меняем из интерфейса.
+			foreach (['x_value_field_name', 'x_table_name', 'x_table_order', 'x_list_url',] as $f)
+			{
+				$data[$f] = $old_data[$f];
+			}
+		}
+
+
 		if (trim($data['title']) == '')
 		{
 			return "Описание поля не может быть пустым";
