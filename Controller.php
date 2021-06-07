@@ -369,6 +369,8 @@ public function defaultMethod($method_name)
 		elseif ($type == 'float' || $type == 'double')
 		{//а плавающая точка где-то может быть запятой.
 			$value = preg_replace("/\,/", '.', $value);
+			$value = preg_replace("/[^\d\.]/", '', $value);
+
 			return (is_numeric($value)) ? $value : $default_value;
 		}
 		elseif ($type == 'string')
