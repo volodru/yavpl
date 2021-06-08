@@ -393,7 +393,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 
 				$field_info = $this->fields_model->getRow($field_id);
 
-				if (($field_info['value_type'] == 'I') || ($field_info['value_type'] == 'K'))
+				if (($field_info['value_type'] == 'I') || ($field_info['value_type'] == 'K')|| ($field_info['value_type'] == 'X'))
 				{
 					$params['where'][] = "v{$field_id}.int_value = {$value}";
 				}
