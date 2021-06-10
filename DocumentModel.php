@@ -411,7 +411,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 					}
 					else
 					{
-						$params['where'][] = "v{$field_id}.value {$action} '{$value}'";
+						$params['where'][] = "v{$field_id}.value {$action} '".$field_info['values'][$value]['value']."'";
 					}
 				}
 				elseif ($field_info['value_type'] == 'I')
