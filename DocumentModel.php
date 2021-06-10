@@ -326,6 +326,13 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 		]);
 	}
 
+	private function getList_action($action)
+	{
+		if ($action == 'more') return '>';
+		if ($action == 'less') return '<';
+		if ($action == 'eq') return '=';
+	}
+
 /**
  * without_fields = true - не грузить атрибуты
  */
@@ -381,34 +388,53 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 
 
 		//da('FILTER');		da($params['filter']);
-		if (isset($params['filter']) && (count($params['filter']) > 0))
+		if (isset($params['filter_values']) && (count($params['filter_values']) > 0))
 		{
 			//структура: $params['filter']
 			// ID-поля => значение для поиска
-			foreach ($params['filter'] as $field_id => $value)
+			foreach ($params['filter_values'] as $field_id => $value)
 			{
 				$value = trim($value);
 				if (is_string($value) && $value == ''){continue;}
 				if (is_numeric($value) && $value == 0) {continue;}
 
+				$action = $this->getList_action($params['filter_actions'][$field_id] ?? 'eq');
+				//da("$field_id $action");
+
 				$field_info = $this->fields_model->getRow($field_id);
 
-				if (($field_info['value_type'] == 'I') || ($field_info['value_type'] == 'K')|| ($field_info['value_type'] == 'X'))
+				if (($field_info['value_type'] == 'K')|| ($field_info['value_type'] == 'X'))
+				{//TO_DO - сделать сравнение по значению для больше-меньше и по ключу - когда равно
+					if ($action == '=')
+					{
+						$params['where'][] = "v{$field_id}.int_value = {$value}";
+					}
+					else
+					{
+						$params['where'][] = "v{$field_id}.value {$action} '{$value}'";
+					}
+				}
+				elseif ($field_info['value_type'] == 'I')
 				{
-					$params['where'][] = "v{$field_id}.int_value = {$value}";
+					$params['where'][] = "v{$field_id}.int_value {$action} {$value}";
 				}
 				elseif ($field_info['value_type'] == 'F')
 				{
-					$params['where'][] = "v{$field_id}.float_value = {$value}";
+					$params['where'][] = "v{$field_id}.float_value {$action} {$value}";
+				}
+				elseif ($field_info['value_type'] == 'D')
+				{
+					$value = preg_replace("/(\d{1,2})-(\d{1,2})-(\d{4})/", "$3-$2-$1", $value);
+					$params['where'][] = "v{$field_id}.date_value {$action} '{$value}'";
 				}
 				else
 				{
-					$params['where'][] = "v{$field_id}.value = '{$value}'";
+					$params['where'][] = "v{$field_id}.value {$action} '{$value}'";
 				}
 				$params['fields_to_join'][] = $field_id;
 			}
 		}
-		//da($params['where']);		da($params);
+		//da($params['where']);		da($params); die();
 
 		foreach (array_unique($params['fields_to_join']) as $field_id)
 		{
