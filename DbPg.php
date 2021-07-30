@@ -78,15 +78,15 @@ class DbPg extends Db implements iDb
 			if ((preg_match("/^\s*(SELECT)/sim", $query)) && (!preg_match("/^\s*BEGIN/sim", $query)))
 			{//logging -------------------------------
 				$sth = (count($this->params) > 0) ?
-					pg_query_params($this->pg_dbh, "EXPLAIN $query ", $this->params) :
-					pg_query($this->pg_dbh, "EXPLAIN $query ");
+					pg_query_params($this->pg_dbh, "EXPLAIN {$query} ", $this->params) :
+					pg_query($this->pg_dbh, "EXPLAIN {$query} ");
 
 				$rows = pg_numrows($sth);
 
 				for($r = 0; $r < $rows; $r++)
 				{
 					list($tmp) = pg_fetch_array($sth, $r);
-					$explain .= "$tmp\n";
+					$explain .= $tmp."\n";
 				}
 				$this->explain = $explain;
 
@@ -101,7 +101,22 @@ class DbPg extends Db implements iDb
 				{
 					$a = explode('.', $_SERVER['SERVER_NAME']);
 					$fn = $this->log_path."long_sqls_".((isset($a[count($a)-2])) ? $a[count($a)-2] : $_SERVER['SERVER_NAME']).".log";
-					if (is_writable($fn) && $f = fopen($fn,'a'))
+					if (!file_exists($fn))
+					{
+						$f = fopen($fn,'w');
+					}
+					else
+					{
+						if (is_writable($fn))
+						{
+							$f = fopen($fn,'a');
+						}
+						else
+						{
+							//cannot create or add to
+						}
+					}
+					if ($f)
 					{
 						fwrite($f, "
 #----------------------------------------------------
@@ -110,7 +125,7 @@ class DbPg extends Db implements iDb
 #	{$_SERVER['SERVER_NAME']}	{$_SERVER['REMOTE_ADDR']}
 ref: ".urldecode(isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER']:'')."
 agent: {$_SERVER['HTTP_USER_AGENT']}
-$query
+{$query}
 ".((count($this->params) > 0) ? "
 PARAMS: ".print_r($this->params, true) : '').$explain);
 						fclose($f);
@@ -127,7 +142,7 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 			$application->executed_sql[] = $query.
 				"\nQuery returs {$this->rows} row(s)".
 				((count($this->params) > 0)?"\nPARAMS: ".print_r($this->params, true):'').
-				(($explain != '') ? "\n-----------\n$explain-----------" : '');
+				(($explain != '') ? "\n-----------\n{$explain}-----------" : '');
 		}
 		return $this;
     }//exec
