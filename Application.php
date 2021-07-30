@@ -327,7 +327,7 @@ class Application
 			}
 			else
 			{
-				$this->fatalError("Cannot find class [$s] in file [$file_name]");
+				$this->fatalError("Cannot find class [{$s}] in file [{$file_name}]");
 				return false;
 			}
 		}
@@ -402,7 +402,7 @@ class Application
 		{
 			return;//хватит для API и CLI
 		}
-//создали представление - вызвали контруктор
+//создали представление - вызвали его конструктор
 		$this->loadView();
 //вызвали рисовалку представления
 		if ($this->controller->__need_render)
