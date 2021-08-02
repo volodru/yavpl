@@ -101,6 +101,7 @@ class DbPg extends Db implements iDb
 				{
 					$a = explode('.', $_SERVER['SERVER_NAME']);
 					$fn = $this->log_path."long_sqls_".((isset($a[count($a)-2])) ? $a[count($a)-2] : $_SERVER['SERVER_NAME']).".log";
+					$f = false;
 					if (!file_exists($fn))
 					{
 						$f = fopen($fn,'w');
