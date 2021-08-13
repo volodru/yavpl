@@ -500,6 +500,7 @@ class Application
 				$file_name = "models/".strtolower(preg_replace("/_/", '/', $matches[1])).".php";
 				if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
 				{
+					print "<div>BACKTRACE\n<xmp>".__getBacktrace()."</xmp></div>";
 					die("Cannot find file: $file_name");
 				}
 			}
