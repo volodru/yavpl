@@ -450,7 +450,7 @@ class Application
 /** Автозагрузчик всего и вся */
 	static function __autoload($class_name)
 	{
-		//print "__autoload loading: $class_name<br />";
+		//print "<p>__autoload loading: {$class_name}</p>";
 		// свои библиотечные файлы проверяем первыми.
 		// оно меняется раз в несколько лет. пусть лежит в виде массива прямо тут.
 		if (in_array($class_name, [
