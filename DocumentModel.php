@@ -551,7 +551,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 			{
 				return "{$field_info['title']} - [{$value}]: Неверная дата. Формат даты ДД-ММ-ГГГГ";
 			}
-			$value = $matches[1].'.'.$matches[2].'.'.$matches[3];
+			$value = $matches[1].'-'.$matches[2].'-'.$matches[3];
 			$db_field = 'date_value';
 			$result = '';
 		}
