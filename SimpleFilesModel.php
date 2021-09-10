@@ -255,6 +255,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 		{
 			return $result;//все хорошо, если файлов вообще не выбрали
 		}
+		$data['ids'] = [];
 		foreach ($i_files['name'] as $file_name)
 		{
 			$i++;
@@ -268,6 +269,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 			$data['id'] = 0;
 			if ($this->saveFile($data, $file_info))
 			{
+				$data['files_list'][$data['id']] = $data;
 				$overall_log[] = "Файл {$file_name} успешно загружен.";
 			}
 			else
