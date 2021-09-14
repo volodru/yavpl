@@ -212,7 +212,7 @@ class View
 	{
 		if ($filename != '')
 		{
-			$this->__header_tags[] ="<script type='text/javascript' src='$filename' $options></script>";
+			$this->__header_tags[] ="<script type='text/javascript' src='{$filename}' {$options}></script>";
 		}
 		return $this;
 	}
@@ -224,7 +224,7 @@ class View
 	{
 		if ($filename != '')
 		{
-			$this->__header_tags[] ="<link rel='stylesheet' type='text/css' href='$filename' />";
+			$this->__header_tags[] ="<link rel='stylesheet' type='text/css' href='{$filename}' />";
 		}
 		return $this;
 	}
@@ -237,7 +237,7 @@ class View
 		$css = trim($css);
 		if ($css != '')
 		{
-			$this->__header_tags[] = "<style type='text/css'>\n$css\n\t</style>";
+			$this->__header_tags[] = "<style type='text/css'>\n{$css}\n\t</style>";
 		}
 		return $this;
 	}
@@ -250,7 +250,7 @@ class View
 		$js = trim($js);
 		if ($js != '')
 		{
-			$this->__header_tags[] = "<script type='text/javascript'>\n$js\n\t</script>";
+			$this->__header_tags[] = "<script type='text/javascript'>\n{$js}\n\t</script>";
 		}
 		return $this;
 	}

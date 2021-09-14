@@ -56,7 +56,6 @@ if (!defined('REMOTE_ADDR'))
 
 if (!defined('CHARSET_FOR_EMAILS'))
 {//should be initialized once per project. probable in main.php
-	//define('CHARSET_FOR_EMAILS', 'windows-1251');//utf-8
 	define('CHARSET_FOR_EMAILS', 'utf-8');//windows-1251
 }
 
@@ -257,7 +256,7 @@ class Mail
 	{
 		if ($this->from_email == '')
 		{
-			$this->from_email = ADMIN_EMAIL;
+			$this->from_email = TECH_SUPPORT_EMAIL;
 		}
 
 		$from_line = $this->convertFieldToLine([[$this->from_email, $this->from_name]]);
