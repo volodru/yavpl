@@ -166,7 +166,7 @@ function sendBugReport($subject = 'Bug report', $message = 'Common bug', $is_fat
 		exit();
 	}
 
-	(new Mail(TECH_SUPPORT_EMAIL, "[{$server_name}] {$subject}", "{$message}
+	(new Mail(ADMIN_EMAIL, "[{$server_name}] {$subject}", "{$message}
 {$_SERVER['SCRIPT_URI']}".((isset($_SERVER['QUERY_STRING']) && $_SERVER['QUERY_STRING'] != '') ? '?'.$_SERVER['QUERY_STRING'] : '')."
 ____________________________________________________
 TRACE\n".__getBacktrace()."
@@ -199,7 +199,7 @@ function sendNotification($subject = 'Notification', $message = 'Message')
 	exec('hostname', $a);
 	$server_name = $_SERVER['SERVER_NAME'] ?? trim(join('', $a));//именно имя сервера - чтобы отличать проекты друг от друга. для CLI уже пофигу
 
-	(new Mail(TECH_SUPPORT_EMAIL, "[{$server_name}] {$subject}", "{$message}
+	(new Mail(ADMIN_EMAIL, "[{$server_name}] {$subject}", "{$message}
 ____________________________________________________
 SESSION\n" . print_r($_SESSION, true)))->send();
 }
