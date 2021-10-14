@@ -319,6 +319,16 @@ WHERE document_id = $1
 ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 	}
 
+	public function getFieldValue($document_id, $field_id)
+	{
+		return $this->db->exec("
+SELECT f.*, v.*, f.id AS field_id
+FROM {$this->scheme}.documents_fields AS f
+JOIN {$this->scheme}.documents_fields_values AS v ON (v.field_id = f.id)
+WHERE document_id = $1 AND f.id = $2
+", $document_id, $field_id)->fetchRow();
+	}
+
 	public function getFiles($document_id)
 	{
 		return $this->files_model->getList([
