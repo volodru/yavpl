@@ -345,6 +345,7 @@ WHERE document_id = $1 AND f.id = $2
 
 /**
  * without_fields = true - не грузить атрибуты
+ * without_files = true - не грузить файлы
  */
 	public function getList($params = [])
 	{
@@ -360,6 +361,8 @@ WHERE document_id = $1 AND f.id = $2
 		$params['index'] = $params['index'] ?? 'id';//не надо тут d.id!
 
 		$params['order_direction'] = $params['order_direction'] ?? 'DESC';
+		$params['order_default_field'] = $params['order_default_field'] ?? 'd.id';
+		$params['order_default_direction'] = $params['order_default_direction'] ?? 'DESC';
 
 		if (isset($params['raw_order']))
 		{
@@ -369,13 +372,13 @@ WHERE document_id = $1 AND f.id = $2
 		{
 			if (!isset($params['order']))
 			{
-				$params['order'] = 'd.id '.$params['order_direction'];
+				$params['order'] = $params['order_default_field'].' '.$params['order_direction'];
 			}
 			else
 			{// - $params['order'] ID поля для сортировки
 				if ($params['order'] == 0)
 				{
-					$params['order'] = 'd.id '.$params['order_direction'];
+					$params['order'] = $params['order_default_field'].' '.$params['order_direction'];
 				}
 				else
 				{
@@ -383,7 +386,8 @@ WHERE document_id = $1 AND f.id = $2
 					$field_info = $this->fields_model->getRow($params['order']);
 					$field_name = $this->fields_model->sort_field_names[$field_info['value_type']];
 					//так будет работать всё, кроме словарных полей
-					$params['order'] = "v{$params['order']}.{$field_name} {$params['order_direction']} NULLS LAST, d.id DESC";
+					$params['order'] = "v{$params['order']}.{$field_name} {$params['order_direction']} NULLS LAST, ".
+						$params['order_default_field'].' '.$params['order_default_direction'];
 				}
 			}
 		}
