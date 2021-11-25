@@ -197,7 +197,9 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 					{
 						$row[$index] = str_replace("'", '', $row[$index]);//we have to do it
 						/** @TO_DO - вопрос спорный что делать с обратными слэшами. если оставить */
-						$row[$index] = preg_replace("/^(.+)\\$/", '$1', $row[$index]);//в конце строки, чтобы не ломался eval со скобкой ]
+						//$row[$index] = preg_replace("/^(.+)\\$/", '$1', $row[$index]);//в конце строки, чтобы не ломался eval со скобкой ]
+						$row[$index] = trim($row[$index], '\\');
+
 						//96308617\
 						$code .= "['".$row[$index]."']" ;
 					}
