@@ -196,6 +196,8 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 					if (is_string($row[$index]))
 					{
 						$row[$index] = str_replace("'", '', $row[$index]);//we have to do it
+						$row[$index] = str_replace("\\", '\\\\', $row[$index]);//we have to do it
+						//96308617\
 						$code .= "['".$row[$index]."']" ;
 					}
 					else
