@@ -299,7 +299,8 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 				if (isset($v))
 				{
 					$v = preg_replace("/([\t])/", '\T', $v);
-					$v = preg_replace("/([\\\\])/", '\\', $v);
+					//$v = preg_replace("/([\\\\])/", '\\', $v);
+					$v = str_replace("\\", '\\\\', $v);
 					$line[$k] = $v;
 				}
 				else
