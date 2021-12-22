@@ -244,7 +244,7 @@ function __my_exception_handler($exception)
 {
 	$message = $exception->getMessage();
 	sendBugReport('Uncaught exception', $message);
-	if (1||APPLICATION_ENV != 'production')
+	if (APPLICATION_ENV != 'production')
 	{
 		print '<h1>Uncaught exception</h1>';
 		print "<h2>{$message}</h2>";
