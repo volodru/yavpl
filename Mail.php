@@ -337,6 +337,7 @@ Content-ID: <{$attachment['file_name']}>
 			{
 				fwrite($f, $letter);
 				pclose($f);
+				sleep(1);//EXPERIMENTAL - попытка предотвратить блокировку 25 порта а МСК
 				//$st = pclose($f);
 				/*if ($st != 0)
 				 	die(" (Mail status is: $st)");*/
@@ -360,7 +361,7 @@ Content-ID: <{$attachment['file_name']}>
 			}
 			else
 			{
-				die("Server does not seem production and file [$log_file_name] cannot be created.");
+				die("Server does not seem production and file [{$log_file_name}] cannot be created.");
 			}
 		}
 	}
