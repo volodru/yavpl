@@ -76,9 +76,9 @@ class Mail
 
 	private $__typeByExt = [
 		'doc'	=> 'application/msword',
-		'docx'	=> 'application/msword',
+		'docx'	=> 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 		'xls'	=> 'application/vnd.ms-excel',
-		'xlsx'	=> 'application/vnd.ms-excel',
+		'xlsx'	=> 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 		'rtf'	=> 'application/msword',
 		'ppt'	=> 'application/mspowerpoint',
 		'odt'	=> 'application/vnd.oasis.opendocument.text',
