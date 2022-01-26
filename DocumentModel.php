@@ -7,6 +7,12 @@
 */
 
 /** CHANGELOG
+ *
+ * 1.05
+ * DATE: 2022-01-26
+ * в словарь полей добавлены поля description(текст) и automated (0/1)
+ * удалена модель для работы с файлами. файлы к документам теперь тлько через MPFL
+ *
  * 1.04
  * DATE: 2021-06-3
  *
@@ -51,7 +57,6 @@ documents - документы
 documents_fields - список полей для каждого типа документа
 documents_fields_values - значения полей для документа
 documents_values_dicts - словарь для словарных полей
-documents_files - прицепленные файлы
 
 document_type_id - тип документа. по-умолчанию = 0, если надо в схеме реализовать несколько
 разных документов и соединить их в иерархию через parent_id, то вот тут то и надо использовать
@@ -110,7 +115,7 @@ class DocumentModel extends SimpleDictionaryModel
 
 		$this->initFieldsModel($scheme, $document_type_id);
 		$this->initValuesDictsModel($scheme, $document_type_id);
-		$this->initFilesModel($scheme, $document_type_id);
+		//obsolete $this->initFilesModel($scheme, $document_type_id);
 	}
 
 /** перекрыть, если используется своя модель для полей
@@ -133,15 +138,14 @@ class DocumentModel extends SimpleDictionaryModel
 		$this->values_dicts_model->__parent = $this;
 	}
 
-/** перекрыть, если используется своя модель для файлов
- */
+/* //obsolete
 	public function initFilesModel($scheme, $document_type_id)
 	{
 		//в перекрытом методе вызываем свою модель
 		$this->files_model = new Document_filesModel($scheme, HOME_DIR.'/'.$scheme);
 		//не забыть прицепить ее к документам!
 		$this->files_model->__parent = $this;
-	}
+	}*/
 
 /** USAGE:
 print $this->__getDataStructureScript();die('stopped');
@@ -151,8 +155,8 @@ print $this->__getDataStructureScript();die('stopped');
  */
 	public function __getDataStructureScript()
 	{
+		//obsolete DROP TABLE {$this->scheme}.documents_files;
 		return "
-DROP TABLE {$this->scheme}.documents_files;
 DROP TABLE {$this->scheme}.documents_values_dicts;
 DROP TABLE {$this->scheme}.documents_fields_values;
 DROP TABLE {$this->scheme}.documents_fields;
@@ -180,8 +184,8 @@ CREATE TABLE {$this->scheme}.documents_fields
   id serial NOT NULL,
   document_type_id integer NOT NULL DEFAULT 0,
   title character varying, -- заголовок поля для форм и таблиц
-  --proposed for deletion 2021-04-14 field_group_id integer NOT NULL DEFAULT 0,-- тип поля с т.з. функционала, отображения и т.п. (hidden, например), либо группы полей с т.з. автоматизируемого процесса, если полей слишком много
   value_type character(1), -- тип значения
+  description text, -- комментарий к полю
   measure character varying, -- ед.изм. значения. например длина в метрах, кредит-нота в долларах
   sort_order integer NOT NULL DEFAULT 0, -- для сортировки в списке полей
   x_value_field_name text DEFAULT 'name', -- для типа Внешний словарь (X): название для поля с значением (как правило - name)
@@ -269,31 +273,11 @@ ALTER FUNCTION {$this->scheme}.documents_fields_values_ins_func()
 --  FOR EACH ROW
 --  EXECUTE PROCEDURE {$this->scheme}.documents_fields_values_ins_func();
 
-CREATE TABLE {$this->scheme}.documents_files
-(
-  id serial NOT NULL,
-  document_id integer,
-  file_type_id integer, --тип файла - (например: отчет, скан запроса, скан кредитноты), ссылка на таблицу или массив в коде
-  file_name text,
-  file_ext character varying,
-  file_size integer,
-  CONSTRAINT documents_files_pkey PRIMARY KEY (id),
-  CONSTRAINT documents_files_document_id_fkey FOREIGN KEY (document_id)
-      REFERENCES {$this->scheme}.documents (id) MATCH SIMPLE
-      ON UPDATE CASCADE ON DELETE CASCADE
-)
-WITH (
-  OIDS=FALSE
-);
-ALTER TABLE {$this->scheme}.documents_files
-  OWNER TO postgres;
-
 
 CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.documents FOR EACH ROW EXECUTE PROCEDURE log_history();
 CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.documents_fields FOR EACH ROW EXECUTE PROCEDURE log_history();
 CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.documents_fields_values FOR EACH ROW EXECUTE PROCEDURE log_history();
 CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.documents_values_dicts FOR EACH ROW EXECUTE PROCEDURE log_history();
-CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.documents_files FOR EACH ROW EXECUTE PROCEDURE log_history();
 ";
 	}
 
@@ -326,12 +310,14 @@ WHERE document_id = $1 AND f.id = $2
 ", $document_id, $field_id)->fetchRow();
 	}
 
+	//obsolete
+	/*
 	public function getFiles($document_id)
 	{
 		return $this->files_model->getList([
 			'document_id'	=> $document_id,
 		]);
-	}
+	}*/
 
 	private function getList_action($action)
 	{
@@ -342,7 +328,7 @@ WHERE document_id = $1 AND f.id = $2
 
 /**
  * without_fields = true - не грузить атрибуты
- * without_files = true - не грузить файлы
+ * //obsolete  without_files = true - не грузить файлы
  */
 	public function getList($params = [])
 	{
@@ -463,10 +449,11 @@ WHERE document_id = $1 AND f.id = $2
 			{
 				$list[$row['id']]['fields'] = $this->getFieldsValues($row['id']);
 			}
+			/* //obsolete
 			if (!isset($params['without_files']))
 			{
 				$list[$row['id']]['files'] = $this->getFiles($row['id']);
-			}
+			}*/
 		}
 		return $list;
 	}
@@ -590,7 +577,7 @@ WHERE document_id = $1 AND field_id = $2 AND {$db_field} = $3", $document_id, $f
 		if ($row !== false)
 		{
 			$row['fields'] = $this->getFieldsValues($row['id']);
-			$row['files'] = $this->getFiles($row['id']);
+			//obsolete $row['files'] = $this->getFiles($row['id']);
 		}
 		return $row;
 	}
@@ -650,7 +637,7 @@ class Document_fieldsModel extends SimpleDictionaryModel
 	function __construct($scheme, $document_type_id = 0)
 	{
 		parent::__construct($scheme.'.documents_fields', 'id', [
-			'title', 'value_type', 'measure', 'sort_order',
+			'title', 'value_type', 'measure', 'sort_order', 'description', 'automated',
 			'x_value_field_name', 'x_table_name', 'x_table_order', 'x_list_url',
 		]);
 		$this->scheme = $scheme;
@@ -691,8 +678,10 @@ ORDER BY {$field_info['x_table_order']}")->fetchAll('id');
 			'id'				=> 0,
 			'title'				=> '',
 			'measure'			=> '',
+			'description'		=> '',
 			'value_type'		=> 'I',
 			'sort_order'		=> 0,
+			'automated'			=> 0,
 		];
 	}
 
@@ -754,45 +743,15 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 			$key_value)->fetchAll('value'));
 	}
 
-	public function getMetaData()
-	{
-		return [
-			'pk'	=> $this->key_field,
-			'fields'=> [
-				'title'	=> [
-					'title'	=> 'Название',
-					'width' => 200,
-					'type'	=> 'string',
-				],
-				'value_type'	=> [
-					'title'	=> 'Тип значения',
-					'width' => 50,
-					'type'	=> 'string',
-				],
-				'measure'	=> [
-					'title'	=> 'Ед.изм.',
-					'width' => 20,
-					'type'	=> 'string',
-				],
-				'sort_order'	=> [
-					'title'	=> 'Сортировка',
-					'width' => 10,
-					'type'	=> 'integer',
-				],
-			]//fields
-		];
-	}
-
 	public function saveRow($data)
 	{
 		if (!isset($data['id']) || intval($data['id']) == 0)
 		{//запрет создания полей
 			return "Потерян ID поля.";
 		}
-		if (!isset($data['sort_order']))
-		{
-			$data['sort_order'] = 0;
-		}
+		$data['sort_order'] = $data['sort_order'] ?? 0;
+		$data['automated'] = $data['automated'] ?? 0;
+
 		$old_data = $this->getRow($data['id']);
 
 		$data['value_type'] = $old_data['value_type'];//тип не меняем из интерфейса.
@@ -805,10 +764,9 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 			}
 		}
 
-
 		if (trim($data['title']) == '')
 		{
-			return "Описание поля не может быть пустым";
+			return "Название поля не может быть пустым";
 		}
 		//da($this->fields);		da($data);		da($this->table_name);		die();
 		$ar = $this->db->update($this->table_name, $this->key_field, $this->fields, $data)->affectedRows();
@@ -883,6 +841,7 @@ WHERE f.value_type='K' AND v.int_value = $key_value LIMIT 1")->rows > 0)
 	}
 }
 
+/* obsolete
 class Document_filesModel extends SimpleFilesModel
 {
 	function __construct($scheme, $storage_path, $allowed_extensions = [], $max_file_size = 0)
@@ -910,3 +869,4 @@ class Document_filesModel extends SimpleFilesModel
 		return parent::getList($params);
 	}
 }
+*/
