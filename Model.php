@@ -154,6 +154,7 @@ class Model
 		}
 		else
 		{
+			//da('__get model '.$method_name);
 			return null;
 		}
 	}

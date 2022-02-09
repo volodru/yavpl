@@ -8,6 +8,10 @@
 
 /** CHANGELOG
  *
+ * 1.06
+ * DATE: 2022-02-09
+ * в словарь полей добавлен логический тип (0/1) 0 - false/нет, всё что не 0 - true/да
+ *
  * 1.05
  * DATE: 2022-01-26
  * в словарь полей добавлены поля description(текст) и automated (0/1)
@@ -115,7 +119,6 @@ class DocumentModel extends SimpleDictionaryModel
 
 		$this->initFieldsModel($scheme, $document_type_id);
 		$this->initValuesDictsModel($scheme, $document_type_id);
-		//obsolete $this->initFilesModel($scheme, $document_type_id);
 	}
 
 /** перекрыть, если используется своя модель для полей
@@ -124,7 +127,7 @@ class DocumentModel extends SimpleDictionaryModel
 	{
 		//в перекрытом методе вызываем свою модель
 		$this->fields_model = new Document_fieldsModel($scheme, $document_type_id);
-		//не забыть прицепить ее к документам!
+		//не забыть прицепить ее вот таким образом к документам!
 		$this->fields_model->__parent = $this;
 	}
 
@@ -134,18 +137,9 @@ class DocumentModel extends SimpleDictionaryModel
 	{
 		//в перекрытом методе вызываем свою модель
 		$this->values_dicts_model = new Document_values_dictsModel($scheme, $document_type_id);
-		//не забыть прицепить ее к документам!
+		//не забыть прицепить ее вот таким образом к документам!
 		$this->values_dicts_model->__parent = $this;
 	}
-
-/* //obsolete
-	public function initFilesModel($scheme, $document_type_id)
-	{
-		//в перекрытом методе вызываем свою модель
-		$this->files_model = new Document_filesModel($scheme, HOME_DIR.'/'.$scheme);
-		//не забыть прицепить ее к документам!
-		$this->files_model->__parent = $this;
-	}*/
 
 /** USAGE:
 print $this->__getDataStructureScript();die('stopped');
@@ -155,7 +149,6 @@ print $this->__getDataStructureScript();die('stopped');
  */
 	public function __getDataStructureScript()
 	{
-		//obsolete DROP TABLE {$this->scheme}.documents_files;
 		return "
 DROP TABLE {$this->scheme}.documents_values_dicts;
 DROP TABLE {$this->scheme}.documents_fields_values;
@@ -284,9 +277,9 @@ CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.d
 	public function getEmptyRow()
 	{
 		return [
-			'id'			=> 0,
+			'id'				=> 0,
 			'document_type_id'	=> $this->document_type_id,
-			'parent_id'		=> 0,
+			'parent_id'			=> 0,
 		];
 	}
 
@@ -309,15 +302,6 @@ JOIN {$this->scheme}.documents_fields_values AS v ON (v.field_id = f.id)
 WHERE document_id = $1 AND f.id = $2
 ", $document_id, $field_id)->fetchRow();
 	}
-
-	//obsolete
-	/*
-	public function getFiles($document_id)
-	{
-		return $this->files_model->getList([
-			'document_id'	=> $document_id,
-		]);
-	}*/
 
 	private function getList_action($action)
 	{
@@ -449,11 +433,6 @@ WHERE document_id = $1 AND f.id = $2
 			{
 				$list[$row['id']]['fields'] = $this->getFieldsValues($row['id']);
 			}
-			/* //obsolete
-			if (!isset($params['without_files']))
-			{
-				$list[$row['id']]['files'] = $this->getFiles($row['id']);
-			}*/
 		}
 		return $list;
 	}
@@ -491,7 +470,7 @@ WHERE document_id = $1 AND f.id = $2
 		$value = $hr_value = trim($value);
 		$result = "Field [{$field_info['title']}] with value [{$value}]: Unknown value_type [{$field_info['value_type']}]";//ошибка по-умолчанию
 		$insert_clause = '';
-		if ($field_info['value_type'] == 'A')
+		if ($field_info['value_type'] == 'A')//string
 		{
 			if ($value == '')
 			{
@@ -500,7 +479,7 @@ WHERE document_id = $1 AND f.id = $2
 			$db_field = 'text_value';
 			$result = '';
 		}
-		if ($field_info['value_type'] == 'I')
+		if ($field_info['value_type'] == 'I')//integer
 		{
 			$value = preg_replace("/\D/", '', $value);
 			if ($value == '')
@@ -510,7 +489,19 @@ WHERE document_id = $1 AND f.id = $2
 			$db_field = 'int_value';
 			$result = '';
 		}
-		if ($field_info['value_type'] == 'F')
+		if ($field_info['value_type'] == 'B')// boolean
+		{
+			$value = preg_replace("/\D/", '', $value);
+			if ($value == '')
+			{
+				return "{$field_info['title']} - [{$value}]: Ожидается число 0 или 1";
+			}
+			$value = ($value != 0) ? 1 : 0;//всё, кроме нуля - ДА
+			$hr_value = ($value != 0) ? 'да' : 'нет';
+			$db_field = 'int_value';
+			$result = '';
+		}
+		if ($field_info['value_type'] == 'F')//float
 		{
 			$value = preg_replace("/\,/", '.', $value);
 			$value = preg_replace("/\s+/", '', $value);
@@ -522,7 +513,7 @@ WHERE document_id = $1 AND f.id = $2
 			$db_field = 'float_value';
 			$result = '';
 		}
-		if (in_array($field_info['value_type'], ['K', 'X']))
+		if (in_array($field_info['value_type'], ['K', 'X']))//dictionary
 		{
 			$value = preg_replace("/\D/", '', $value);
 			if ($value == '')
@@ -537,7 +528,7 @@ WHERE document_id = $1 AND f.id = $2
 			$db_field = 'int_value';
 			$result = '';
 		}
-		if ($field_info['value_type'] == 'D')
+		if ($field_info['value_type'] == 'D')//date
 		{
 			$value = trim($value);
 			$matches = [];
@@ -577,7 +568,6 @@ WHERE document_id = $1 AND field_id = $2 AND {$db_field} = $3", $document_id, $f
 		if ($row !== false)
 		{
 			$row['fields'] = $this->getFieldsValues($row['id']);
-			//obsolete $row['files'] = $this->getFiles($row['id']);
 		}
 		return $row;
 	}
@@ -614,6 +604,7 @@ class Document_fieldsModel extends SimpleDictionaryModel
 		'D'	=> 'Дата', // date
 		'K'	=> 'Словарный', // key values
 		'X'	=> 'Внешний словарь', // key values
+		'B'	=> 'Логический', // integer (0|1),  0 - false, not 0 - true
 	];
 
 	public $value_field_names = [
@@ -623,10 +614,12 @@ class Document_fieldsModel extends SimpleDictionaryModel
 		'D'	=> 'date_value', // date
 		'K'	=> 'int_value', // key values
 		'X'	=> 'int_value', // key values
+		'B'	=> 'int_value', // integer
 	];
 
 	public $sort_field_names = [
 		'A'	=> 'text_value', // alphabet
+		'B'	=> 'int_value', // integer
 		'I'	=> 'int_value', // integer
 		'F'	=> 'float_value', // float
 		'D'	=> 'date_value', // date
@@ -658,7 +651,7 @@ class Document_fieldsModel extends SimpleDictionaryModel
 			{
 				if (!isset($field_info[$f]))
 				{
-					die("Для поля #{$field_info['id']} {$field_info['title']} типа Внешний словарь не задано поле [$f]");
+					die("Для поля #{$field_info['id']} {$field_info['title']} типа Внешний словарь не задано поле [{$f}]");
 				}
 			}
 
@@ -739,7 +732,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 
 	public function getDistinctValues($key_value)
 	{
-		return array_keys($this->db->exec("SELECT DISTINCT(value) AS value  FROM {$this->scheme}.documents_fields_values WHERE field_id = $1",
+		return array_keys($this->db->exec("SELECT DISTINCT(value) AS value FROM {$this->scheme}.documents_fields_values WHERE field_id = $1",
 			$key_value)->fetchAll('value'));
 	}
 
@@ -768,12 +761,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		{
 			return "Название поля не может быть пустым";
 		}
-		//da($this->fields);		da($data);		da($this->table_name);		die();
 		$ar = $this->db->update($this->table_name, $this->key_field, $this->fields, $data)->affectedRows();
-		/*
-		$ar = $this->db->exec("UPDATE {$this->scheme}.documents_fields SET title = $2, measure = $3, sort_order = $4 WHERE id = $1",
-			$data['id'], trim($data['title']), trim($data['measure']), $data['sort_order'])->affectedRows();
-			*/
 		if ($ar != 1)
 		{
 			return "Ошибка при сохранении атрибутов поля. Возможно, поле ID={$data['id']} уже не существует";
@@ -814,7 +802,7 @@ class Document_values_dictsModel extends SimpleDictionaryModel
 SELECT f.id
 FROM {$this->scheme}.documents_fields_values AS v
 JOIN {$this->scheme}.documents_fields AS f ON (f.id = v.field_id)
-WHERE f.value_type='K' AND v.int_value = $key_value LIMIT 1")->rows > 0)
+WHERE f.value_type='K' AND v.int_value = {$key_value} LIMIT 1")->rows > 0)
 		{
 			return "На удаляемое значение [{$key_value}] ссылаются какие-то документы. Нужно их ВСЕХ отредактировать перед удалением значения.";
 		}
@@ -840,33 +828,3 @@ WHERE f.value_type='K' AND v.int_value = $key_value LIMIT 1")->rows > 0)
 		];
 	}
 }
-
-/* obsolete
-class Document_filesModel extends SimpleFilesModel
-{
-	function __construct($scheme, $storage_path, $allowed_extensions = [], $max_file_size = 0)
-	{
-		parent::__construct($scheme.'.documents_files', 'id', [
-				'document_id', 'file_type_id', 'file_name', 'file_ext', 'file_size',
-			],
-				$storage_path, $allowed_extensions, $max_file_size
-		);
-		$this->scheme = $scheme;
-	}
-
-	public function getList($params = [])
-	{
-		if (!isset($params['order']) || $params['order'] == '')
-		{
-			$params['order'] = 'file_type_id, file_name';
-		}
-		$params['where'] = $params['where'] ?? [];
-
-		if (isset($params['document_id']))
-		{
-			$params['where'][] = "document_id = {$params['document_id']}";
-		}
-		return parent::getList($params);
-	}
-}
-*/
