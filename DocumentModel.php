@@ -456,7 +456,7 @@ WHERE document_id = $1 AND f.id = $2
 		if ($field_id == 0){die('DocumentModel.saveFieldsValue: $field_id == 0');}			// - barbaric!
 
 		$field_info = $this->fields_model->getRow($field_id);
-		//da($field_info);
+		//da($value);da($field_info);die;
 		if ($field_info == false){die("DocumentModel.saveFieldsValue: UNKNOWN field_id = {$field_id}");}
 		$delete_clause = "DELETE FROM {$this->scheme}.documents_fields_values WHERE document_id = $1 AND field_id = $2";
 		//установка value -> null - удаляет значение поля
@@ -547,6 +547,7 @@ WHERE document_id = $1 AND f.id = $2
 
 		if ($result == '')
 		{
+			//da("$document_id, $field_id, $value, $hr_value");die;
 			if ($this->db->exec("
 SELECT document_id
 FROM {$this->scheme}.documents_fields_values
@@ -767,6 +768,27 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 			return "Ошибка при сохранении атрибутов поля. Возможно, поле ID={$data['id']} уже не существует";
 		}
 		return '';
+	}
+
+	public function updateDictValues()
+	{
+		$this->db->exec("
+UPDATE {$this->scheme}.documents_fields_values
+SET value = to_char(date_value, 'DD-MM-YYYY')
+WHERE field_id IN (SELECT id FROM {$this->scheme}.documents_fields WHERE value_type = 'D')");
+
+		$this->db->exec("
+UPDATE {$this->scheme}.documents_fields_values
+SET value = (SELECT value FROM {$this->scheme}.documents_values_dicts AS d WHERE d.field_id = field_id AND d.id = int_value)
+WHERE field_id IN (SELECT id FROM {$this->scheme}.documents_fields WHERE value_type = 'K')");
+
+		foreach ($this->db->exec("SELECT * FROM {$this->scheme}.documents_fields WHERE value_type = 'X'")->fetchAll() as $field_info)
+		{
+			$this->db->exec("
+UPDATE {$this->scheme}.documents_fields_values
+SET value = (SELECT {$field_info['x_value_field_name']} AS value FROM {$field_info['x_table_name']} AS d WHERE d.id = int_value)
+WHERE field_id = $1", $field_info['id']);
+		}
 	}
 }
 
