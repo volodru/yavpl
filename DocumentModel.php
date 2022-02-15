@@ -790,6 +790,20 @@ SET value = (SELECT {$field_info['x_value_field_name']} AS value FROM {$field_in
 WHERE field_id = $1", $field_info['id']);
 		}
 	}
+
+	public function canDeleteRow($key_value)
+	{
+		if ($this->db->exec("
+SELECT f.id
+FROM {$this->scheme}.documents_fields_values AS v
+JOIN {$this->scheme}.documents_fields AS f ON (f.id = v.field_id)
+WHERE v.field_id = {$key_value} LIMIT 1")->rows > 0)
+		{
+			return "На удаляемое поле [{$key_value}] ссылаются какие-то документы. Нужно их ВСЕХ отредактировать перед удалением значения.";
+		}
+		return '';
+	}
+
 }
 
 class Document_values_dictsModel extends SimpleDictionaryModel
