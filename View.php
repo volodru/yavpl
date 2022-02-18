@@ -43,7 +43,8 @@ class View
 "<link rel='shortcut icon' href='/favicon.ico' type='image/x-icon' />",
 	];
 
-	private $__doctype_declaration = "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>";
+	//private $__doctype_declaration = "<!DOCTYPE html PUBLIC '-//W3C//DTD XHTML 1.0 Transitional//EN' 'http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd'>";
+	private $__doctype_declaration = "<!DOCTYPE html>";
 	private $__html_tag_attributes = "xmlns='http://www.w3.org/1999/xhtml' xml:lang='ru' lang='ru' dir='ltr'";
 
 	private $__methods = [];
