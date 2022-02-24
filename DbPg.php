@@ -28,11 +28,11 @@ class DbPg extends Db implements iDb
 
 		$this->pg_dbh = @pg_connect($connect_string, PGSQL_CONNECT_FORCE_NEW)
 		OR die("Cannot connect to PostgresQL base={$this->host_params['dbname']} port={$this->host_params['port']} user={$this->host_params['user']} (PGSQL_CONNECT_FORCE_NEW)");
-
 		if (isset($this->host_params['exec_after_connect']))
 		{
 			@pg_query($this->pg_dbh, $this->host_params['exec_after_connect']);
 		}
+		//da(pg_get_pid ($this->pg_dbh));
 		//da(__getBackTrace());
 		$this->is_connected = true;
 	}

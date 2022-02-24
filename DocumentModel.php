@@ -592,6 +592,37 @@ WHERE document_id = $1 AND field_id = $2 AND {$db_field} = $3", $document_id, $f
 		$ar = $this->db->insert($this->table_name, $this->key_field, $this->fields, $data)->affectedRows();
 		return ($ar == 1) ? '' : "Произошла ошибка при сохранении документа [#{$this->document_id}]: количество измененных записей = {$ar}";
 	}
+
+	public function calcAutomatedFields($document_id = 0)
+	{
+		if ($document_id == 0){die('Lost $document_id in calcAutomatedFields($document_id = 0)');}
+
+		/* ШАБЛОН
+		foreach (array_keys($this->fields_model->getList(['automated' => 1])) as $field_id)
+		{
+
+			if (in_array($field_id, [71]))
+			{//
+				$fv1 = $this->getFieldValue($document_id, 16);
+				$fv2 = $this->getFieldValue($document_id, 4);
+				if (($fv1 !== false) && ($fv2 !== false))
+				{
+					$field_value1 = $fv1['date_value'];
+					$field_value2 = $fv2['date_value'];
+					//da($value);			da($new_field_value);
+					if (($field_value1 != '') && ($field_value2 != ''))
+					{//
+						//da("$field_value16  $field_value4");
+						$new_value = $this->db->exec("SELECT ($1::date - $2::date) AS v", $field_value1, $field_value2)->fetchRow()['v'];
+						$msg = $this->saveFieldValue($document_id, $field_id, $new_value);
+						if ($msg != ''){ return $msg; }
+					}
+				}
+			}
+		}
+		// END ШАБЛОН
+		*/
+	}
 }
 
 class Document_fieldsModel extends SimpleDictionaryModel
