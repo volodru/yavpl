@@ -82,6 +82,11 @@ class SimpleFilesModel extends SimpleDictionaryModel
 		}
 	}
 
+	public function getAllowedExtensions($data = [])
+	{//наследники могут перекрыть это. например в MPFL
+		return $this->allowed_extensions;
+	}
+
 /**
 * Входной файл обязателен.
 * Сохраняет новый файл или заменяет старый файл новым.
@@ -126,9 +131,9 @@ class SimpleFilesModel extends SimpleDictionaryModel
 		if (preg_match("/^(.+)\.(.+?)$/", $data['file_name'], $matches))
 		{
 			$data['file_ext'] = strtolower($matches[2]);
-			if (!in_array($data['file_ext'], $this->allowed_extensions))
+			if (!in_array($data['file_ext'], $this->getAllowedExtensions($data)))
 			{
-				$this->log[] = "Расширение файла {$data['file_ext']} не входит в список разрешенных: [".join(', ', $this->allowed_extensions)."]";
+				$this->log[] = "Расширение файла {$data['file_ext']} не входит в список разрешенных: [".join(', ', $this->getAllowedExtensions($data))."]";
 			}
 		}
 		else
