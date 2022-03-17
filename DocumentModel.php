@@ -742,7 +742,17 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 
 		$params['where'][] = "document_type_id = {$this->document_type_id}";
 
+		foreach (['automated'] as $f)
+		{
+			if (isset($params[$f]))
+			{
+				$params['where'][] = "{$f} = {$params[$f]}";
+			}
+		}
+
+
 		$list = parent::getList($params);
+
 		if (isset($params['add_default_value']))
 		{
 			$default_value_title = $params['default_value_title'] ?? '-- Выберите --';
