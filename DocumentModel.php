@@ -309,6 +309,7 @@ WHERE document_id = $1 AND f.id = $2
 		if ($action == 'less') return '<';
 		if ($action == 'eq') return '=';
 		if ($action == 'ne') return '!=';
+		if ($action == 'is_null') return 'is_null';
 	}
 
 /**
@@ -384,34 +385,40 @@ WHERE document_id = $1 AND f.id = $2
 				//da("$field_id $action");
 
 				$field_info = $this->fields_model->getRow($field_id);
-
-				if (($field_info['value_type'] == 'K')|| ($field_info['value_type'] == 'X'))
-				{//TO_DO - сделать сравнение по значению для больше-меньше и по ключу - когда равно
-					if (($action == '=')||($action == '!='))
-					{
-						$params['where'][] = "v{$field_id}.int_value {$action} {$value}";
-					}
-					else
-					{
-						$params['where'][] = "v{$field_id}.value {$action} '".$field_info['values'][$value]['value']."'";
-					}
-				}
-				elseif ($field_info['value_type'] == 'I')
+				if ($action == 'is_null')
 				{
-					$params['where'][] = "v{$field_id}.int_value {$action} {$value}";
-				}
-				elseif ($field_info['value_type'] == 'F')
-				{
-					$params['where'][] = "v{$field_id}.float_value {$action} {$value}";
-				}
-				elseif ($field_info['value_type'] == 'D')
-				{
-					$value = preg_replace("/(\d{1,2})-(\d{1,2})-(\d{4})/", "$3-$2-$1", $value);
-					$params['where'][] = "v{$field_id}.date_value {$action} '{$value}'";
+					$params['where'][] = "v{$field_id}.int_value IS NULL";
 				}
 				else
 				{
-					$params['where'][] = "v{$field_id}.value {$action} '{$value}'";
+					if (($field_info['value_type'] == 'K')|| ($field_info['value_type'] == 'X'))
+					{//		TO_DO - сделать сравнение по значению для больше-меньше и по ключу - когда равно
+						if (($action == '=')||($action == '!='))
+						{
+							$params['where'][] = "v{$field_id}.int_value {$action} {$value}";
+						}
+						else
+						{
+							$params['where'][] = "v{$field_id}.value {$action} '".$field_info['values'][$value]['value']."'";
+						}
+					}
+					elseif ($field_info['value_type'] == 'I')
+					{
+						$params['where'][] = "v{$field_id}.int_value {$action} {$value}";
+					}
+					elseif ($field_info['value_type'] == 'F')
+					{
+						$params['where'][] = "v{$field_id}.float_value {$action} {$value}";
+					}
+					elseif ($field_info['value_type'] == 'D')
+					{
+						$value = preg_replace("/(\d{1,2})-(\d{1,2})-(\d{4})/", "$3-$2-$1", $value);
+						$params['where'][] = "v{$field_id}.date_value {$action} '{$value}'";
+					}
+					else
+					{
+						$params['where'][] = "v{$field_id}.value {$action} '{$value}'";
+					}
 				}
 				$params['fields_to_join'][] = $field_id;
 			}
