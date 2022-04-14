@@ -308,10 +308,11 @@ WHERE document_id = $1 AND f.id = $2
 		if ($action == 'more') return '>';
 		if ($action == 'less') return '<';
 		if ($action == 'eq') return '=';
+		if ($action == 'ne') return '!=';
 	}
 
 /**
- * without_fields = true - не грузить атрибуты
+ * 'without_fields' => true, - не грузить атрибуты
  * //obsolete  without_files = true - не грузить файлы
  */
 	public function getList($params = [])
@@ -386,9 +387,9 @@ WHERE document_id = $1 AND f.id = $2
 
 				if (($field_info['value_type'] == 'K')|| ($field_info['value_type'] == 'X'))
 				{//TO_DO - сделать сравнение по значению для больше-меньше и по ключу - когда равно
-					if ($action == '=')
+					if (($action == '=')||($action == '!='))
 					{
-						$params['where'][] = "v{$field_id}.int_value = {$value}";
+						$params['where'][] = "v{$field_id}.int_value {$action} {$value}";
 					}
 					else
 					{
