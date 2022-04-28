@@ -140,7 +140,10 @@ class SimpleFilesModel extends SimpleDictionaryModel
 		{
 			$this->log[] = "Не удалось распознать расширение файла";
 		}
-		if (count($this->log) > 0) return false;//stage check point
+		if (count($this->log) > 0)
+		{
+			return false;//stage check point
+		}
 
 
 		if ($i_file['error'] == UPLOAD_ERR_INI_SIZE)//1
@@ -169,7 +172,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 		}
 		elseif ($i_file['error'] == UPLOAD_ERR_EXTENSION)//8
 		{
-			$this->log[] = "PHP-расширение остановило загрузку файла. PHP не предоставляет способа определить какое расширение остановило загрузку файла. Обратитесь к администратору.";
+			$this->log[] = "PHP-расширение остановило загрузку файла. PHP не предоставляет способа определить, какое расширение остановило загрузку файла. Обратитесь к администратору.";
 		}
 		elseif ($i_file['error'] > 0)
 		{
@@ -180,29 +183,38 @@ class SimpleFilesModel extends SimpleDictionaryModel
 			$this->log[] = "Размер файла должен быть менее {$this->max_file_size} байт";
 		}
 
-		if (count($this->log) > 0) return false;//stage check point
+		if (count($this->log) > 0)
+		{
+			return false;//stage check point
+		}
 
 		if (file_exists($f) && !unlink($f))
 		{
 			$this->log[] = "Невозможно удалить старый файл [$f]";
 		}
 
-		if (count($this->log) > 0) return false;//stage check point
+		if (count($this->log) > 0)
+		{
+			return false;//stage check point
+		}
 
 		if (! move_uploaded_file($i_file['tmp_name'], $f))
 		{
-			$this->log[] = "Невозможно создать файл ({$i_file['tmp_name']} -> $f)!";
+			$this->log[] = "Невозможно создать файл ({$i_file['tmp_name']} -> {$f})!";
 		}
 		elseif (!file_exists($f))
 		{
-			$this->log[] = "И все равно файл не создался! [$f])!";
+			$this->log[] = "И все равно файл не создался! [{$f}])!";
 		}
 		elseif (filesize($f) == 0)
 		{
-			$this->log[] = "И все равно файл нулевой длины! [$f])!";
+			$this->log[] = "И все равно файл нулевой длины! [{$f}])!";
 		}
 
-		if (count($this->log) > 0) return false;//stage check point
+		if (count($this->log) > 0)
+		{
+			return false;//stage check point
+		}
 
 		$data['file_size'] = filesize($f);
 
