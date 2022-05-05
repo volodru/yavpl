@@ -8,6 +8,10 @@
 
 /** CHANGELOG
  *
+ * 1.01
+ * DATE: 2022-05-04
+ * в метод SaveFile добавлена работа с локальными файлами.
+ *
  * 1.00
  * DATE: 2018-03-15
  * файл впервые опубликован
@@ -91,6 +95,9 @@ class SimpleFilesModel extends SimpleDictionaryModel
 * Входной файл обязателен.
 * Сохраняет новый файл или заменяет старый файл новым.
 * Создает или обновляет запись в БД.
+*
+* Возможна загрузка локального файла (в обход CGI) путем указания параметра $i_file['src_file_path']
+* Исходный файл размещать в /tmp/! т.к. файл будет ПЕРЕМЕЩЕН!
 *
 * Для обновления только полей нужно пользоваться saveRow().
 *
@@ -198,17 +205,36 @@ class SimpleFilesModel extends SimpleDictionaryModel
 			return false;//stage check point
 		}
 
-		if (! move_uploaded_file($i_file['tmp_name'], $f))
-		{
-			$this->log[] = "Невозможно создать файл ({$i_file['tmp_name']} -> {$f})!";
+		//локальный файл передавать через /tmp/ - ему делается MOVE
+		if (isset($i_file['src_file_path']))
+		{//local source
+			if (!file_exists($i_file['src_file_path']))
+			{
+				$this->log[] = "Исходный файл [{$i_file['src_file_path']}] не найден.";
+			}
+			else
+			{
+				if (!rename($i_file['src_file_path'], $f))
+				{
+					$this->log[] = "Не удалось переименовать файл [{$i_file['src_file_path']}] в [[$f]].";
+				}
+				//else  - все хорошо
+			}
 		}
-		elseif (!file_exists($f))
+		else
+		{//CGI
+			if (!move_uploaded_file($i_file['tmp_name'], $f))
+			{
+				$this->log[] = "Невозможно создать файл ({$i_file['tmp_name']} -> {$f})!";
+			}
+		}
+		if (!file_exists($f))
 		{
-			$this->log[] = "И все равно файл не создался! [{$f}])!";
+			$this->log[] = "Файл не создался! [{$f}])!";
 		}
 		elseif (filesize($f) == 0)
 		{
-			$this->log[] = "И все равно файл нулевой длины! [{$f}])!";
+			$this->log[] = "Файл нулевой длины! [{$f}])!";
 		}
 
 		if (count($this->log) > 0)

@@ -349,13 +349,10 @@ Content-ID: <{$attachment['file_name']}>
 		}
 		else
 		{
-			//obsolete $log_file_name = "/tmp/www_mail_sent_from_{$_SERVER['SERVER_NAME']}.log";
 			$server_name = $_SERVER['SERVER_NAME'] ?? 'local';
 			$log_file_name = "/tmp/mail_from_{$server_name}_".date('Y-m-d--H-i-s').'_'.rand(1,10000).".eml";
-			//obsolete if ($f = fopen($log_file_name, 'a+'))
 			if ($f = fopen($log_file_name, 'w'))
 			{
-				//obsolete fwrite($f, "\n\n__________".date("d.m.Y H:i:s")."_____________________\n\n");
 				fwrite($f, $letter);
 				fclose($f);
 			}
