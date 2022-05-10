@@ -306,7 +306,7 @@ class Application
 	/** название метода по умолчанию*/
 	public $default_method_name = 'index';
 	/** URI как для CGI так и CLI*/
-	private $__request_uri;
+	protected $__request_uri;
 
 /** Загрузчик Контроллера */
 	public function loadController()
@@ -327,7 +327,7 @@ class Application
 			}
 			else
 			{
-				$this->fatalError("Cannot find class [{$s}] in file [{$file_name}]");
+				$this->fatalError("Cannot find class [{$s}] in file [{$file_name}]");//фаталити - файл есть, а класса в нем нет.
 				return false;
 			}
 		}
@@ -379,6 +379,7 @@ class Application
 //создали экземпляр контроллера - вызвали конструктор
 		if (!$this->loadController())
 		{
+			/*
 			if (APPLICATION_RUNNING_MODE == 'cli')
 			{
 				$this->fatalError("Cannot load appropriate controller for URI [{$this->__request_uri}]");
@@ -386,7 +387,7 @@ class Application
 			else
 			{
 				$this->fatalError("Cannot load appropriate controller for page [{$this->__request_uri}].<br/><br/>It seems that page is not available anymore.<br/><br/>Please, try again from <a href='/'>the main page</a>.");
-			}
+			}*/
 		}
 //вызвали нужный метод контроллера
 		if (method_exists($this->controller, $this->method_name))
