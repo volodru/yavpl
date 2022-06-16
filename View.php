@@ -76,7 +76,14 @@ class View
 		}
 		else
 		{
-			return null;
+			if (APPLICATION_ENV == 'production')
+			{
+				return null;
+			}
+			else
+			{
+				sendBugReport("Call to undefined method {$method_name}", $method_name, true);
+			}
 		}
 	}
 
