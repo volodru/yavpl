@@ -77,24 +77,25 @@
  * подкорректировано описание концепции
  */
 
+//приложение работает в одном из 3х режимов: веб интерфейс (UI), API и CLI
 if (!defined('APPLICATION_RUNNING_MODE') || trim(APPLICATION_RUNNING_MODE) == '')
 {
-	define('APPLICATION_RUNNING_MODE', 'ui');
+	define('APPLICATION_RUNNING_MODE', 'ui');//режим по-умолчанию
 }
 if (APPLICATION_RUNNING_MODE == 'api')
-{
+{//нет представления, контроллер отдает JSON
 	define('CONTROLLERS_BASE_PATH', 'api');
 }
 elseif (APPLICATION_RUNNING_MODE == 'cli')
-{
+{//режим командной строки - нет пользоватльской сессии, все делается от администратора.
 	define('CONTROLLERS_BASE_PATH', 'cli');
 }
 elseif (APPLICATION_RUNNING_MODE == 'ui')
-{
+{//режим веб-интерфейса - работает всё, выдаем HTML или что решит контроллер
 	define('CONTROLLERS_BASE_PATH', 'controllers');
 }
 else
-{
+{//а всякую дичь отметаем сразу
 	die('Wrong APPLICATION_RUNNING_MODE: '.APPLICATION_RUNNING_MODE);
 }
 
@@ -458,7 +459,7 @@ class Application
 			'Db', 'DbPg', 'DbPgSingleton', 'DbMy',//СУБД
 			'Mail',//Почта
 			'Model', 'SimpleDictionaryModel', 'SimpleFilesModel', 'BasicUserModel', 'DocumentModel',//модельки
-			'Controller', 'View', 'Helper', //ядро
+			'Controller', 'View', 'Helper', //ядро фреймворка
 			'ToolBar', 'Test',//плюшки
 		]))
 		{
@@ -466,9 +467,10 @@ class Application
 			return true;
 		}
 
+//вызовы классов-предков. непосредственный контроллер грузится в loadController - предки и все остальные грузятся тут
 		$matches = [];
 		if (preg_match("/(.+)_(.+)Controller/", $class_name, $matches))
-		{
+		{//контроллеры
 			if ($matches[2] == 'default') {$matches[2] = '_default';}
 			$file_name = CONTROLLERS_BASE_PATH."/{$matches[1]}/{$matches[2]}.php";
 			if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
@@ -477,7 +479,7 @@ class Application
 			}
 		}
 		elseif (preg_match("/(.+)_(.+)View/", $class_name, $matches))
-		{
+		{//представления
 			if ($matches[2] == 'default') {$matches[2] = '_default';}
 			$file_name = "views/{$matches[1]}/{$matches[2]}.php";
 			if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
@@ -486,15 +488,15 @@ class Application
 			}
 		}
 		elseif ($class_name == 'defaultController')
-		{
+		{//главный контроллер проекта
 			$file_name = CONTROLLERS_BASE_PATH."/_default.php";
 		}
 		elseif ($class_name == 'defaultView')
-		{
+		{//главное представление проекта - именно там шаблон всех страниц проекта
 			$file_name = "views/_default.php";
 		}
 		elseif (preg_match("/(.+)(Model)/", $class_name, $matches))
-		{
+		{//модельки грузятся по необходимости
 			$file_name = "models/".preg_replace("/_/", '/', $matches[1]).".php";
 			if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
 			{
@@ -507,7 +509,7 @@ class Application
 			}
 		}
 		elseif (preg_match("/(.+)(Helper)/", $class_name, $matches))
-		{
+		{//хелперы - грызятся по необходимости
 			$file_name = "helpers/{$matches[1]}.php";
 			if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
 			{
@@ -523,7 +525,7 @@ class Application
 			return false;
 		}
 
-		//are we still here?
+		//are we still here? т.е. пока еще все хорошо - мы сформировали путь к файлу
 		if (file_exists(APPLICATION_PATH.'/'.$file_name))
 		{
 			require_once($file_name);

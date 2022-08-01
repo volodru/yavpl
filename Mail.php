@@ -13,7 +13,7 @@
  * добавлено понятие "адрес техподдержки" - TECH_SUPPORT_EMAIL
  * по умолчанию - оно совпадает с ADMIN_EMAIL
  * в проектах туда стоит отправлять все технические письма (ошибки и т.п.)
- * админский емэйл - от кого по дефолту посылаются письма - желательно с адреса проекта (...@adrussia.ru, volod@volod.ru, tech@parslovar.ru)
+ * админский емэйл - от кого по дефолту посылаются письма - желательно с адреса проекта (...@adrussia.ru, volod@volod.ru, tech@paraslovar.ru)
  *
  * 1.06
  * @DATE: 2015-10-30
@@ -56,7 +56,7 @@ if (!defined('REMOTE_ADDR'))
 
 if (!defined('CHARSET_FOR_EMAILS'))
 {//should be initialized once per project. probable in main.php
-	define('CHARSET_FOR_EMAILS', 'utf-8');//windows-1251
+	define('CHARSET_FOR_EMAILS', 'utf-8');
 }
 
 class Mail
@@ -70,7 +70,7 @@ class Mail
 	private $robot_email = ADMIN_EMAIL;
 	private $from_email;
 	private $from_name;
-	private $organization; //you should define('ORGANIZATION_FIELD_FOR_EMAILS', 'you organization')
+	private $organization; //you should do define('ORGANIZATION_FIELD_FOR_EMAILS', 'you organization')
 	private $attachments = [];
 	private $charset = CHARSET_FOR_EMAILS;
 

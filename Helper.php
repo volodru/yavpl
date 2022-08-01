@@ -55,7 +55,7 @@ class Helper
 	}
 
 	public function __call($method_name, $args)
-	{//теперь можно вызывать хелперы из других хелперов
+	{//можно вызывать хелперы из других хелперов
 		if (isset($this->__owner))
 		{
 			return $this->__owner->__call($method_name, $args);
