@@ -19,45 +19,6 @@
  * DATE: 2017-09-30
  * Фатальные ошибки теперь генерят исключение. Перехват их дело добровольное.
  *
- * 1.07
- * В параметры хоста добавлен адрес админа СУБД - db_admin_email.
- * Именно на этот адрес будут идти фатальные ошибки БД.
- * Нужно, чтобы разделить для некототорых проектов db_admin_email и ADMIN_EMAIL.
- * По умолчанию как раньше используется глобальная константа ADMIN_EMAIL.
- * Соответственно поправлен конструктор и showErrorMessage.
- *
- * 1.06
- * ошибки по почте отправляются через класс Mail (mail.php), а не через функцию php - mail()
- *
- * 1.05
- * добавил метод типа "паблик Морозов" - public function getHostParams()
- * надо для копирование в новый коннектор, если в проекте используется синглтон, а надо сделать еще одно отдельное соединение с базой.
- * например при использовании команды COPY в цикле выборки из базы по другому коннектору
- *
- * 1.04
- * Класс стал базовым для подклассов для Постгреса и Мускуля. Здесь осталась только абстракция.
- *
- * 1.03
- * добавлен класс DBSingleton
- * Использование в конструкторе MainModel проекта:
-  	$this->db = DBSingleton::getInstance([
-			'host'		=> 'localhost',
-			...................
-			'dbname'	=> 'dbname',
-	]);
-	Кому это не надо, делает свой экземпляр класса Db и вешает его на переменную MainModel->db
-	$this->db = new Db([
-			'host'		=> 'localhost',
-			...................
-			'dbname'	=> 'dbname',
-	]);
- * 1.02
- * добавлено поле public $min_cost_to_save_log
- *
- * 1.01
- * добавлен заголовок с версией, описанием и проч. к этому файлу
- * теперь в методах insert, update, delete, rowExists поля и ключ могут быть массивами или строками через запятую
- * добавлен метод getRow($table, $keys, $data)
  */
 
 if (!defined('REMOTE_ADDR'))
@@ -92,8 +53,7 @@ class Db
 	public function __construct(array $host_params)
 	{
 		$this->host_params = $host_params;
-		$this->db_admin_email = isset($host_params['db_admin_email']) ? $host_params['db_admin_email'] : ADMIN_EMAIL;
-		//!!!!!!!$this->connect() - используем lazy evaluation, коннектимся не в конструкторе, а по мере необходимости.
+		//!!!!!!!$this->connect() - используем lazy evaluation, коннектимся не в конструкторе, а только по мере необходимости.
 	}
 
 /** если надо преждевременно оторваться от БД, можно просто сделать unset($this->db) в модели
@@ -202,16 +162,14 @@ class Db
 	}
 
 /**
- * Всегда делает die в конце. Ошибки базы всегда фатальны!
+ * Ошибки базы всегда фатальны!
  */
 	public function showErrorMessage($err_msg, $notice_msg)
 	{
-		$current_time = date('Y/m/d H:i:s', time());
+		$current_time = date('Y/m/d H:i:s');
 		$url = "http://".$_SERVER['SERVER_NAME'].$_SERVER['SCRIPT_NAME'];
-		if ($_SERVER['QUERY_STRING']) $url .= '?'.$_SERVER['QUERY_STRING'];
 
-		$ref = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER']:'';
-		$ref = urldecode($ref);
+		if ($_SERVER['QUERY_STRING']) {$url .= '?'.$_SERVER['QUERY_STRING'];}
 
 		ob_start();
 		debug_print_backtrace();
@@ -222,10 +180,10 @@ class Db
 		<h3>Critical error</h3>{$current_time}
 		<br />URL {$url} (URI {$_SERVER['REQUEST_URI']})
 		<br />AGENT: {$_SERVER['HTTP_USER_AGENT']}
-		<br />REFERER: {$ref}
+		<br />REFERER: ".urldecode($_SERVER['HTTP_REFERER'] ?? '')."
 		<br />QUERY ON HOST {$this->host_params['host']}:{$this->host_params['port']} TO DB [{$this->host_params['dbname']}] AS USER [{$this->host_params['user']}]:
 		<br /><xmp>QUERY: ".htmlspecialchars($this->query)."</xmp>
-<br /><xmp>PARAMS: ".print_r($this->params, true)."</xmp>
+		<br /><xmp>PARAMS: ".print_r($this->params, true)."</xmp>
 		<br />PostgresQL's response:
 		<div style='color: #F00; padding: 5px;'>{$err_msg}</div>
 		<div style='color: #0FF; padding: 5px;'>{$notice_msg}</div>
@@ -237,16 +195,17 @@ class Db
 		}
 
 		if ($this->show_error_messages)
-		{//@TODO: это мутный момент когда и как показывать ошибки БД для случаев,
-			//когда они допустимы.
-			//и решить что это за случаи.
+		{
+//@TODO: это мутный момент когда и как показывать ошибки БД для случаев,
+//когда они допустимы.
+//и решить что это за случаи.
 			print "
 <h1>Ошибка в запросе</h1>
 <h2>Ваш запрос</h2>
 <xmp>".htmlspecialchars($this->query)."</xmp>
-		<h2>Ответ от базы данных</h2>
-		<xmp style='color: #F00;'>$err_msg</xmp>
-		<xmp style='color: #0FF;'>$notice_msg</xmp>";
+<h2>Ответ от базы данных</h2>
+<xmp style='color: #F00;'>{$err_msg}</xmp>
+<xmp style='color: #0FF;'>{$notice_msg}</xmp>";
 		}
 		throw new Exception($debug_info);
 	}
