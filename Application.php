@@ -354,11 +354,13 @@ class Application
 		}//else и хрен бы с файлом
 	}
 
-/** Разборщик URI - если проект не ложится в схему Модуль->Класс->Метод перекрываем этот метод*/
+/** Разборщик URI - если проект не ложится в схему Модуль->Класс->Метод перекрываем этот метод
+ * в перекрытом методе надо присвоить значение $this->__request_uri, т.к. его потом использует метод fileNotFound
+ * */
 	public function parseURI()
 	{
 		if (APPLICATION_RUNNING_MODE == 'cli')
-		{
+		{//CLI
 			$this->__request_uri = $_SERVER['argv'][1];
 		}
 		else//Normal And API
@@ -380,15 +382,14 @@ class Application
 //создали экземпляр контроллера - вызвали конструктор
 		if (!$this->loadController())
 		{
-			/*
 			if (APPLICATION_RUNNING_MODE == 'cli')
 			{
-				$this->fatalError("Cannot load appropriate controller for URI [{$this->__request_uri}]");
+				$this->fatalError("CLI mode: Cannot load appropriate controller for URI [{$this->__request_uri}]");
 			}
 			else
 			{
-				$this->fatalError("Cannot load appropriate controller for page [{$this->__request_uri}].<br/><br/>It seems that page is not available anymore.<br/><br/>Please, try again from <a href='/'>the main page</a>.");
-			}*/
+				return;//а чё ещё делать, если контроллер не нашелся.
+			}
 		}
 //вызвали нужный метод контроллера
 		if (method_exists($this->controller, $this->method_name))
