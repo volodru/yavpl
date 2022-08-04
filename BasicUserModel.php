@@ -107,7 +107,7 @@ class BasicUserModel extends SimpleDictionaryModel
  * Параметр fields - обязателен, перечисление полей описывающих юзера
  * В целом, общим для разных проектов является только id, остальное может отличаться (name против name_r/name_e)
  */
-    function __construct(array $params = [])
+	public function __construct(array $params = [])
 	{
 		$params['table_name'] = isset($params['table_name']) ? $params['table_name'] : BASIC_USER_TABLE_NAME;
 		$params['key_field'] = isset($params['key_field']) ? $params['key_field'] : BASIC_USER_TABLE_KEY_FIELD;

@@ -99,7 +99,7 @@ class Model
 	protected $__sub_models = [];
 	private $__methods = [];
 
- 	function __construct()
+	public 	function __construct()
 	{
 	}
 
@@ -164,5 +164,4 @@ class Model
 		$this->__methods = array_merge($this->__methods, Helper::registerHelper($helper_class_name, $this));
 		return $this;
 	}
-
 }

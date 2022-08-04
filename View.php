@@ -53,7 +53,7 @@ class View
 
 	//public $title;
 
-	function __construct()
+	public function __construct()
 	{
 		global $application;
 		if (isset($application) && isset($application->controller))

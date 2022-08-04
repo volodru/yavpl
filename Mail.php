@@ -100,7 +100,7 @@ class Mail
 		'cer'	=> 'application/octet-stream',// public keys
 	];
 
-	function __construct($to_email = '', $subj = '', $content = '', $from_email = '', $from_name = '')
+	public function __construct($to_email = '', $subj = '', $content = '', $from_email = '', $from_name = '')
 	{
 		if ($to_email != '')
 		{

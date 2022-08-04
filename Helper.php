@@ -29,7 +29,7 @@ class Helper
 {
 	protected $__owner;
 
-	function __construct()
+	public function __construct()
 	{
 	}
 
@@ -75,7 +75,7 @@ class Helper
  * Типичный помощник: helpers/html.php
  * Помощник сам может использовать методы вызвавшего его представления через магию __get()
  */
-	static function registerHelper($helper_class_name, $owner)//class
+	public static function registerHelper($helper_class_name, $owner)//class
 	{//if register more than one helper with the same method - method of the last helper will be called. I guess. :)
 		$name = $helper_class_name.'Helper';
 		$helper = new $name();

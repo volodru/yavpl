@@ -28,7 +28,7 @@ class Test
 	public $assertsCount = 0;
 	protected $controller;
 
-	function __construct($controller)
+	public function __construct($controller)
 	{
 		$this->controller = $controller;
 	}

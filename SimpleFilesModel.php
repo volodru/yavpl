@@ -32,7 +32,7 @@
  */
 class SimpleFilesModel extends SimpleDictionaryModel
 {
-	function __construct($table_name, $key_field, $fields, $storage_path,
+	public function __construct($table_name, $key_field, $fields, $storage_path,
 		$allowed_extensions = [], $max_file_size = 0)
 	{
 		foreach (['file_name', 'file_ext', 'file_size'] as $f)

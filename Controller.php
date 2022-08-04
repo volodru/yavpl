@@ -132,7 +132,7 @@ class Controller
 
 	private $__methods = [];//for Helper
 
-	function __construct()
+	public function __construct()
 	{
 		/* Заполняем параметры для CLI режима */
 		foreach ($_SERVER['argv'] ?? [] as $param)
@@ -148,7 +148,7 @@ class Controller
 /**
  * ничего не делаем
  */
-	function __destruct()
+	public function __destruct()
 	{
 	}
 

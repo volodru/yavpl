@@ -63,7 +63,7 @@ class SimpleDictionaryModel extends MainModel
 	public $key_field_value;
 
 /** Берем таблицу, ключ и поля*/
-	function __construct($table_name, $key_field, $fields)
+	public function __construct($table_name, $key_field, $fields)
 	{
 		parent::__construct();
 		$this->table_name = $table_name;

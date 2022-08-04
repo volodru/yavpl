@@ -451,7 +451,7 @@ class Application
 	}
 
 /** Автозагрузчик всего и вся */
-	static function __autoload($class_name)
+	public static function __autoload($class_name)
 	{
 		//print "<p>__autoload loading: {$class_name}</p>";
 		// свои библиотечные файлы проверяем первыми.

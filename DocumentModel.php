@@ -108,7 +108,7 @@ class DocumentModel extends SimpleDictionaryModel
 {
 	protected $document_type_id;//TODO: а оно вообще надо тут? пока еще не было больше одного типа документов в одной схеме.
 
-	function __construct($scheme, $document_type_id = 0)
+	public function __construct($scheme, $document_type_id = 0)
 	{
 		parent::__construct($scheme.'.documents', 'id', [
 			'document_type_id',

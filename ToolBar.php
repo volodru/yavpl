@@ -21,7 +21,7 @@ class ToolBar
 {
 	private $__elements = [];
 
-	function __construct()
+	public function __construct()
 	{
 	}
 
