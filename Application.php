@@ -151,7 +151,10 @@ function __printBacktrace()
  */
 function sendBugReport($subject = 'Bug report', $message = 'Common bug', $is_fatal = false)
 {
-	if (!isset($_SESSION)){session_start();}
+	if (APPLICATION_RUNNING_MODE != 'cli')
+	{
+		if (!isset($_SESSION)){session_start();}
+	}
 
 	$a = [];
 	exec('hostname', $a);
