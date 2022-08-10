@@ -41,7 +41,7 @@
 
 if (!defined('ADMIN_EMAIL'))
 {
-	define('ADMIN_EMAIL', $_SERVER['SERVER_ADMIN']);
+	define('ADMIN_EMAIL', $_SERVER['SERVER_ADMIN'] ?? '');
 }
 
 if (!defined('TECH_SUPPORT_EMAIL'))

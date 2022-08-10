@@ -436,7 +436,7 @@ CREATE TABLE public.user_activity_logs
  */
 	public function generateNewAutologin()
 	{
-		return md5(time().$_SERVER['REMOTE_ADDR']);
+		return md5(time().REMOTE_ADDR);
 	}
 
 /** Загружаем настройки из сессии или кук, в зависимости от юзер или аноним.
