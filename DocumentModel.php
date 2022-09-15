@@ -549,6 +549,7 @@ WHERE document_id = $1 AND f.id = $2
 				return "{$field_info['title']} - [{$value}]: Неверная дата. Формат даты ДД-ММ-ГГГГ";
 			}
 			$value = $matches[1].'-'.$matches[2].'-'.$matches[3];
+			$hr_value = $matches[1].'-'.$matches[2].'-'.$matches[3];
 			$db_field = 'date_value';
 			$result = '';
 		}
