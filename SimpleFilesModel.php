@@ -107,6 +107,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 	public function saveFile(&$data, $i_file)
 	{
 		$this->clearLog();
+		$i_file['error'] ??= 0;//для загрузки через файловую систему
 
 		$key_value = $data[$this->key_field];
 		if ($key_value == 0)
