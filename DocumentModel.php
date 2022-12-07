@@ -758,6 +758,13 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 				$params['where'][] = "{$f} = {$params[$f]}";
 			}
 		}
+		foreach (['value_type'] as $f)
+		{
+		    if (isset($params[$f]))
+		    {
+		        $params['where'][] = "{$f} = '{$params[$f]}'";
+		    }
+		}
 
 
 		$list = parent::getList($params);
