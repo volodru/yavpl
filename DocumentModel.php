@@ -660,15 +660,15 @@ class Document_fieldsModel extends SimpleDictionaryModel
 
 	public $sort_field_names = [
 		'A'	=> 'text_value', // alphabet
-		'B'	=> 'int_value', // integer
 		'I'	=> 'int_value', // integer
 		'F'	=> 'float_value', // float
 		'D'	=> 'date_value', // date
 		'K'	=> 'value', // key values
 		'X'	=> 'value', // key values
+		'B'	=> 'int_value', // integer
 	];
 
-	function __construct($scheme, $document_type_id = 0)
+	public function __construct($scheme, $document_type_id = 0)
 	{
 		parent::__construct($scheme.'.documents_fields', 'id', [
 			'title', 'value_type', 'measure', 'sort_order', 'description', 'automated',
