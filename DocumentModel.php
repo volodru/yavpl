@@ -94,11 +94,11 @@ print $this->__getDataStructureScript();die('stopped');
 shipments -- например
 update shipments.documents_fields
 set
-  value_type = 'X',
-  x_value_field_name = 'name',
-  x_table_name  = 'shipments.container_types',
-  x_table_order  = 'name',
-  x_list_url  = '/shipments/containertypes'
+	value_type = 'X',
+	x_value_field_name = 'name',
+	x_table_name	= 'shipments.container_types',
+	x_table_order	= 'name',
+	x_list_url	= '/shipments/containertypes'
 where id = 60
 
 
@@ -141,7 +141,8 @@ class DocumentModel extends SimpleDictionaryModel
 		$this->values_dicts_model->__parent = $this;
 	}
 
-/** USAGE:
+/** когда создаем новый тип документов, можно сразу получить SQL скрипт для создания всех таблиц схемы
+ * USAGE:
 print $this->__getDataStructureScript();die('stopped');
 потом открыть исходник и скопировать отформатированный скрипт.
 копия из браузера - идет без форматирования, а PgAdmin ругается на одну длинную строку.
@@ -157,93 +158,93 @@ DROP TABLE {$this->scheme}.documents;
 
 CREATE TABLE {$this->scheme}.documents
 (
-  id serial NOT NULL,
-  document_type_id integer NOT NULL DEFAULT 0,
-  parent_id integer NOT NULL DEFAULT 0,
-  CONSTRAINT documents_pkey PRIMARY KEY (id),
-  CONSTRAINT documents_parent_id_fkey FOREIGN KEY (parent_id)
-      REFERENCES {$this->scheme}.documents (id) MATCH SIMPLE
-      ON UPDATE CASCADE ON DELETE CASCADE
+	id serial NOT NULL,
+	document_type_id integer NOT NULL DEFAULT 0,
+	parent_id integer NOT NULL DEFAULT 0,
+	CONSTRAINT documents_pkey PRIMARY KEY (id),
+	CONSTRAINT documents_parent_id_fkey FOREIGN KEY (parent_id)
+		REFERENCES {$this->scheme}.documents (id) MATCH SIMPLE
+		ON UPDATE CASCADE ON DELETE CASCADE
 )
 WITH (
-  OIDS=FALSE
+	OIDS=FALSE
 );
 ALTER TABLE {$this->scheme}.documents
-  OWNER TO postgres;
+	OWNER TO postgres;
 INSERT INTO {$this->scheme}.documents (id, document_type_id, parent_id) VALUES (0, 0, 0);
 
 CREATE TABLE {$this->scheme}.documents_fields
 (
-  id serial NOT NULL,
-  document_type_id integer NOT NULL DEFAULT 0,
-  title character varying, -- заголовок поля для форм и таблиц
-  value_type character(1), -- тип значения
-  description text, -- комментарий к полю
-  measure character varying, -- ед.изм. значения. например длина в метрах, кредит-нота в долларах
-  sort_order integer NOT NULL DEFAULT 0, -- для сортировки в списке полей
-  x_value_field_name text DEFAULT 'name', -- для типа Внешний словарь (X): название для поля с значением (как правило - name)
-  x_table_name text,-- для типа Внешний словарь (X): полное название таблицы - схема+таблица
-  x_table_order text,-- для типа Внешний словарь (X): сортировака значений
-  x_list_url text,-- для типа Внешний словарь (X): ссылка на список редактирования словаря
-  CONSTRAINT documents_fields_pkey PRIMARY KEY (id)
+	id serial NOT NULL,
+	document_type_id integer NOT NULL DEFAULT 0,
+	title character varying, -- заголовок поля для форм и таблиц
+	value_type character(1), -- тип значения
+	description text, -- комментарий к полю
+	measure character varying, -- ед.изм. значения. например длина в метрах, кредит-нота в долларах
+	sort_order integer NOT NULL DEFAULT 0, -- для сортировки в списке полей
+	x_value_field_name text DEFAULT 'name', -- для типа Внешний словарь (X): название для поля с значением (как правило - name)
+	x_table_name text,-- для типа Внешний словарь (X): полное название таблицы - схема+таблица
+	x_table_order text,-- для типа Внешний словарь (X): сортировака значений
+	x_list_url text,-- для типа Внешний словарь (X): ссылка на список редактирования словаря
+	CONSTRAINT documents_fields_pkey PRIMARY KEY (id)
 )
 WITH (
-  OIDS=FALSE
+	OIDS=FALSE
 );
 ALTER TABLE {$this->scheme}.documents_fields
-  OWNER TO postgres;
+	OWNER TO postgres;
 
 CREATE TABLE {$this->scheme}.documents_fields_values
 (
-  document_id integer NOT NULL,
-  field_id integer NOT NULL,
-  int_value integer,
-  float_value double precision,
-  date_value date,
-  text_value text,
-  value text,
-  CONSTRAINT documents_fields_values_pkey PRIMARY KEY (document_id, field_id),
-  CONSTRAINT documents_fields_values_field_id_fkey FOREIGN KEY (field_id)
-      REFERENCES {$this->scheme}.documents_fields (id) MATCH SIMPLE
-      ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT documents_fields_values_document_id_fkey FOREIGN KEY (document_id)
-      REFERENCES {$this->scheme}.documents (id) MATCH SIMPLE
-      ON UPDATE CASCADE ON DELETE CASCADE
+	document_id integer NOT NULL,
+	field_id integer NOT NULL,
+	int_value integer,
+	float_value double precision,
+	date_value date,
+	text_value text,
+	value text,
+	CONSTRAINT documents_fields_values_pkey PRIMARY KEY (document_id, field_id),
+	CONSTRAINT documents_fields_values_field_id_fkey FOREIGN KEY (field_id)
+		REFERENCES {$this->scheme}.documents_fields (id) MATCH SIMPLE
+		ON UPDATE CASCADE ON DELETE RESTRICT,
+	CONSTRAINT documents_fields_values_document_id_fkey FOREIGN KEY (document_id)
+		REFERENCES {$this->scheme}.documents (id) MATCH SIMPLE
+		ON UPDATE CASCADE ON DELETE CASCADE
 )
 WITH (
-  OIDS=FALSE
+	OIDS=FALSE
 );
 ALTER TABLE {$this->scheme}.documents_fields_values
-  OWNER TO postgres;
+	OWNER TO postgres;
 
 CREATE TABLE {$this->scheme}.documents_values_dicts
 (
-  id serial NOT NULL,
-  document_type_id integer NOT NULL DEFAULT 0,
-  field_id integer NOT NULL,
-  value text,
-  CONSTRAINT documents_values_dicts_pkey PRIMARY KEY (id),
-  CONSTRAINT documents_values_dicts_field_id_fkey FOREIGN KEY (field_id)
-      REFERENCES {$this->scheme}.documents_fields (id) MATCH SIMPLE
-      ON UPDATE CASCADE ON DELETE CASCADE
+	id serial NOT NULL,
+	document_type_id integer NOT NULL DEFAULT 0,
+	field_id integer NOT NULL,
+	value text,
+	CONSTRAINT documents_values_dicts_pkey PRIMARY KEY (id),
+	CONSTRAINT documents_values_dicts_field_id_fkey FOREIGN KEY (field_id)
+		REFERENCES {$this->scheme}.documents_fields (id) MATCH SIMPLE
+		ON UPDATE CASCADE ON DELETE CASCADE
 )
 WITH (
-  OIDS=FALSE
+	OIDS=FALSE
 );
 ALTER TABLE {$this->scheme}.documents_values_dicts
-  OWNER TO postgres;
+	OWNER TO postgres;
 
 CREATE INDEX documents_values_dicts_field_id_idx
-  ON {$this->scheme}.documents_values_dicts
-  USING btree
-  (field_id);
+	ON {$this->scheme}.documents_values_dicts
+	USING btree
+	(field_id);
 
 -- warning about trigger, see below
 CREATE OR REPLACE FUNCTION {$this->scheme}.documents_fields_values_ins_func()
-  RETURNS trigger AS
+	RETURNS trigger AS
 \$BODY\$
 DECLARE
-    field_info {$this->scheme}.documents_fields%ROWTYPE;
+	field_info {$this->scheme}.documents_fields%ROWTYPE;
 BEGIN
 	SELECT * INTO field_info FROM {$this->scheme}.documents_fields WHERE id = NEW.field_id;
 	NEW.value = CASE WHEN field_info.value_type = 'K'
@@ -254,17 +255,17 @@ BEGIN
 	END AS value;
 	RETURN NEW;
 END;\$BODY\$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
+	LANGUAGE plpgsql VOLATILE
+	COST 100;
 ALTER FUNCTION {$this->scheme}.documents_fields_values_ins_func()
-  OWNER TO postgres;
+	OWNER TO postgres;
 
 -- avoid trigger to work field with type X, all through PHP!
 -- CREATE TRIGGER documents_fields_values_ins_trg
---  BEFORE INSERT
---  ON {$this->scheme}.documents_fields_values
---  FOR EACH ROW
---  EXECUTE PROCEDURE {$this->scheme}.documents_fields_values_ins_func();
+--	BEFORE INSERT
+--	ON {$this->scheme}.documents_fields_values
+--	FOR EACH ROW
+--	EXECUTE PROCEDURE {$this->scheme}.documents_fields_values_ins_func();
 
 
 CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.documents FOR EACH ROW EXECUTE PROCEDURE log_history();
@@ -282,7 +283,10 @@ CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.d
 			'parent_id'			=> 0,
 		];
 	}
-
+/** получить значения полей документа
+ * для списков полей и getRow оно вызывается автоматом.
+ * если перекрываем метод getRow и не вызываем предка, то значения заполнять именно этой функцией.
+ */
 	public function getFieldsValues($document_id)
 	{
 		return $this->db->exec("
@@ -293,6 +297,9 @@ WHERE document_id = $1
 ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 	}
 
+/** получить значение одного поля
+ * например в calcAutomatedFields()
+ */
 	public function getFieldValue($document_id, $field_id)
 	{
 		return $this->db->exec("
@@ -304,41 +311,41 @@ WHERE document_id = $1 AND f.id = $2
 	}
 
 	private function getList_action($action)
-	{
-		if ($action == 'more') return '>';
-		if ($action == 'less') return '<';
-		if ($action == 'eq') return '=';
-		if ($action == 'ne') return '!=';
-		if ($action == 'is_null') return 'is_null';
+	{//ну не люблю я конструкцию CASE во всех языках :)
+		if ($action == 'more') {return '>';}
+		if ($action == 'less') {return '<';}
+		if ($action == 'eq') {return '=';}
+		if ($action == 'ne') {return '!=';}
+		if ($action == 'is_null') {return 'is_null';}
 	}
 
-/**
- * 'without_fields' => true, - не грузить атрибуты
- * //obsolete  without_files = true - не грузить файлы
+/** фильтруемый список документов
+ * 'without_fields' => true, - не грузить атрибуты. по умолчанию они грузятся. если надо быстро получить ID документов, то поля грузить не надо.
  */
 	public function getList($params = [])
 	{
 		$params['from'] = $params['from'] ?? "{$this->table_name} AS d";
-
 		$params['where'] = $params['where'] ?? [];
 
-		//эти поля будут прицеплены через
-		//LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v ON (v.document_id = d.id AND v.field_id = FIELD_ID
-		//ожидается просто массив номеров (ID) полей
-		$params['fields_to_join'] = $params['fields_to_join'] ?? [];
+//эти поля будут прицеплены через
+//LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v ON (v.document_id = d.id AND v.field_id = FIELD_ID
+//ожидается просто массив номеров (ID) полей
+		$params['fields_to_join'] ??= [];
+		$params['index'] ??= 'id';//не надо тут d.id! это индекс для хеша в PHP
+		$params['order_direction'] ??= 'DESC';//как сортировать записи
 
-		$params['index'] = $params['index'] ?? 'id';//не надо тут d.id!
+		//если значения одинаковые, то как сортировать их (например, ORDER BY v16.date_value ASC, id DESC)
+		$params['order_default_field'] ??= 'd.id';
+		$params['order_default_direction'] ??= 'DESC';
 
-		$params['order_direction'] = $params['order_direction'] ?? 'DESC';
-		$params['order_default_field'] = $params['order_default_field'] ?? 'd.id';
-		$params['order_default_direction'] = $params['order_default_direction'] ?? 'DESC';
-
+//если не получается сортировать по полю, а надо сложно - приоритет на этом параметре.
+//значение просто вставляется в SQL запрос
 		if (isset($params['raw_order']))
 		{
 			$params['order'] = $params['raw_order'];
 		}
 		else
-		{
+		{//иначе считаем, что в $params['order'] ID поля для сортировки - в отличии от предка этого класса!
 			if (!isset($params['order']))
 			{
 				$params['order'] = $params['order_default_field'].' '.$params['order_direction'];
@@ -350,8 +357,8 @@ WHERE document_id = $1 AND f.id = $2
 					$params['order'] = $params['order_default_field'].' '.$params['order_direction'];
 				}
 				else
-				{
-					$params['fields_to_join'][] = $params['order']; // ожидается в $params['order'] ID поля для сортировки
+				{// ожидается в $params['order'] ID поля для сортировки
+					$params['fields_to_join'][] = $params['order']; //добавляем его к прицепляемым (left outer join ) полям
 					$field_info = $this->fields_model->getRow($params['order']);
 					$field_name = $this->fields_model->sort_field_names[$field_info['value_type']];
 					//так будет работать всё, кроме словарных полей
@@ -361,16 +368,21 @@ WHERE document_id = $1 AND f.id = $2
 			}
 		}
 
-		//чтобы не было в выдаче рутового документа
+//чтобы не было в выдаче рутового документа
 		$params['where'][] = "d.id > 0";
 
-		if (isset($params['parent_id']) && $params['parent_id'] > 0)
+		$f = 'parent_id';
+		if (isset($params[$f]) && $params[$f] > 0)
 		{
-			$params['where'][] = "parent_id = {$params['parent_id']}";
+			$params['where'][] = "{$f} = {$params[$f]}";
 		}
 
-
 		//da('FILTER');		da($params['filter']);
+
+//универсальный фильтр по значениям полей
+//передаем сюда поле, действие и значение.
+//всё вместе идет как AND по всем полям.
+//кому надо OR делает несколько запросов :)
 		if (isset($params['filter_values']) && (count($params['filter_values']) > 0))
 		{
 			//структура: $params['filter']
@@ -411,7 +423,7 @@ WHERE document_id = $1 AND f.id = $2
 						$params['where'][] = "v{$field_id}.float_value {$action} {$value}";
 					}
 					elseif ($field_info['value_type'] == 'D')
-					{
+					{//дата приходит в русском формате (DD-MM-YYYY), переводим его в естественный YYYY-MM-DD
 						$value = preg_replace("/(\d{1,2})-(\d{1,2})-(\d{4})/", "$3-$2-$1", $value);
 						$params['where'][] = "v{$field_id}.date_value {$action} '{$value}'";
 					}
@@ -425,11 +437,13 @@ WHERE document_id = $1 AND f.id = $2
 		}
 		//da($params['where']);		da($params); die();
 
+//прицепляем к запросу все используемые поля
+//в селектах/сортировке/фильтрах появляются таблицы v{$field_id}
 		foreach (array_unique($params['fields_to_join']) as $field_id)
 		{
 			$params['from'] .= "\nLEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id} ON (v{$field_id}.document_id = d.id AND v{$field_id}.field_id = {$field_id})";
 		}
-
+//по-умолчанию отдаем только атрибуты документа
 		$params['select'] = isset($params['select']) ? $params['select'] : "d.*";
 
 		$list = parent::getList($params);
@@ -444,7 +458,13 @@ WHERE document_id = $1 AND f.id = $2
 		}
 		return $list;
 	}
-
+/** если надо сделать поля по умолчанию для методов типа ->edit() для новой записи/документа
+ * то можно сгенерировать правильную структуру поля этим методом
+ * $this->document_info['fields'] = [
+		13	=> $this->claims->documents->generateFieldValue(13, $this->user->id),//заявитель
+		3	=> $this->claims->documents->generateFieldValue(3, date('d-m-Y')),
+	];
+ */
 	public function generateFieldValue($field_id, $value)
 	{
 		$result = ['id' => $field_id];
@@ -454,12 +474,21 @@ WHERE document_id = $1 AND f.id = $2
 		return $result;
 	}
 
+/** сохранение значения поля.
+ * собственно, это самый ценный метод этого класса.
+ * всё остальное нужно, чтобы работал этот метод :)
+ *
+ * тут есть все мыслимые проверки валидности.
+ * если на выходе пустая строка - все хорошо, иначе там описание ошибки.
+ *
+ * логика:
+- если value равно null - просто удаляем старое значение и выходим
+- если поле неправильное, то выводим ошибку и выходим
+- если все хорошо, то удаляем поле и вставляем его заново с новым значением
+- триггер, обновляющий value в {DOCUMENTS}_fields_values работает только на вставку!
+*/
 	public function saveFieldValue($document_id = 0, $field_id = 0, $value = null)
 	{
-//если value равно null - просто удаляем старое значение и выходим
-//если поле неправильное, то выводим ошибку и выходим
-//если все хорошо, то удаляем поле и вставляем его заново с новым значением
-//триггер, обновляющий value в {DOCUMENTS}_fields_values работает только на вставку!
 		if ($document_id == 0){die('DocumentModel.saveFieldsValue: $document_id == 0');}	// - absolutely
 		if ($field_id == 0){die('DocumentModel.saveFieldsValue: $field_id == 0');}			// - barbaric!
 
@@ -557,17 +586,20 @@ WHERE document_id = $1 AND f.id = $2
 		if ($result == '')
 		{
 			//da("$document_id, $field_id, $value, $hr_value");die;
+			//проверяем - есть ли такой значение
 			if ($this->db->exec("
 SELECT document_id
 FROM {$this->scheme}.documents_fields_values
 WHERE document_id = $1 AND field_id = $2 AND {$db_field} = $3", $document_id, $field_id, $value)->rows == 0)
-			{
+			{//нет значения - удаляем старое и добавляем новое
 				$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, {$db_field}, value) VALUES ($1,$2,$3,$4)";
 				$this->db->exec("BEGIN");
 				$this->db->exec($delete_clause, $document_id, $field_id);
 				$this->db->exec($insert_clause, $document_id, $field_id, $value, $hr_value);
 				$this->db->exec("COMMIT");
 			}
+			//наша задача, чтобы поле БЫЛО
+			//и если оно там уже есть, то ничего не делаем
 		}
 		return $result;
 	}
@@ -595,7 +627,7 @@ WHERE document_id = $1 AND field_id = $2 AND {$db_field} = $3", $document_id, $f
 		{
 			return "Не задан тип документа";
 		}
-		$data['parent_id'] = $data['parent_id'] ?? 0;
+		$data['parent_id'] ??= 0;
 		$data['document_type_id'] = $this->document_type_id;
 		$this->document_id = $data['id'] = $this->db->nextVal($this->getSeqName());
 		$ar = $this->db->insert($this->table_name, $this->key_field, $this->fields, $data)->affectedRows();
@@ -606,7 +638,7 @@ WHERE document_id = $1 AND field_id = $2 AND {$db_field} = $3", $document_id, $f
 	{
 		if ($document_id == 0){die('Lost $document_id in calcAutomatedFields($document_id = 0)');}
 
-		/* ШАБЛОН
+		/* ШАБЛОН для наследников
 		foreach (array_keys($this->fields_model->getList(['automated' => 1])) as $field_id)
 		{
 
@@ -621,7 +653,7 @@ WHERE document_id = $1 AND field_id = $2 AND {$db_field} = $3", $document_id, $f
 					//da($value);			da($new_field_value);
 					if (($field_value1 != '') && ($field_value2 != ''))
 					{//
-						//da("$field_value16  $field_value4");
+						//da("$field_value16	$field_value4");
 						$new_value = $this->db->exec("SELECT ($1::date - $2::date) AS v", $field_value1, $field_value2)->fetchRow()['v'];
 						$msg = $this->saveFieldValue($document_id, $field_id, $new_value);
 						if ($msg != ''){ return $msg; }
@@ -634,6 +666,9 @@ WHERE document_id = $1 AND field_id = $2 AND {$db_field} = $3", $document_id, $f
 	}
 }
 
+/**
+ * поля документа
+ */
 class Document_fieldsModel extends SimpleDictionaryModel
 {
 	private $data_cash = [];
@@ -645,7 +680,7 @@ class Document_fieldsModel extends SimpleDictionaryModel
 		'D'	=> 'Дата', // date
 		'K'	=> 'Словарный', // key values
 		'X'	=> 'Внешний словарь', // key values
-		'B'	=> 'Логический', // integer (0|1),  0 - false, not 0 - true
+		'B'	=> 'Логический', // integer (0|1), 0 - false, not 0 - true
 	];
 
 	public $value_field_names = [
@@ -678,6 +713,11 @@ class Document_fieldsModel extends SimpleDictionaryModel
 		$this->document_type_id = $document_type_id;
 	}
 
+/** отдает массив значений для словарных полей в виде хеша
+ * id =>
+ * 	'id'	=> ID_значения
+ * 	'value'	=> значение в виде текста
+ */
 	public function getValues($field_info)
 	{
 		if ($field_info['value_type'] == 'K')
@@ -706,6 +746,8 @@ ORDER BY {$field_info['x_table_order']}")->fetchAll('id');
 		}
 	}
 
+/** надо для интерфейсов редактирования полей документов
+ */
 	public function getEmptyRow()
 	{
 		return [
@@ -719,6 +761,8 @@ ORDER BY {$field_info['x_table_order']}")->fetchAll('id');
 		];
 	}
 
+/** надо для интерфейсов редактирования полей документов
+ */
 	public function getRow($key_value)
 	{
 		if ($key_value == 0)
@@ -760,25 +804,26 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		}
 		foreach (['value_type'] as $f)
 		{
-		    if (isset($params[$f]))
-		    {
-		        $params['where'][] = "{$f} = '{$params[$f]}'";
-		    }
+			if (isset($params[$f]))
+			{
+				$params['where'][] = "{$f} = '{$params[$f]}'";
+			}
 		}
 
-
 		$list = parent::getList($params);
-
+//если надо для списков значений словарей делать нулевое/невыбранное значение - текст делаем тут
 		if (isset($params['add_default_value']))
 		{
 			$default_value_title = $params['default_value_title'] ?? '-- Выберите --';
 		}
 
+//заполняем значения словарных полей
 		foreach ($list as $id => $field_info)
 		{
 			if (in_array($field_info['value_type'], ['K', 'X']))
 			{
 				$list[$id]['values'] = $this->getValues($field_info);
+				//если надо для списков значений словарей делать нулевое/невыбранное значение
 				if (isset($params['add_default_value']))
 				{
 					$list[$id]['values'] = [0 => $default_value_title] + $list[$id]['values'];
@@ -788,12 +833,18 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		return $list;
 	}
 
+/** все значения для поля.
+ * надо, например, если в поле ID юзера и надо взять всех юзеров, которые упоминались во всех документах.
+ * для фильтров списков документом по юзеру, например. чтобы не все юзеры, а только те, кто упоминался.
+ */
 	public function getDistinctValues($key_value)
 	{
 		return array_keys($this->db->exec("SELECT DISTINCT(value) AS value FROM {$this->scheme}.documents_fields_values WHERE field_id = $1",
 			$key_value)->fetchAll('value'));
 	}
 
+/** надо для интерфейсов редактирования полей документов
+ */
 	public function saveRow($data)
 	{
 		if (!isset($data['id']) || intval($data['id']) == 0)
@@ -822,11 +873,14 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		$ar = $this->db->update($this->table_name, $this->key_field, $this->fields, $data)->affectedRows();
 		if ($ar != 1)
 		{
-			return "Ошибка при сохранении атрибутов поля. Возможно, поле ID={$data['id']} уже не существует";
+			return "Ошибка при сохранении атрибутов поля. Возможно, поле с ID={$data['id']} не существует";
 		}
 		return '';
 	}
 
+/** иногда триггеры работают неправильно или мы меняем тип поля на словарный.
+ * тогда надо вызвать этот метод для глобального апдейта
+ */
 	public function updateDictValues()
 	{
 		$this->db->exec("
@@ -848,6 +902,8 @@ WHERE field_id = $1", $field_info['id']);
 		}
 	}
 
+/** нельзя удалять поля с имеющимися значениями
+ */
 	public function canDeleteRow($key_value)
 	{
 		if ($this->db->exec("
@@ -860,12 +916,14 @@ WHERE v.field_id = {$key_value} LIMIT 1")->rows > 0)
 		}
 		return '';
 	}
-
 }
 
+/** словарики для простых словарных полей
+ * ID значений уникальны в рамках схемы схемы
+ */
 class Document_values_dictsModel extends SimpleDictionaryModel
 {
-	function __construct($scheme)
+	public function __construct($scheme)
 	{
 		parent::__construct($scheme.'.documents_values_dicts', 'id', [
 			'field_id', 'value',
@@ -881,9 +939,10 @@ class Document_values_dictsModel extends SimpleDictionaryModel
 		}
 		$params['where'] = $params['where'] ?? [];
 
-		if (isset($params['field_id']))
+		$f = 'field_id';
+		if (isset($params[$f]))
 		{
-			$params['where'][] = "field_id = {$params['field_id']}";
+			$params['where'][] = "{$f} = {$params[$f]}";
 		}
 
 		return parent::getList($params);
