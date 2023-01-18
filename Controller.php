@@ -247,26 +247,28 @@ public function defaultMethod($method_name)
 	{
 		if ($content_type != '')
 		{
-			header("Content-Type: $content_type");
+			header("Content-Type: {$content_type}");
 		}
 		$this->disableRender();
 		return $this;
 	}
 
 /**
- * Для аджаксных вызовов
+ * Для аджаксных вызовов, если результат в виде HTML
  */
 	public function isAJAX()
-	{
+	{//просто отдаём HTML без обёрток из шапки и подвала сайта
 		$this->disableRender();
 		return $this;
 	}
 
 /**
  * Для аджаксных вызовов ожидающих строго JSON формат
+ * при этом Application вызовет метод view->default_JSON_Method()
  */
 	public function isJSON()
 	{
+		header("Content-type: application/json");
 		$this->disableRender();
 		$this->__is_json = true;
 		return $this;
@@ -292,7 +294,7 @@ public function defaultMethod($method_name)
  */
 	public function sendEventStreamMessage($id, $data)
 	{
-		print "id: $id" . PHP_EOL . "data: " . json_encode($data) . PHP_EOL . PHP_EOL;
+		print "id: {$id}" . PHP_EOL . "data: " . json_encode($data) . PHP_EOL . PHP_EOL;
 		ob_flush();
 		flush();
 	}
@@ -532,6 +534,8 @@ public function defaultMethod($method_name)
  * Обеспечение работы помощников.
  * После регистрации помощника, все его методы доступны в представлении как свои собственные.
  * Используется магия __call()
+ *
+ * по сути, это имитация trait-ов другими средствами языка.
  */
 	public function __call($method_name, $args)
 	{
