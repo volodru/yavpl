@@ -103,6 +103,11 @@ class Model
 	{
 	}
 
+	protected function connectToMainDB()
+	{
+		return null; //override
+	}
+
 	public function setSubModel(Model $sub_model)
 	{
 		$matches = [];
@@ -117,7 +122,11 @@ class Model
 
 	public function __get($name)
 	{
-		if (isset($this->__sub_models_cache[$name]))
+		if ($name == 'db')
+		{
+			return $this->connectToMainDB();
+		}
+		elseif (isset($this->__sub_models_cache[$name]))
 		{
 			return $this->__sub_models_cache[$name];
 		}
@@ -155,6 +164,7 @@ class Model
 		else
 		{
 			//da('__get model '.$method_name);
+			sendBugReport("__call(".get_class($this)."->{$method_name})", 'call undefined MODEL method');
 			return null;
 		}
 	}

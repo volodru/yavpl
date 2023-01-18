@@ -559,6 +559,7 @@ public function defaultMethod($method_name)
 		}
 		else
 		{
+			sendBugReport("__call(".get_class($this)."->{$method_name})", 'call undefined CONTROLLER method');
 			return null;
 		}
 	}

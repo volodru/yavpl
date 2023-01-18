@@ -76,14 +76,18 @@ class View
 		}
 		else
 		{
+			sendBugReport("__call(".get_class($this)."->{$method_name})", 'call undefined VIEW method');
+			return null;
+			/*
 			if (APPLICATION_ENV == 'production')
 			{
 				return null;
 			}
 			else
 			{
-				sendBugReport("Call to undefined method {$method_name}", $method_name, true);
-			}
+				//sendBugReport("Call to undefined method {$method_name}", $method_name, true);
+				sendBugReport("__call(".get_class($this)."->{$method_name})", 'call undefined VIEW method');
+			}*/
 		}
 	}
 

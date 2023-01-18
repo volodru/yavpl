@@ -215,64 +215,64 @@ class Db
  * $fields, $keys - arrays or strings with comma separated fields
  * $data - hash
  */
-    public function insert($table, $keys, $fields, array $data)
-    {
-    	if (!is_array($keys))
-    	{
-    		$keys = preg_split("/\s*,\s*/", $keys, -1, PREG_SPLIT_NO_EMPTY);
-    	}
-        if (!is_array($fields))
-    	{
-    		$fields = preg_split("/\s*,\s*/", $fields, -1, PREG_SPLIT_NO_EMPTY);
-    	}
+	public function insert($table, $keys, $fields, array $data)
+	{
+		if (!is_array($keys))
+		{
+			$keys = preg_split("/\s*,\s*/", $keys, -1, PREG_SPLIT_NO_EMPTY);
+		}
+		if (!is_array($fields))
+		{
+			$fields = preg_split("/\s*,\s*/", $fields, -1, PREG_SPLIT_NO_EMPTY);
+		}
 //$fields - array with names of data fields
 //$data - hash
-    	$p = [];//place holders
-    	$v = [];//linear array of data
-    	$ff = [];//fields
-    	$i = 1;
+		$p = [];//place holders
+		$v = [];//linear array of data
+		$ff = [];//fields
+		$i = 1;
    		foreach (array_merge($keys, $fields) as $f)
-    	{
-    		$p[] = '$'.$i;
-    		$ff[] = $f;
-    		$v[] = (isset($data[$f])) ? $data[$f] : null;
-    		$i++;
-    	}
+		{
+			$p[] = '$'.$i;
+			$ff[] = $f;
+			$v[] = (isset($data[$f])) ? $data[$f] : null;
+			$i++;
+		}
 		return $this->exec("-- ".get_class($this).", method: ".__METHOD__."
 INSERT INTO $table (".join(', ', $ff).") VALUES (".join(', ', $p).")", $v);//->print_r();
-    }
+	}
 
 /**
  * Изменение
  * параметры - см. Вставку / Insert
  */
-    public function update($table, $keys, $fields, array $data)
-    {
-        if (!is_array($keys))
-    	{
-    		$keys = preg_split("/\s*,\s*/", $keys, -1, PREG_SPLIT_NO_EMPTY);
-    	}
-        if (!is_array($fields))
-    	{
-    		$fields = preg_split("/\s*,\s*/", $fields, -1, PREG_SPLIT_NO_EMPTY);
-    	}
+	public function update($table, $keys, $fields, array $data)
+	{
+		if (!is_array($keys))
+		{
+			$keys = preg_split("/\s*,\s*/", $keys, -1, PREG_SPLIT_NO_EMPTY);
+		}
+		if (!is_array($fields))
+		{
+			$fields = preg_split("/\s*,\s*/", $fields, -1, PREG_SPLIT_NO_EMPTY);
+		}
 
-    	$v = [];//linear array of data
-    	$s = [];// for SET with place holders
-    	$i = 1;//for both "foreach" cycles!
+		$v = [];//linear array of data
+		$s = [];// for SET with place holders
+		$i = 1;//for both "foreach" cycles!
 		foreach ($fields as $f)
-    	{
-    		$s[] = "$f = \$$i";
-    		$v[] = (isset($data[$f])) ? $data[$f] : null;
-    		$i++;
-    	}
-    	$w = [];// for where
+		{
+			$s[] = "$f = \$$i";
+			$v[] = (isset($data[$f])) ? $data[$f] : null;
+			$i++;
+		}
+		$w = [];// for where
    		foreach ($keys as $f)
-    	{
-    		$w[] = "$f = \$$i";
-    		$v[] = (isset($data[$f])) ? $data[$f] : null;
-    		$i++;
-    	}
+		{
+			$w[] = "$f = \$$i";
+			$v[] = (isset($data[$f])) ? $data[$f] : null;
+			$i++;
+		}
 		return $this->exec("-- ".get_class($this).", method: ".__METHOD__."
 UPDATE $table SET ".join(', ', $s)." WHERE (".join(') AND (', $w).")", $v);
 	}
@@ -281,21 +281,21 @@ UPDATE $table SET ".join(', ', $s)." WHERE (".join(') AND (', $w).")", $v);
  * Удаление
  * параметры - см. Вставку / Insert
  */
-    public function delete($table, $keys, array $data)
-    {
-        if (!is_array($keys))
-    	{
-    		$keys = preg_split("/\s*,\s*/", $keys, -1, PREG_SPLIT_NO_EMPTY);
-    	}
-    	$i = 1;
-    	$w = [];// for where
-    	$v = [];// linear array of data
+	public function delete($table, $keys, array $data)
+	{
+		if (!is_array($keys))
+		{
+			$keys = preg_split("/\s*,\s*/", $keys, -1, PREG_SPLIT_NO_EMPTY);
+		}
+		$i = 1;
+		$w = [];// for where
+		$v = [];// linear array of data
    		foreach ($keys as $f)
-    	{
-    		$w[] = "$f = \$$i";
-    		$v[] = (isset($data[$f])) ? $data[$f] : null;
-    		$i++;
-    	}
+		{
+			$w[] = "$f = \$$i";
+			$v[] = (isset($data[$f])) ? $data[$f] : null;
+			$i++;
+		}
 		return $this->exec("-- ".get_class($this).", method: ".__METHOD__."
 DELETE FROM $table WHERE (".join(') AND (', $w).")", $v);
 	}
@@ -306,10 +306,10 @@ DELETE FROM $table WHERE (".join(') AND (', $w).")", $v);
  */
 	public function rowExists($table, $keys, array $data)
 	{
-	    if (!is_array($keys))
-    	{
-    		$keys = preg_split("/\s*,\s*/", $keys, -1, PREG_SPLIT_NO_EMPTY);
-    	}
+		if (!is_array($keys))
+		{
+			$keys = preg_split("/\s*,\s*/", $keys, -1, PREG_SPLIT_NO_EMPTY);
+		}
 		$i = 1;
 		$w = [];// for where
 		$v = [];// linear array of data
@@ -329,10 +329,10 @@ SELECT ".join(',',$keys)." FROM $table WHERE (".join(') AND (', $w).")", $v)->ro
  */
 	public function getRow($table, $keys, array $data)
 	{
-	    if (!is_array($keys))
-    	{
-    		$keys = preg_split("/\s*,\s*/", $keys, -1, PREG_SPLIT_NO_EMPTY);
-    	}
+		if (!is_array($keys))
+		{
+			$keys = preg_split("/\s*,\s*/", $keys, -1, PREG_SPLIT_NO_EMPTY);
+		}
 		$i = 1;
 		$w = [];// for where
 		$v = [];// linear array of data

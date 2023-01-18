@@ -235,7 +235,7 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 				(($explain != '') ? "\n-----------\n$explain-----------" : '');
 		}
 		return $this;
-    }//exec
+	}//exec
 
 /**
  * Получить следующее значение из сиквенсы
@@ -329,5 +329,5 @@ class DbPgSingleton extends DbPg //singleton in the global scope
 			self::$instance = new DbPg($host_params);
 		}
 		return self::$instance;
-    }
+	}
 }

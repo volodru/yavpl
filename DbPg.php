@@ -27,7 +27,7 @@ class DbPg extends Db implements iDb
 		$connect_string = "host={$this->host_params['host']} port={$this->host_params['port']} user={$this->host_params['user']} password={$this->host_params['passwd']} dbname={$this->host_params['dbname']} connect_timeout=5";
 
 		$this->pg_dbh = @pg_connect($connect_string, PGSQL_CONNECT_FORCE_NEW)
-		OR die("Cannot connect to PostgresQL base={$this->host_params['dbname']} port={$this->host_params['port']} user={$this->host_params['user']} (PGSQL_CONNECT_FORCE_NEW)");
+			OR die("Cannot connect to PostgresQL base=[{$this->host_params['dbname']}] port=[{$this->host_params['port']}] user=[{$this->host_params['user']}] (PGSQL_CONNECT_FORCE_NEW)");
 		if (isset($this->host_params['exec_after_connect']))
 		{
 			@pg_query($this->pg_dbh, $this->host_params['exec_after_connect']);
@@ -139,14 +139,13 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 				// end logging -------------------------------
 			}
 			global $application;
-			//$executed_sql[] = $query.
 			$application->executed_sql[] = $query.
 				"\nQuery returs {$this->rows} row(s)".
 				((count($this->params) > 0)?"\nPARAMS: ".print_r($this->params, true):'').
 				(($explain != '') ? "\n-----------\n{$explain}-----------" : '');
 		}
 		return $this;
-    }//exec
+	}//exec
 
 /**
  * Получить следующее значение из сиквенсы
@@ -157,8 +156,7 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 		{
 			$this->connect();
 		}
-		list($i) = pg_fetch_array(pg_query($this->pg_dbh,
-			"SELECT nextval('$sequence_name')"), 0, PGSQL_NUM);
+		list($i) = pg_fetch_array(pg_query($this->pg_dbh, "SELECT nextval('$sequence_name')"), 0, PGSQL_NUM);
 		return $i;
 	}
 
@@ -167,13 +165,6 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
  */
 	public function fetchAll($hash_index = '')
 	{
-		/* old one, delete it in time...
-		$t = [];
-		for($r = 0; $r < $this->rows; $r++)
-		{
-			$t[] = pg_fetch_array($this->sth, $r, $type);
-		}
-		return $t;*/
 		$t = [];
 		for ($row_num = 0; $row_num < $this->rows; $row_num++)
 		{
@@ -208,16 +199,10 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 						$code .= "[{$row[$index]}]";
 					}
 				}
-				eval("\$t$code = \$row;");
+				eval("\$t{$code} = \$row;");
 			}
 		}
 		return $t;
-	}
-
-	//obsolete! do not use. refactor all code. delete this in the end.
-	public function fetchAllWithId($index_src)
-	{
-		return $this->fetchAll($index_src);
 	}
 
 /**
@@ -275,7 +260,9 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 		print "\n-------------------------\n";
 		print_r($explain);
 		if (count($this->params) > 0)
+		{
 			print "\n-------------------------\nPARAMS: ".var_export($this->params, true);
+		}
 		print "</xmp>";
 		return $this;
 	}
