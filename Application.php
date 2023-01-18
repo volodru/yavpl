@@ -264,7 +264,7 @@ set_exception_handler('__my_exception_handler');
 /** Класс приложение
  *
  * Порядок работы:
- * * в приложении создается контроллер, вызывается его конструктор
+ * * в приложении создается контроллер, вызывается его конструктор (ну и предки по желанию конструктора контроллера)
  * * вызывается запрошенный метод контроллера
  * * в приложении создается представление ($application->view = new XXYYView())
  * * вызывается метод приложения render()
@@ -278,6 +278,7 @@ set_exception_handler('__my_exception_handler');
  *
  * для AJAX есть специальный метод controller->isAJAX() устанавливающий заголовок с кодировкой и отключающий рендер
  * для отдачи бинарников есть метод controller->isBINARY()
+ * для работы с JSON - вызываем controller->isJSON() и заполняем переменную $this->result (и всё) см. view->default_JSON_Method()
  *
  * соглашение об именах в библиотеке:
  * - классы и методы - верблюжьим горбом, с маленькой буквы
@@ -293,37 +294,42 @@ set_exception_handler('__my_exception_handler');
  * в представлениях:
  * * представление берет все данные из контроллера через магию __get. и ими же должно ограничиваться.
  * * все вычисления в представлении могут быть только для красивого вывода.
- * * представление _без крайней необходимости_ не должно использовать ссылки на модели из контроллера.
- * * и вообще, представление ничего не знает о моделях.
-
+ * * представление без большой необходимости не должно использовать ссылки на модели из контроллера.
+ * 		исключения, например, для ACL - можно в представлении делать if ($this->user->isAllowe('resource_id')) {print "...";}
+ * * и вообще, представление как бы ничего не знает о моделях. но иногда в лом объявлять в контроллере shortcut
+ * 		на какую-нибудь структуру в модели только для того, чтобы ее один раз показать в каком-нибудь селекторе
 */
 class Application
 {
-	/** ссылка на Контроллер*/
+	/** глобальная ссылка на Контроллер*/
 	public $controller;
-	/** ссылка на Представление*/
+
+	/** глобальная ссылка на Представление*/
 	public $view;
+
 	/** название модуля по умолчанию*/
 	public $default_module_name = 'index';
 	/** название класса по умолчанию*/
 	public $default_class_name = 'index';
 	/** название метода по умолчанию*/
 	public $default_method_name = 'index';
+
 	/** URI как для CGI так и CLI*/
 	protected $__request_uri;
 
 /** Загрузчик Контроллера */
 	public function loadController()
-	{
+	{//работает для форматов в виде модуль/класс/метод или класс/метод (для простых проектов)
+	// для сложных структур - это надо всё будет переопределить, например для проект/раздел/модуль/класс/метод.
 		$file_name = CONTROLLERS_BASE_PATH.'/'.(($this->module_name != '') ? $this->module_name."/" : '')."{$this->class_name}.php";
 		if (file_exists(APPLICATION_PATH.'/'.$file_name))
 		{
-			require_once($file_name);//it does not depend on __autoload
+			require_once($file_name);//it does not depend on __autoload - мы тут сами как-нибудь
 			$s = (($this->module_name != '') ? $this->module_name.'_' : '')."{$this->class_name}Controller";
 			if (class_exists($s))
 			{
-				$this->controller = new $s();
-				$this->controller->setModuleName($this->module_name);//эти методы там устанавливают протектед поля
+				$this->controller = new $s();//делаем экземпляр класса
+				$this->controller->setModuleName($this->module_name);//эти методы там просто устанавливают протектед поля
 				$this->controller->setClassName($this->class_name);
 				$this->controller->setMethodName($this->method_name);
 				$this->controller->setDefaultResourceId((($this->module_name != '') ? $this->module_name.'/' : '') . $this->class_name.'/'.$this->method_name);
@@ -363,10 +369,10 @@ class Application
 	public function parseURI()
 	{
 		if (APPLICATION_RUNNING_MODE == 'cli')
-		{//CLI
+		{//CLI - первый параметр в режиме CLI - модуль/класс/метод, потом все остальные параметры
 			$this->__request_uri = $_SERVER['argv'][1];
 		}
-		else//Normal And API
+		else//WEB And API
 		{
 			$this->__request_uri = trim(preg_replace("/(.+?)\?.+/", "$1", $_SERVER['REQUEST_URI']), '/');
 		}
@@ -377,7 +383,7 @@ class Application
 		$this->method_name = (count($uri) > 2) ? $uri[2] : $this->default_method_name;
 	}
 
-	/** Главный метод приложения */
+/** Главный метод приложения */
 	public function run()
 	{
 //разобрали URI
@@ -419,7 +425,7 @@ class Application
 			}
 			else
 			{//сюда попадаем если представление не наследовано от базового класса View
-			//и чё делать тут?
+			 //и чё делать тут? вообще-то это фаталити.
 			}
 		}
 		else
@@ -430,10 +436,10 @@ class Application
 			}
 			else
 			{// сюда попадаем, если есть аджаксовый код, но без представления.
-			// скорее всего, контроллер сам отдал данные в виде файла или JSON
-				if ($this->controller->__is_json)
+			 // скорее всего, контроллер сам отдал данные в виде файла или JSON
+				if ($this->controller->__is_json)//а если прямо явно указано, что это JSON
 				{
-					$this->view->default_JSON_Method();
+					$this->view->default_JSON_Method();//то выводим данные в формате JSON
 				}
 			}
 		}

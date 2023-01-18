@@ -118,7 +118,6 @@ class Controller
 	public $__need_render = true;
 	public $__is_json = false;
 	public $__breadcrumbs = [];
-	//public $__toolbar_elements = [];
 
 	protected $default_resource_id;
 
@@ -146,7 +145,7 @@ class Controller
 	}
 
 /**
- * ничего не делаем
+ * ничего не делаем.
  */
 	public function __destruct()
 	{
@@ -194,14 +193,17 @@ class Controller
 
 /**
  * Вызывается после вызова конструктора контроллера в Application
+ *
+ * Бывает нужен в программе. Модуль и класс в программе редко нужен, т.к. это епархия Application.
+ * Если контроллер манипулирует названиями методов, то это может пригодиться.
  */
 	public function setMethodName($method_name)
-	{//он бывает нужен в программе. модуль и класс в программе редко нужен, т.к. это епархия Application
+	{
 		$this->running_method_name = $method_name;
 	}
 
 /**
- * Надо иногда
+ * Надо иногда.
  */
  	public function getMethodName()
 	{
@@ -233,6 +235,8 @@ public function defaultMethod($method_name)
  * Выключает рендеринг через главное представление.
  * Нужно для аджакса, бинарников и некоторых специальных случаев, типа печатных версий или
  * версий для мобильных устройств.
+ *
+ * Принцип выделения минимального - 99% страниц отдаются в виде именно страницы с шапкой и т.п.
  */
 	public function disableRender()
 	{
@@ -265,6 +269,10 @@ public function defaultMethod($method_name)
 /**
  * Для аджаксных вызовов ожидающих строго JSON формат
  * при этом Application вызовет метод view->default_JSON_Method()
+ *
+ *
+ * по-умолчанию, конечный контроллер заполняет массив $this->result, который просто отдается браузеру через json_encode
+ * ну и Content-type тут выставляем, чтобы было красиво.
  */
 	public function isJSON()
 	{
@@ -309,7 +317,7 @@ public function defaultMethod($method_name)
 	}
 
 /**
- * Для простых контроллеров	без представления - выполнил работу и перешел на другую страницу.
+ * Для простых контроллеров без представления - выполнил работу и перешел на другую страницу.
  */
 	protected function redirect($url = '/', $exit = true)
 	{
@@ -322,7 +330,6 @@ public function defaultMethod($method_name)
 
 //Хлебные крошки. Т.к. оно реализовано в виде 1 массива и двух методов, то делать отдельный класс для этого - нунафиг.
 //Тулбар - штука посложнее, поэтому он в отдельном классе. см. ToolBar.php
-
 /**
  * получить приватное поле с крошками
  */
@@ -356,12 +363,13 @@ public function defaultMethod($method_name)
 	}
 
 /**
- * Приватный метод для getParam.
+ * Приватный метод для getParam. Валидирует значения в общем случае.
+ * Кому тут тесно - берите строку и валидируйте ее самостоятельно.
  */
 	private function checkParamType($type, $value, $default_value)
 	{
 		if (in_array($type, ['integer', 'float', 'double']))
-		{//все числа, особенно из экселя, могут содержать форматирующие пробелы
+		{//все числа, особенно из экселя, могут содержать форматирующие пробелы/переносы/неразрывные пробелы
 			$value = preg_replace("/[\s\xC2\xA0]/", '', $value);
 		}
 		if ($type == 'integer')
@@ -369,7 +377,7 @@ public function defaultMethod($method_name)
 			return preg_match("/^\s*(\+|\-)?\d+\s*$/", $value) ? $value : $default_value;
 		}
 		elseif ($type == 'float' || $type == 'double')
-		{//а плавающая точка где-то может быть запятой.
+		{//а плавающая точка где-то может быть запятой. тут захардкоден американский формат чисел!
 			$value = preg_replace("/\,/", '.', $value);
 			$value = preg_replace("/[^\d\.]/", '', $value);
 
@@ -385,8 +393,8 @@ public function defaultMethod($method_name)
 			//return stripslashes(strval($value));
 		}
 		else
-		{
-			die("Unrecognized type cast [$type]");
+		{//значит накосячили при вызове getParam
+			die("Unrecognized type cast [{$type}]");
 		}
 	}
 
@@ -406,15 +414,18 @@ public function defaultMethod($method_name)
 				$default_value = 0;
 			}
 			else
-			{
-				die("Unrecognized type cast \"$type\"");
+			{//значит накосячили при вызове getParam
+				die("Unrecognized type cast \"{$type}\"");
 			}
 		}
 		return $default_value;
 	}
 
 /** Получить параметр извне.
-приоритет параметров:
+
+Параметр - это параметр. Код не может действовать различно в засимости от источника данных.
+
+Приоритет параметров:
 1. установленные через setParam
 2. GET
 3. POST
@@ -434,8 +445,8 @@ public function defaultMethod($method_name)
 
 		//проверяем дефолтное значение в любом случае, а не только, если до него дошла очередь
 		if (is_array($valid_values) && !in_array($default_value, $valid_values))
-		{
-			die("Default value [$default_value] is invalid");
+		{//значит накосячили при вызове getParam
+			die("Default value [{$default_value}] is invalid");
 		}
 
 /*
@@ -461,9 +472,7 @@ public function defaultMethod($method_name)
 
 		if (is_array($value))
 		{
-			//reset($value);
 			$result = [];
-			//while (list ($k, $v) = each($value))
 			foreach ($value as $k => $v)
 			{
 				$result[$k] = $this->checkParamType($type, $v, $default_value);
@@ -473,7 +482,7 @@ public function defaultMethod($method_name)
 		{ // проверяем допустимые значения только для скаляров
 			$result = $this->checkParamType($type, $value, $default_value);
 			// если значение неправильное и есть массив правильных значений
-			if (is_array($valid_values) && ! (in_array($result, $valid_values)))
+			if (is_array($valid_values) && !(in_array($result, $valid_values)))
 			{ // тогда возвращаем дефолтное значение
 				$result = $default_value;
 			}
