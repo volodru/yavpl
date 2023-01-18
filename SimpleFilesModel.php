@@ -38,15 +38,16 @@ class SimpleFilesModel extends SimpleDictionaryModel
 		foreach (['file_name', 'file_ext', 'file_size'] as $f)
 		{
 			if (!in_array($f, $fields))
-			{//debug stage
-				die("SimpleFilesModel requires field $f in table $table_name");
+			{//debug stage - косяк на этапе разработки
+				die("SimpleFilesModel requires field {$f} in table {$table_name}");
 			}
 		}
 		parent::__construct($table_name, $key_field, $fields);
-		$this->storage_path = $storage_path;
-		$this->allowed_extensions = $allowed_extensions;
-		$this->max_file_size = $max_file_size;
+		$this->storage_path = $storage_path;// путь (HOME_DIR.'/catalog/complains') к папке с файлами или подпапками с файлам
+		$this->allowed_extensions = $allowed_extensions;//массив расширений без точек и маленькими буквами ('xls', 'xlsx', 'doc', 'docx', 'pdf',])
+		$this->max_file_size = $max_file_size; //ограничение на размер - должно быть меньше, чем в php.ini, иначе будет ошибка в логах апача
 
+		//для одаренных наследников. проходим и делаем lowercase на всякий случай
 		array_walk($this->allowed_extensions, function(&$value, $key){$value = strtolower($value);});
 	}
 
@@ -55,20 +56,29 @@ class SimpleFilesModel extends SimpleDictionaryModel
  * по-умолчанию оно в общем-то и не надо.
  */
 	public function getStoragePath($key_value, $data = false)
-	{//перекрыть этот метод, если надо иметь путь к файлу исходя из каких-то данных в $data
+	{//перекрыть этот метод, если надо иметь путь к файлу исходя из каких-то данных в $data - когда путь формируется со всякими суффиксами-префиксами
 		return $this->storage_path;
 	}
 
+/** путь к файлу - место где они хранятся + '/' + ID файла.
+ * если надо сложное хранилище - перекрыть и делать там что угодно.
+ *
+ */
 	public function getFilePath($key_value, $data = false)
 	{
 		return $this->getStoragePath($key_value, $data).'/'.$key_value;
 	}
 
+/** просто шорткат, в общем-то
+ */
 	public function getFileSize($key_value)
 	{
 		return filesize($this->getFilePath($key_value));
 	}
 
+/** когда удаляем файл с инфой из базы, то СНАЧАЛА удаляем его с диска.
+ * из базы оно точно удалится, а вот накосячив с правами к папкам, можно файл и не удалить
+ */
 	public function beforeDeleteRow($key_value)
 	{
 		$f = $this->getFilePath($key_value);
@@ -77,7 +87,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 		{
 			if (!unlink($f))
 			{
-				return "Невозможно удалить файл [$f]";
+				return "Невозможно удалить файл [{$f}]";
 			}
 		}
 		else
@@ -85,7 +95,8 @@ class SimpleFilesModel extends SimpleDictionaryModel
 			return '';
 		}
 	}
-
+/** для сложных наследников, у которых список расширений хранится в СУБД - перекрыть и отдавать из базы
+ */
 	public function getAllowedExtensions($data = [])
 	{//наследники могут перекрыть это. например в MPFL
 		return $this->allowed_extensions;
@@ -106,14 +117,18 @@ class SimpleFilesModel extends SimpleDictionaryModel
 */
 	public function saveFile(&$data, $i_file)
 	{
-		$this->clearLog();
+		$this->log = [];//очищаем лог загрузки именно этого файла (важно для нескольких последовательных вызовов)
+
 		$i_file['error'] ??= 0;//для загрузки через файловую систему
 
 		$key_value = $data[$this->key_field];
 		if ($key_value == 0)
 		{
 			$is_new_file = true;
-			$data[$this->key_field] = $this->key_field_value = $key_value = $this->db->nextVal($this->getSeqName());
+			$data[$this->key_field] = //для сохранения предком
+				$this->key_field_value = //для контроллеров
+				$key_value = //шорткат для остального кода
+					$this->db->nextVal($this->getSeqName());
 		}
 		else
 		{
@@ -139,23 +154,24 @@ class SimpleFilesModel extends SimpleDictionaryModel
 		if (preg_match("/^(.+)\.(.+?)$/", $data['file_name'], $matches))
 		{
 			$data['file_ext'] = strtolower($matches[2]);
-			if (!in_array($data['file_ext'], $this->getAllowedExtensions($data)))
+			$allowed_extensions = $this->getAllowedExtensions($data);//если там запрос к СУБД - не вызываем его 2 раза
+			if (!in_array($data['file_ext'], $allowed_extensions))
 			{
-				$this->log[] = "Расширение файла {$data['file_ext']} не входит в список разрешенных: [".join(', ', $this->getAllowedExtensions($data))."]";
+				$this->log[] = "Расширение файла {$data['file_ext']} не входит в список разрешенных: [".join(', ', $allowed_extensions)."]";
 			}
 		}
 		else
 		{
 			$this->log[] = "Не удалось распознать расширение файла";
 		}
+		//нашли ошибку тут - дальше не идём.
 		if (count($this->log) > 0)
 		{
 			return false;//stage check point
 		}
 
-
 		if ($i_file['error'] == UPLOAD_ERR_INI_SIZE)//1
-		{
+		{//хотя оно просто валится и надо читать логи апача
 			$this->log[] = "Размер файла превышает параметр upload_max_filesize в php.ini. Обратитесь к администратору или используйте файл меньшего размера.";
 		}
 		elseif ($i_file['error'] == UPLOAD_ERR_FORM_SIZE)//2
@@ -187,26 +203,26 @@ class SimpleFilesModel extends SimpleDictionaryModel
 			$this->log[] = "Неопределенная ошибка номер [{$i_file['error']}]";
 		}
 		elseif (($this->max_file_size > 0) && ($i_file['size'] > $this->max_file_size))
-		{
+		{//наша локальная проверка - max_file_size должно быть меньше, чем в INI файле.
 			$this->log[] = "Размер файла должен быть менее {$this->max_file_size} байт";
 		}
 
-		if (count($this->log) > 0)
+		if (count($this->log) > 0)//есть ошибки - дальше не идем
 		{
 			return false;//stage check point
 		}
 
 		if (file_exists($f) && !unlink($f))
 		{
-			$this->log[] = "Невозможно удалить старый файл [$f]";
+			$this->log[] = "Невозможно удалить старый файл [{$f}]";
 		}
 
-		if (count($this->log) > 0)
+		if (count($this->log) > 0)//есть ошибки - дальше не идем
 		{
 			return false;//stage check point
 		}
 
-		//локальный файл передавать через /tmp/ - ему делается MOVE
+		//локальный файл ВСЕГДА передавать через /tmp/ - ему делается MOVE
 		if (isset($i_file['src_file_path']))
 		{//local source
 			if (!file_exists($i_file['src_file_path']))
@@ -217,7 +233,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 			{
 				if (!rename($i_file['src_file_path'], $f))
 				{
-					$this->log[] = "Не удалось переименовать файл [{$i_file['src_file_path']}] в [[$f]].";
+					$this->log[] = "Не удалось переименовать файл [{$i_file['src_file_path']}] в [{$f}].";
 				}
 				//else  - все хорошо
 			}
@@ -228,6 +244,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 			{
 				$this->log[] = "Невозможно создать файл ({$i_file['tmp_name']} -> {$f})!";
 			}
+			//else  - все хорошо
 		}
 		if (!file_exists($f))
 		{
@@ -238,7 +255,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 			$this->log[] = "Файл нулевой длины! [{$f}])!";
 		}
 
-		if (count($this->log) > 0)
+		if (count($this->log) > 0)//есть ошибки - дальше не идём
 		{
 			return false;//stage check point
 		}
@@ -292,7 +309,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 		//каждая сохранялка отдельного файла ($this->saveFile(&$data, $i_file)) чистит лог. поэтому тут набираем общий лог и его уже отдаем
 		$this->log = $this->log ?? [];
 		$overall_log = [];
-		$i = -1;
+
 		$result = true;
 		//da($i_files['name']);
 		if (count($i_files['name']) == 0)
@@ -300,10 +317,11 @@ class SimpleFilesModel extends SimpleDictionaryModel
 			return $result;//все хорошо, если файлов вообще не выбрали
 		}
 		$data['ids'] = [];
+		$i = -1;
 		foreach ($i_files['name'] as $file_name)
 		{
 			$i++;
-			if ($file_name == '') continue;
+			if ($file_name == '') {continue;}
 			#$overall_log[] = "Обрабатываем файл: $file_name";
 			$file_info = [];
 			foreach (['name', 'type', 'error', 'size', 'tmp_name'] as $f)
