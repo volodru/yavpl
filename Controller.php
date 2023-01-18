@@ -395,7 +395,7 @@ public function defaultMethod($method_name)
  */
 	private function verifyDefaultValue($type, $default_value)
 	{
-    	if ($default_value === false)
+		if ($default_value === false)
 		{//если не передали дефолтное значение, то берем его исходя из типа
 			if ($type == 'string')
 			{
@@ -430,7 +430,7 @@ public function defaultMethod($method_name)
  */
 	protected function getParam($name, $type, $default_value = false, $valid_values = false)
 	{
-	    $default_value = $this->verifyDefaultValue($type, $default_value);
+		$default_value = $this->verifyDefaultValue($type, $default_value);
 
 		//проверяем дефолтное значение в любом случае, а не только, если до него дошла очередь
 		if (is_array($valid_values) && !in_array($default_value, $valid_values))
@@ -438,13 +438,15 @@ public function defaultMethod($method_name)
 			die("Default value [$default_value] is invalid");
 		}
 
+/*
+	$this->__params_array[$name],//что поставили ручками + автотесты
+	$GLOBALS[$name], //для передачи данных из глобального контекста, например реализаци ЧПУ в Application
+*/
+
 /** @TODO: use coalesce in php7
  * ждем coalesce в php7 и уберу этот ужас нах.
  */
-/*
-		$this->__params_array[$name],//что поставили ручками + автотесты
-		$GLOBALS[$name], //для передачи данных из глобального контекста, например реализаци ЧПУ в Application
-*/
+		/*
 		$value = (isset($this->__params_array[$name])) ? $this->__params_array[$name] : (
 			(isset($_GET[$name])) ? $_GET[$name] : (
 				(isset($_POST[$name])) ? $_POST[$name] : (
@@ -454,6 +456,8 @@ public function defaultMethod($method_name)
 				)
 			)
 		);
+		*/
+		$value = $this->__params_array[$name] ?? $_GET[$name] ?? $_POST[$name] ?? $_COOKIE[$name] ?? $GLOBALS[$name] ?? $default_value;
 
 		if (is_array($value))
 		{
@@ -493,11 +497,11 @@ public function defaultMethod($method_name)
 	public function setTitle($title = '')
 	{
 		if ($title != '')
-		{
+		{//либо рисуем, что передали
 			$this->__title = $title;
 		}
 		else
-		{
+		{//или рисуем весь путь из хлебных крошек через разделитель
 			$a = [];
 			foreach ($this->__breadcrumbs as $s)
 			{
