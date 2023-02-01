@@ -131,32 +131,34 @@ class Controller
 
 	private $__methods = [];//for Helper
 
+/**
+ *  ничего особенного не делаем, а разбор параметров для консольного режима тут лежит от безысходности.
+ *  его бы куда-нибудь в другое место...
+ */
 	public function __construct()
 	{
 		/* Заполняем параметры для CLI режима */
-		foreach ($_SERVER['argv'] ?? [] as $param)
+		if (APPLICATION_RUNNING_MODE == 'cli')
 		{
-			$a = explode("=", $param);
-			if (count($a) == 2)
+			foreach ($_SERVER['argv'] ?? [] as $param)
 			{
-				$this->setParam($a[0], $a[1]);
+				$a = explode("=", $param);
+				if (count($a) == 2)
+				{
+					$this->setParam($a[0], $a[1]);
+				}
 			}
 		}
 	}
 
 /**
  * ничего не делаем.
+ * а в API наследниках тут (в их деструкторе) можно отдать накопленные данные в формате JSON.
+ * деструктор, конечно, не самое лучшее место. зато просто и очевидно.
+ * (с) "все сложные задачи имеют простые и понятные неправильные решения"
  */
 	public function __destruct()
 	{
-	}
-
-/**
- * Устанавливается после вызова конструктора контроллера в Application
- */
-	public function setDefaultResourceId($resource_id)
-	{
-		$this->default_resource_id = $resource_id;
 	}
 
 /**
@@ -214,13 +216,22 @@ class Controller
  * По-умолчанию вообще ничего не делаем,
  * чтобы для статических страниц не писать липовых контроллеров.
  * Если хочется чуть упростить отладку, можно наследовать метод:
-public function defaultMethod($method_name)
-{
+	public function defaultMethod($method_name)
+	{
 		die("Declare method [$method_name] or defaultMetod() in descendant controller");
-}
+	}
  * */
 	public function defaultMethod($method_name)
 	{
+	}
+
+/**
+ * Устанавливается после вызова конструктора контроллера в Application.
+ * Для проектов с ACL.
+ */
+	public function setDefaultResourceId($resource_id)
+	{
+		$this->default_resource_id = $resource_id;
 	}
 
 /**
@@ -236,7 +247,7 @@ public function defaultMethod($method_name)
  * Нужно для аджакса, бинарников и некоторых специальных случаев, типа печатных версий или
  * версий для мобильных устройств.
  *
- * Принцип выделения минимального - 99% страниц отдаются в виде именно страницы с шапкой и т.п.
+ * Принцип выделения минимального - 99% страниц отдаются в виде именно страницы с шапкой, хлебными крошками и подвалом.
  */
 	public function disableRender()
 	{
