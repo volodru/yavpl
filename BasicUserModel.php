@@ -150,7 +150,10 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE {$this->key_field} = $1
  */
 	public function getRowByUniqueField($field_name, $value)
 	{
-		if (!in_array($field_name, $this->fields)) die(__METHOD__." requires field $field_name");
+		if (!in_array($field_name, $this->fields))
+		{
+			die(__METHOD__." requires field $field_name");
+		}
 		return $this->db->exec("SELECT * FROM {$this->table_name} WHERE {$field_name} = $1", $value)->fetchRow();
 	}
 
@@ -158,7 +161,10 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE {$this->key_field} = $1
  */
 	public function getIdByUniqueField($field_name, $value)
 	{
-		if (!in_array($field_name, $this->fields)) die(__METHOD__." requires field $field_name");
+		if (!in_array($field_name, $this->fields))
+		{
+			die(__METHOD__." requires field $field_name");
+		}
 		$this->db->exec("SELECT {$this->key_field} FROM {$this->table_name} WHERE {$field_name} = $1", $value);
 		//проверка строго на 1, т.к. это уникальное поле. если в базе это поле не уникально, то нефиг им пользоваться для получения ID
 		if ($this->db->rows == 1)
@@ -177,7 +183,10 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE {$this->key_field} = $1
  */
 	public function getIdByLoginAndPassword($login, $password)
 	{
-		if (!$this->options['auth_by_login_and_password']) die(__METHOD__.' Login by login&password is not supported.');
+		if (!$this->options['auth_by_login_and_password'])
+		{
+			die(__METHOD__.' Login by login&password is not supported.');
+		}
 
 		$this->db->exec("-- ".get_class($this).", method: ".__METHOD__."
 SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password = $2", $login, md5($password));
@@ -365,7 +374,7 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
 
 /** Юзер не забанен?
  * Надо перекрыть метод и в нем проверять забаненных юзеров.
- * Предка не вызываем!!!
+ * Предка (этот код) не вызываем!!!
  */
 	public function isUserAllowedToLogin()
 	{
@@ -373,7 +382,7 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
 	}
 
 /** Записать текущую активность в лог.
- * Недовольные набором полей перекрывают метод и не вызывают предка.
+ * Недовольные набором полей или самим методом логгирования перекрывают метод и не вызывают предка.
  *
  */
 	public function writeActivityLog()
@@ -486,7 +495,7 @@ CREATE TABLE public.user_activity_logs
 		}
 		else
 		{
-			die("Unrecognized type cast \"$type\"");
+			die("Unrecognized type cast [{$type}]");
 		}
 		return $default_value;
 	}
@@ -503,7 +512,7 @@ CREATE TABLE public.user_activity_logs
 		// при переборе опции передаются сразу, при проверки одной строки вытягиваем их из валидатора
 		$options = isset($options) ? $options : $this->valid_settings[$key];
 		// с типами все жестко. он должен быть указан.
-		$type = isset($options[0]) ? $options[0] : die("Unknown type for settings key: \"$key\"");
+		$type = isset($options[0]) ? $options[0] : die("Unknown type for settings key: [{$key}]");
 		// вычисляем сразу дефолтное значение. оно нам надо тут в двух местах.
 		$default_value = (isset($options[1])) ? $options[1] : $this->verifyDefaultValue($type);
 
@@ -531,8 +540,8 @@ CREATE TABLE public.user_activity_logs
 	{
 		if (!isset($this->valid_settings[$key]))
 		{//фаталити. надо сразу звать программиста. где-то ставится настройка, которой нет в валидаторе.
-			sendBugReport('attempt to change settings was invalid', "INVALID KEY OR VAL!\nKEY='$key' VALUE='$val'\n\n".print_r($this, true));
-			die("your attempt to change settings was invalid. KEY='$key' VALUE='$val'");
+			sendBugReport('attempt to change settings was invalid', "INVALID KEY OR VAL!\nKEY='{$key}' VALUE='{$val}'\n\n".print_r($this, true));
+			die("your attempt to change settings was invalid. KEY='{$key}' VALUE='{$val}'");
 		}
 		//устанавливаем настройку
 		$this->settings[$key] = $val;
@@ -559,7 +568,8 @@ CREATE TABLE public.user_activity_logs
 	{
 		if (is_null(self::$current_instance))
 		{
-			self::$current_instance = new UserModel();
+/*@TODO: убрать эту порнуху. */
+			self::$current_instance = new UserModel();//this is a porn (UserModel extends this class in real project)
 			self::$current_instance->continueCurrentSession();
 		}
 		return self::$current_instance;
