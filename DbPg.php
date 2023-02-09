@@ -271,13 +271,16 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
  * $fields_list - массив полей,
  * $data - массив массивов.
  * осмысленные проверки надо делать на стороне вызывающей стороны!
- * тут заменяются \t в строках и null элементы на \N
+ * тут заменяются \t на \T в строках и null элементы на \N
  */
 	public function bulkLoad($table_name, $fields_list, $data)
 	{
 		if ((count($fields_list) == 0) ||
 			(count($data) == 0) ||
-		 	(trim($table_name) == '')) return;
+		 	(trim($table_name) == ''))
+		{
+			return;
+		}
 		$buf = [];
 		foreach ($data as $line)
 		{

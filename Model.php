@@ -80,8 +80,8 @@ class CompetitorsModel extends Model
 		parent::__construct();
 		//автозагрузка
 		$this->__sub_models = array('brands');
-		//конструктор - не самое лучшее место, т.к. подмодель грузится ВСЕГДА
-		$this->setSubModel(new Competitors_BrandsModel(array(1,2,3,4)));
+		//конструктор главной модели - не самое лучшее место, т.к. теперь подмодель грузится ВСЕГДА, когда упоминается главная модель.
+		$this->setSubModel(new Competitors_BrandsModel([1,2,3,4]));
 	 }
  }
 --------------------------------------------------------------
@@ -95,9 +95,10 @@ class CompetitorsModel extends Model
 
 class Model
 {
-	private $__sub_models_cache = [];
 	protected $__sub_models = [];
+	private $__sub_models_cache = [];
 	private $__methods = [];
+	/* ! public $db = null; - коннектор к главной базе проекта. заполняется магией __get*/
 
 	public 	function __construct()
 	{
@@ -105,6 +106,8 @@ class Model
 
 	protected function connectToMainDB()
 	{
+		//global $application;
+		//return $this->db = $application->get('DB');
 		return null; //override
 	}
 
@@ -144,9 +147,10 @@ class Model
 			//da('__get model '.$name);
 			return;//null
 		}
-		//в наследнике делать что-то вроде:
-		//$result = parent::__get($name);
-		//if (isset($result)) return $result;
+/*в наследнике делать что-то вроде:
+	$result = parent::__get($name);
+	if (isset($result)) {return $result;}
+*/
 	}
 
 /**
@@ -164,7 +168,7 @@ class Model
 		else
 		{
 			//da('__get model '.$method_name);
-			sendBugReport("__call(".get_class($this)."->{$method_name})", 'call undefined MODEL method');
+			sendBugReport("__call(".get_class($this)."->{$method_name})", 'called undefined MODEL method');
 			return null;
 		}
 	}
