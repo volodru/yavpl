@@ -106,8 +106,10 @@ class Model
 
 	protected function connectToMainDB()
 	{
-		//global $application;
-		//return $this->db = $application->get('DB');
+		/*TODO что-то типа
+		global $application;
+		return $this->db = $application->get('DB');
+		 * */
 		return null; //override
 	}
 
