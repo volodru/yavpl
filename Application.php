@@ -519,7 +519,7 @@ class Application
 			}
 		}
 		elseif (preg_match("/(.+)(Helper)/", $class_name, $matches))
-		{//хелперы - грызятся по необходимости
+		{//хелперы - грузятся по необходимости
 			$file_name = "helpers/{$matches[1]}.php";
 			if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
 			{
