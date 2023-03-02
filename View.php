@@ -310,7 +310,9 @@ class View
 </html>";
 	}
 
-/** Если установлен режим controler->isJSON() и в представлении нет нужного метода, то вызывается этот метод
+/** Если установлен режим controler->isJSON() и в представлении нет нужного метода, то вызывается этот метод.
+ * это только для ui режима!
+ * для режима API используется свой механизм прямо в контроллере.
  */
 	public function default_JSON_Method()
 	{
@@ -324,7 +326,7 @@ class View
 			print json_encode(['message' => $this->controller->message ?? '', 'log' => $this->log ?? []]);
 		}
 		else
-		{
+		{//надо выдать хоть что-то, а то непонятно, зачем мы все это делали
 			sendBugReport("Call of __default_JSON() without \$result or \$message", "FATALITY!", true);
 		}
 	}

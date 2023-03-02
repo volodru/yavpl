@@ -82,12 +82,13 @@ if (!defined('APPLICATION_RUNNING_MODE') || trim(APPLICATION_RUNNING_MODE) == ''
 {
 	define('APPLICATION_RUNNING_MODE', 'ui');//режим по-умолчанию
 }
+//тут выясняем, где брать контроллеры
 if (APPLICATION_RUNNING_MODE == 'api')
-{//нет представления, контроллер отдает JSON
+{//нет представления, контроллер всегда отдает JSON
 	define('CONTROLLERS_BASE_PATH', 'api');
 }
 elseif (APPLICATION_RUNNING_MODE == 'cli')
-{//режим командной строки - нет пользоватльской сессии, все делается от администратора.
+{//режим командной строки - нет пользовательской сессии, все делается от администратора.
 	define('CONTROLLERS_BASE_PATH', 'cli');
 }
 elseif (APPLICATION_RUNNING_MODE == 'ui')
@@ -144,8 +145,6 @@ function __printBacktrace()
 		da(__getBacktrace());
 	}
 }
-
-
 
 /** Мегаотладчик по почте - в случае проблем высылаем ошибку по email
  */
@@ -267,11 +266,12 @@ set_exception_handler('__my_exception_handler');
  * * в приложении создается контроллер, вызывается его конструктор (ну и предки по желанию конструктора контроллера)
  * * вызывается запрошенный метод контроллера
  * * в приложении создается представление ($application->view = new XXYYView())
- * * вызывается метод приложения render()
- * * render приложения вызывает либо view->render (обертка) либо сразу запрошенный метод из view
- * * view->render печатает в вывод стандартную обертку для HTML файла (заголовки) и вызывает метод view->body($method_name)
+ * * вызывается метод представления render()
+ * * метод run приложения вызывает либо view->render (обертка), либо сразу запрошенный метод из view, если рендер заблокирован
+ * * view->render печатает в вывод стандартную обертку для HTML файла (тэг html, заголовки head и тэг body)
+ * и вызывает метод view->body($method_name) внутри тэга body
  * * view->body должен быть переопределен где-то в наследниках View (как правило в defaultView проекта) и
- * * отрисовывает обертку проекта (шапку, меню, футер и т.п.) и где-то среди нее вызывает this->$method_name
+ * * отрисовывает обертку конкретного проекта (шапку, меню, футер и т.п.) и где-то среди нее вызывает this->$method_name
  * * !!! представление имеет доступ ко всем полям класса вызвавшего его контроллера через магию __get
  *
  * чтобы отрисовать отдельный элемент в AJAX или iframe в контроллере нужно установить disableRender()
@@ -388,7 +388,7 @@ class Application
 	{
 //разобрали URI
 		$this->parseURI();//sets global module, class, method
-//создали экземпляр контроллера - вызвали конструктор
+//создали экземпляр контроллера - вызвали конструктор класса контроллера
 		if (!$this->loadController())
 		{
 			if (APPLICATION_RUNNING_MODE == 'cli')
@@ -397,24 +397,25 @@ class Application
 			}
 			else
 			{
-				return;//а чё ещё делать, если контроллер не нашелся.
+				return;//а чё ещё делать, если контроллер не нашелся. пусть программист сам ищет контроллер.
 			}
 		}
 //вызвали нужный метод контроллера
 		if (method_exists($this->controller, $this->method_name))
 		{
-			$this->controller->{$this->method_name}();
+			$this->controller->{$this->method_name}();//если такой метод есть
 		}
 		else
-		{
-			$this->controller->defaultMethod($this->method_name);
+		{//если в проекте предусмотрены просто шаблоны без контроллеров, то ничего не делаем, иначе там можно вывести ошибку.
+			$this->controller->defaultMethod($this->method_name);//иначе вызываем дефолтный метод
 		}
 
 		if (APPLICATION_RUNNING_MODE == 'api' || APPLICATION_RUNNING_MODE == 'cli')
 		{
 			return;//хватит для API и CLI
 		}
-//создали представление - вызвали его конструктор
+//для WEB режима идем дальше
+//загрузили файл и создали представление - вызвали его конструктор
 		$this->loadView();
 //вызвали рисовалку представления
 		if ($this->controller->__need_render)
