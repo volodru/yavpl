@@ -249,7 +249,7 @@
     <span>
                                 &nbsp;: <a href="classes/Db.html"><abbr title="\Db">Db</abbr></a>    </span>
 </dt>
-<dd>разбираем параметры, делаем общую часть.</dd>
+<dd>Выполнение запроса к базе.</dd>
 
             <dt class="phpdocumentor-table-of-contents__entry -method -public">
     <a href="classes/Db.html#method_getHostParams">getHostParams()</a>
@@ -288,7 +288,8 @@ $data - hash</dd>
     <span>
                                 &nbsp;: void    </span>
 </dt>
-<dd>Ошибки базы всегда фатальны!</dd>
+<dd>Ошибки базы всегда фатальны!
+Выводим сообщение от СУБД и трассировку вызова.</dd>
 
             <dt class="phpdocumentor-table-of-contents__entry -method -public">
     <a href="classes/Db.html#method_update">update()</a>
@@ -851,7 +852,7 @@ $data - hash</dd>
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="Db.php"><a href="files/db.html"><abbr title="Db.php">Db.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">285</span>
+    <span class="phpdocumentor-element-found-in__line">291</span>
 
     </aside>
 
@@ -978,17 +979,18 @@ $data - hash</dd>
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="Db.php"><a href="files/db.html"><abbr title="Db.php">Db.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">93</span>
+    <span class="phpdocumentor-element-found-in__line">95</span>
 
     </aside>
 
-        <p class="phpdocumentor-summary">разбираем параметры, делаем общую часть.</p>
+        <p class="phpdocumentor-summary">Выполнение запроса к базе.</p>
 
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">public</span>
                     <span class="phpdocumentor-signature__name">exec</span><span>(</span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type"><a href="classes/Db.html"><abbr title="\Db">Db</abbr></a></span></code>
 
-        <section class="phpdocumentor-description"><p>после вызова этого метода наследник собственно обращается к базе и делает в нее запрос</p>
+        <section class="phpdocumentor-description"><p>Здесь разбираем параметры, делаем всякую общую работу безотносительно к какой базе обращаемся.
+После вызова этого метода наследник собственно обращается к базе и делает в нее запрос.</p>
 </section>
 
     
@@ -1046,7 +1048,7 @@ $data - hash</dd>
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="Db.php"><a href="files/db.html"><abbr title="Db.php">Db.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">331</span>
+    <span class="phpdocumentor-element-found-in__line">337</span>
 
     </aside>
 
@@ -1107,7 +1109,7 @@ $data - hash</dd>
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="Db.php"><a href="files/db.html"><abbr title="Db.php">Db.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">219</span>
+    <span class="phpdocumentor-element-found-in__line">225</span>
 
     </aside>
 
@@ -1177,7 +1179,7 @@ $data - hash</p>
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="Db.php"><a href="files/db.html"><abbr title="Db.php">Db.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">308</span>
+    <span class="phpdocumentor-element-found-in__line">314</span>
 
     </aside>
 
@@ -1238,33 +1240,38 @@ $data - hash</p>
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="Db.php"><a href="files/db.html"><abbr title="Db.php">Db.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">168</span>
+    <span class="phpdocumentor-element-found-in__line">174</span>
 
     </aside>
 
-        <p class="phpdocumentor-summary">Ошибки базы всегда фатальны!</p>
+        <p class="phpdocumentor-summary">Ошибки базы всегда фатальны!
+Выводим сообщение от СУБД и трассировку вызова.</p>
 
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">public</span>
-                    <span class="phpdocumentor-signature__name">showErrorMessage</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$err_msg</span></span><span class="phpdocumentor-signature__argument"><span>, </span><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$notice_msg</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">void</span></code>
+                    <span class="phpdocumentor-signature__name">showErrorMessage</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type"><a href=""><abbr title=""></abbr></a>&nbsp;</span><span class="phpdocumentor-signature__argument__name">$err_msg</span></span><span class="phpdocumentor-signature__argument"><span>, </span><span class="phpdocumentor-signature__argument__return-type"><a href=""><abbr title=""></abbr></a>&nbsp;</span><span class="phpdocumentor-signature__argument__name">$notice_msg</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">void</span></code>
 
-    
+        <section class="phpdocumentor-description"><p>Либо выводим сразу на экран, либо отдаем оформленное сообщение в кидаемый Exception</p>
+</section>
+
         <h5 class="phpdocumentor-argument-list__heading">Parameters</h5>
     <dl class="phpdocumentor-argument-list">
                     <dt class="phpdocumentor-argument-list__entry">
                 <span class="phpdocumentor-signature__argument__name">$err_msg</span>
-                : <span class="phpdocumentor-signature__argument__return-type">mixed</span>
+                : <span class="phpdocumentor-signature__argument__return-type"><a href=""><abbr title=""></abbr></a></span>
                             </dt>
             <dd class="phpdocumentor-argument-list__definition">
-                    <section class="phpdocumentor-description"></section>
+                    <section class="phpdocumentor-description"><p>string сообщение об ошибке</p>
+</section>
 
             </dd>
                     <dt class="phpdocumentor-argument-list__entry">
                 <span class="phpdocumentor-signature__argument__name">$notice_msg</span>
-                : <span class="phpdocumentor-signature__argument__return-type">mixed</span>
+                : <span class="phpdocumentor-signature__argument__return-type"><a href=""><abbr title=""></abbr></a></span>
                             </dt>
             <dd class="phpdocumentor-argument-list__definition">
-                    <section class="phpdocumentor-description"></section>
+                    <section class="phpdocumentor-description"><p>string замечание от базы (для PG - pg_last_notice)</p>
+</section>
 
             </dd>
             </dl>
@@ -1290,7 +1297,7 @@ $data - hash</p>
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="Db.php"><a href="files/db.html"><abbr title="Db.php">Db.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">250</span>
+    <span class="phpdocumentor-element-found-in__line">256</span>
 
     </aside>
 
