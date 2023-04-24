@@ -195,7 +195,7 @@
             <dt class="phpdocumentor-table-of-contents__entry -property -protected">
     <a href="classes/Application.html#property___request_uri">$__request_uri</a>
     <span>
-                        &nbsp;: mixed            </span>
+                        &nbsp;: string            </span>
 </dt>
 <dd>URI как для CGI так и CLI</dd>
 
@@ -216,21 +216,21 @@
             <dt class="phpdocumentor-table-of-contents__entry -method -public">
     <a href="classes/Application.html#method_loadController">loadController()</a>
     <span>
-                                &nbsp;: mixed    </span>
+                                &nbsp;: bool    </span>
 </dt>
 <dd>Загрузчик Контроллера</dd>
 
             <dt class="phpdocumentor-table-of-contents__entry -method -public">
     <a href="classes/Application.html#method_loadView">loadView()</a>
     <span>
-                                &nbsp;: mixed    </span>
+                                &nbsp;: void    </span>
 </dt>
 <dd>Загрузчик Представления</dd>
 
             <dt class="phpdocumentor-table-of-contents__entry -method -public">
     <a href="classes/Application.html#method_parseURI">parseURI()</a>
     <span>
-                                &nbsp;: mixed    </span>
+                                &nbsp;: void    </span>
 </dt>
 <dd>Разборщик URI - если проект не ложится в схему Модуль-&gt;Класс-&gt;Метод перекрываем этот метод
 в перекрытом методе надо присвоить значение $this-&gt;__request_uri, т.к. его потом использует метод fileNotFound</dd>
@@ -238,14 +238,14 @@
             <dt class="phpdocumentor-table-of-contents__entry -method -public">
     <a href="classes/Application.html#method_run">run()</a>
     <span>
-                                &nbsp;: mixed    </span>
+                                &nbsp;: void    </span>
 </dt>
 <dd>Главный метод приложения</dd>
 
             <dt class="phpdocumentor-table-of-contents__entry -method -protected">
     <a href="classes/Application.html#method_fileNotFound">fileNotFound()</a>
     <span>
-                                &nbsp;: mixed    </span>
+                                &nbsp;: void    </span>
 </dt>
 <dd>Обработчик ситуации когда не нашли Контроллер по URI</dd>
 
@@ -455,7 +455,7 @@
 
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">protected</span>
-        <span class="phpdocumentor-signature__type">mixed</span>
+        <span class="phpdocumentor-signature__type">string</span>
     <span class="phpdocumentor-signature__name">$__request_uri</span>
     </code>
 
@@ -485,7 +485,7 @@
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="Application.php"><a href="files/application.html"><abbr title="Application.php">Application.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">466</span>
+    <span class="phpdocumentor-element-found-in__line">465</span>
 
     </aside>
 
@@ -529,7 +529,7 @@
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="Application.php"><a href="files/application.html"><abbr title="Application.php">Application.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">459</span>
+    <span class="phpdocumentor-element-found-in__line">458</span>
 
     </aside>
 
@@ -581,14 +581,14 @@
 
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">public</span>
-                    <span class="phpdocumentor-signature__name">loadController</span><span>(</span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">mixed</span></code>
+                    <span class="phpdocumentor-signature__name">loadController</span><span>(</span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">bool</span></code>
 
     
     
     
 
         <h5 class="phpdocumentor-return-value__heading">Return values</h5>
-    <span class="phpdocumentor-signature__response_type">mixed</span>
+    <span class="phpdocumentor-signature__response_type">bool</span>
             &mdash;
         
     
@@ -614,14 +614,14 @@
 
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">public</span>
-                    <span class="phpdocumentor-signature__name">loadView</span><span>(</span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">mixed</span></code>
+                    <span class="phpdocumentor-signature__name">loadView</span><span>(</span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">void</span></code>
 
     
     
     
 
         <h5 class="phpdocumentor-return-value__heading">Return values</h5>
-    <span class="phpdocumentor-signature__response_type">mixed</span>
+    <span class="phpdocumentor-signature__response_type">void</span>
             &mdash;
         
     
@@ -648,14 +648,14 @@
 
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">public</span>
-                    <span class="phpdocumentor-signature__name">parseURI</span><span>(</span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">mixed</span></code>
+                    <span class="phpdocumentor-signature__name">parseURI</span><span>(</span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">void</span></code>
 
     
     
     
 
         <h5 class="phpdocumentor-return-value__heading">Return values</h5>
-    <span class="phpdocumentor-signature__response_type">mixed</span>
+    <span class="phpdocumentor-signature__response_type">void</span>
             &mdash;
         
     
@@ -681,14 +681,14 @@
 
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">public</span>
-                    <span class="phpdocumentor-signature__name">run</span><span>(</span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">mixed</span></code>
+                    <span class="phpdocumentor-signature__name">run</span><span>(</span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">void</span></code>
 
     
     
     
 
         <h5 class="phpdocumentor-return-value__heading">Return values</h5>
-    <span class="phpdocumentor-signature__response_type">mixed</span>
+    <span class="phpdocumentor-signature__response_type">void</span>
             &mdash;
         
     
@@ -706,7 +706,7 @@
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="Application.php"><a href="files/application.html"><abbr title="Application.php">Application.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">453</span>
+    <span class="phpdocumentor-element-found-in__line">452</span>
 
     </aside>
 
@@ -714,14 +714,14 @@
 
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">protected</span>
-                    <span class="phpdocumentor-signature__name">fileNotFound</span><span>(</span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">mixed</span></code>
+                    <span class="phpdocumentor-signature__name">fileNotFound</span><span>(</span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">void</span></code>
 
     
     
     
 
         <h5 class="phpdocumentor-return-value__heading">Return values</h5>
-    <span class="phpdocumentor-signature__response_type">mixed</span>
+    <span class="phpdocumentor-signature__response_type">void</span>
             &mdash;
         
     

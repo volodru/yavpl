@@ -317,10 +317,10 @@ class Application
 	public string $default_method_name = 'index';
 
 	/** URI как для CGI так и CLI*/
-	protected $__request_uri;
+	protected string $__request_uri;
 
 /** Загрузчик Контроллера */
-	public function loadController()
+	public function loadController(): bool
 	{//работает для форматов в виде модуль/класс/метод или класс/метод (для простых проектов)
 	// для сложных структур - это надо всё будет переопределить, например для проект/раздел/модуль/класс/метод.
 		$file_name = CONTROLLERS_BASE_PATH.'/'.(($this->module_name != '') ? $this->module_name."/" : '')."{$this->class_name}.php";
@@ -351,7 +351,7 @@ class Application
 	}
 
 /** Загрузчик Представления */
-	public function loadView()
+	public function loadView(): void
 	{
 		$file_name = "views/".(($this->module_name != '') ? $this->module_name.'/' : '')."{$this->class_name}.php";
 		if (file_exists(APPLICATION_PATH.'/'.$file_name))
@@ -368,7 +368,7 @@ class Application
 /** Разборщик URI - если проект не ложится в схему Модуль->Класс->Метод перекрываем этот метод
  * в перекрытом методе надо присвоить значение $this->__request_uri, т.к. его потом использует метод fileNotFound
  * */
-	public function parseURI()
+	public function parseURI(): void
 	{
 		if (APPLICATION_RUNNING_MODE == 'cli')
 		{//CLI - первый параметр в режиме CLI - модуль/класс/метод, потом все остальные параметры
@@ -386,7 +386,7 @@ class Application
 	}
 
 /** Главный метод приложения */
-	public function run()
+	public function run(): void
 	{
 //разобрали URI
 		$this->parseURI();//sets global module, class, method
@@ -446,11 +446,10 @@ class Application
 				}
 			}
 		}
-		return $this;
 	}
 
 /** Обработчик ситуации когда не нашли Контроллер по URI */
-	protected function fileNotFound()
+	protected function fileNotFound(): void
 	{//override it to handle 404 errors
 		header("HTTP/1.0 404 Not Found");
 	}

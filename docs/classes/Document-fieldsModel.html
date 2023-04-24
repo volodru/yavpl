@@ -196,8 +196,7 @@
     <span>
                                 &nbsp;: string    </span>
 </dt>
-<dd>Действие ПОСЛЕ сохранения записи
-Возвращаем сообщение об ошибке. Пустая строка - все хорошо.</dd>
+<dd>Действие ПОСЛЕ сохранения записи</dd>
 
             <dt class="phpdocumentor-table-of-contents__entry -method -public">
     <a href="classes/SimpleDictionaryModel.html#method_beforeDeleteRow">beforeDeleteRow()</a>
@@ -320,7 +319,7 @@ id =&gt;
     <span>
                                 &nbsp;: string    </span>
 </dt>
-<dd>Обновляет одно поле в строке</dd>
+<dd>Обновляет одно поле в строке.</dd>
 
         </dl>
 
@@ -721,7 +720,7 @@ id =&gt;
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">421</span>
+    <span class="phpdocumentor-element-found-in__line">435</span>
 
     </aside>
 
@@ -731,14 +730,13 @@ id =&gt;
     <span class="phpdocumentor-signature__visibility">public</span>
                     <span class="phpdocumentor-signature__name">afterDeleteRow</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$key_value</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">string</span></code>
 
-        <section class="phpdocumentor-description"><p>перекрываем метод, чтобы сделать что-то после удаления записи.
-сюда пихать зачистку файловой системы от файлов, т.к. надо сначала точно удалить
-запись в СУБД, прежде, чем удалять файл.
-файл удалится наверняка, а в СУБД бывают дедлоки и прочее.</p>
-<p>но все это работает только в том случае, если нужен только ID записи.
-саму-то запись мы уже удалили :(</p>
-<p>возвращает пустую строку, если все хорошо, иначе возвращает сообщение об ошибке.
-чтобы не заморачиваться с возвратом - стоит всегда возвращать parent::afterDeleteRow($key_value)</p>
+        <section class="phpdocumentor-description"><p>Перекрываем метод, чтобы сделать что-то после удаления записи.
+Сюда пихать зачистку файловой системы от файлов, т.к. надо сначала точно удалить запись в СУБД, прежде, чем удалять файл.
+Файл удалится наверняка, а в СУБД бывают дедлоки и прочее.</p>
+<p>Но все это работает только в том случае, если нужен только ID записи.
+Саму-то запись мы уже удалили :(</p>
+<p>Возвращает пустую строку, если все хорошо, иначе возвращает сообщение об ошибке.
+Чтобы не заморачиваться с возвратом - стоит всегда возвращать parent::afterDeleteRow($key_value)</p>
 </section>
 
         <h5 class="phpdocumentor-argument-list__heading">Parameters</h5>
@@ -776,12 +774,11 @@ id =&gt;
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">283</span>
+    <span class="phpdocumentor-element-found-in__line">290</span>
 
     </aside>
 
-        <p class="phpdocumentor-summary">Действие ПОСЛЕ сохранения записи
-Возвращаем сообщение об ошибке. Пустая строка - все хорошо.</p>
+        <p class="phpdocumentor-summary">Действие ПОСЛЕ сохранения записи</p>
 
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">public</span>
@@ -839,7 +836,7 @@ id =&gt;
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">403</span>
+    <span class="phpdocumentor-element-found-in__line">417</span>
 
     </aside>
 
@@ -849,11 +846,11 @@ id =&gt;
     <span class="phpdocumentor-signature__visibility">public</span>
                     <span class="phpdocumentor-signature__name">beforeDeleteRow</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$key_value</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">string</span></code>
 
-        <section class="phpdocumentor-description"><p>перекрываем метод, чтобы сделать что-то непоследственно перед удалением записи.
-бывает, что что-то надо удалить в обход констрэйнтов
-запись удалится наверняка, т.к. метод canDeleteRow уже дал добро на удаление.</p>
-<p>возвращает пустую строку, если все хорошо, иначе возвращает сообщение об ошибке.
-чтобы не заморачиваться с возвратом - стоит всегда возвращать parent::beforeDeleteRow($key_value)</p>
+        <section class="phpdocumentor-description"><p>Перекрываем метод, чтобы сделать что-то непоследственно перед удалением записи.
+Бывает, что что-то надо удалить в обход констрэйнтов
+Запись удалится наверняка, т.к. метод canDeleteRow уже дал добро на удаление.</p>
+<p>Возвращает пустую строку, если все хорошо, иначе возвращает сообщение об ошибке.
+Чтобы не заморачиваться с возвратом - стоит всегда возвращать parent::beforeDeleteRow($key_value).</p>
 </section>
 
         <h5 class="phpdocumentor-argument-list__heading">Parameters</h5>
@@ -891,7 +888,7 @@ id =&gt;
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">266</span>
+    <span class="phpdocumentor-element-found-in__line">273</span>
 
     </aside>
 
@@ -901,8 +898,7 @@ id =&gt;
     <span class="phpdocumentor-signature__visibility">public</span>
                     <span class="phpdocumentor-signature__name">beforeSaveRow</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$action</span></span><span class="phpdocumentor-signature__argument"><span>, </span><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__reference-operator">&amp;</span><span class="phpdocumentor-signature__argument__name">$data</span></span><span class="phpdocumentor-signature__argument"><span>, </span><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$old_data</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">string</span></code>
 
-        <section class="phpdocumentor-description"><p>при перекрытии не забываем вызывать предка, чтобы запустить проверку по отдельным полям.
-Возвращаем сообщение об ошибке. Пустая строка - все хорошо.</p>
+        <section class="phpdocumentor-description"><p>При перекрытии не забываем вызывать предка, чтобы запустить проверку по отдельным полям.</p>
 </section>
 
         <h5 class="phpdocumentor-argument-list__heading">Parameters</h5>
@@ -1002,7 +998,7 @@ id =&gt;
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">341</span>
+    <span class="phpdocumentor-element-found-in__line">353</span>
 
     </aside>
 
@@ -1012,10 +1008,10 @@ id =&gt;
     <span class="phpdocumentor-signature__visibility">public</span>
                     <span class="phpdocumentor-signature__name">checkFieldValue</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$action</span></span><span class="phpdocumentor-signature__argument"><span>, </span><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$field_name</span></span><span class="phpdocumentor-signature__argument"><span>, </span><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__reference-operator">&amp;</span><span class="phpdocumentor-signature__argument__name">$data</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">string</span></code>
 
-        <section class="phpdocumentor-description"><p>метод может корректировать данные.
-для сравнения с предыдущими данными наследник может по $data[$this-&gt;key_field] получить старое значение.
-$old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
-штука редкая - пусть наследники этим занимаются.</p>
+        <section class="phpdocumentor-description"><p>Метод может корректировать данные.
+Для сравнения с предыдущими данными наследник может по $data[$this-&gt;key_field] получить старое значение.
+$old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);</p>
+<p>Штука редкая - пусть наследники этим занимаются.</p>
 </section>
 
         <h5 class="phpdocumentor-argument-list__heading">Parameters</h5>
@@ -1069,7 +1065,7 @@ $old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">435</span>
+    <span class="phpdocumentor-element-found-in__line">450</span>
 
     </aside>
 
@@ -1079,10 +1075,10 @@ $old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
     <span class="phpdocumentor-signature__visibility">public</span>
                     <span class="phpdocumentor-signature__name">deleteRow</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type">int&nbsp;</span><span class="phpdocumentor-signature__argument__name">$key_value</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">string</span></code>
 
-        <section class="phpdocumentor-description"><p>все проверки в наследниках пихать в canDeleteRow
-перекрывать deleteRow только по большим праздникам
-все действия по зачистке мусора делать в beforeDeleteRow() и в afterDeleteRow()</p>
-<p>возвращаем всегда не NULL, а либо пустую строку, либо объяснительную.</p>
+        <section class="phpdocumentor-description"><p>Все проверки в наследниках пихать в canDeleteRow.
+Перекрывать deleteRow только по большим праздникам.
+Все действия по зачистке мусора делать в beforeDeleteRow() и в afterDeleteRow().</p>
+<p>Возвращаем всегда не NULL, а либо пустую строку, либо объяснительную.</p>
 </section>
 
         <h5 class="phpdocumentor-argument-list__heading">Parameters</h5>
@@ -1121,7 +1117,7 @@ $old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">144</span>
+    <span class="phpdocumentor-element-found-in__line">148</span>
 
     </aside>
 
@@ -1295,7 +1291,7 @@ $old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">118</span>
+    <span class="phpdocumentor-element-found-in__line">120</span>
 
     </aside>
 
@@ -1393,7 +1389,7 @@ $old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">256</span>
+    <span class="phpdocumentor-element-found-in__line">262</span>
 
     </aside>
 
@@ -1605,11 +1601,11 @@ id =&gt;
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">352</span>
+    <span class="phpdocumentor-element-found-in__line">364</span>
 
     </aside>
 
-        <p class="phpdocumentor-summary">Обновляет одно поле в строке</p>
+        <p class="phpdocumentor-summary">Обновляет одно поле в строке.</p>
 
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">public</span>
