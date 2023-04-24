@@ -302,17 +302,19 @@ set_exception_handler('__my_exception_handler');
 class Application
 {
 	/** глобальная ссылка на Контроллер*/
-	public $controller;
+	public Controller $controller;
 
 	/** глобальная ссылка на Представление*/
-	public $view;
+	public View $view;
 
 	/** название модуля по умолчанию*/
-	public $default_module_name = 'index';
+	public string $default_module_name = 'index';
+
 	/** название класса по умолчанию*/
-	public $default_class_name = 'index';
+	public string $default_class_name = 'index';
+
 	/** название метода по умолчанию*/
-	public $default_method_name = 'index';
+	public string $default_method_name = 'index';
 
 	/** URI как для CGI так и CLI*/
 	protected $__request_uri;

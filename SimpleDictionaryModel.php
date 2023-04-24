@@ -22,7 +22,8 @@
  * файл опубликован в библиотеке
 */
 
-/** Класс простой словарь - таблица с целым ключом.
+/**
+ * **Класс простой словарь - таблица с целым ключом**
  *
  * Название дурацкое, но так исторически сложилось. Но начиналось всё именно со словаря :)
  *
@@ -68,17 +69,21 @@
 
 class SimpleDictionaryModel extends MainModel
 {
-/** Имя таблица в базе (со схемой)*/
-	public $table_name = '';
+/** Имя таблица в базе (со схемой) */
+	public string $table_name = '';
 /** Ключевое поле - как правило - id*/
-	public $key_field = '';
+	public string $key_field = '';
 /** Список полей - массив */
-	public $fields = [];
+	public array $fields = [];
 /** Последний добавленный ключ
  * - после сохранения строки с ключом 0 в этой переменной будет новый id записи*/
-	public $key_field_value;
+	public int $key_field_value;
 
-/** Берем таблицу, ключ и поля*/
+/** Берем таблицу, ключ и поля
+ * @param $table_name string таблица
+ * @param $key_field string ключевое поле (как правило "id")
+ * @param $fields array массив полей
+ */
 	public function __construct($table_name, $key_field, $fields)
 	{
 		parent::__construct();
@@ -88,6 +93,7 @@ class SimpleDictionaryModel extends MainModel
 	}
 
 /** Запись отдаваемая по ключу == 0
+ * @return array Дефолтные значения для новой записи.
  */
 	public function getEmptyRow()
 	{
@@ -96,6 +102,8 @@ class SimpleDictionaryModel extends MainModel
 
 /** Максимально быстрый и корректный способ проверить наличие строки в базе.
  * в теории - оно работает только по индексу, т.е. не трогает файлы с данными.
+ * @param $key_value int - значение ключевого поля
+ * @return bool есть строка или нет
  */
 	public function rowExists($key_value)
 	{
@@ -104,6 +112,8 @@ class SimpleDictionaryModel extends MainModel
 
 /** Возвращает сырую запись из таблицы по ключу.
  * Перекрывать этот метод нежелательно, все join и экзотику в селектах надо писать в перекрываемом getRow($key_value)
+ * @param $key_value int - значение ключевого поля
+ * @return array всю строку по ключу
  */
 	public function getRawRow($key_value)
 	{
@@ -114,6 +124,8 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 /** Отдает запись по ключу, если ключ == 0, отдает дефолтную запись из getEmptyRow
  * Наследники могут добавлять в селект всё, что угодно и join-нить как угодно с чем угодно.
  * Для оригинальной записи всегда останется getRawRow($key_value)
+ * @param $key_value int - значение ключевого поля
+ * @return array всю строку по ключу, но наследники могут делать join и отдавать еще что-нибудь из прицепленных таблиц
  */
 	public function getRow($key_value)
 	{
@@ -127,7 +139,8 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		}
 	}
 
-/** Вместо списка с данными выдает количество записей по переданным параметрам, вызывает свой getList($params) */
+/** DEPRECATED
+ * Вместо списка с данными выдает количество записей по переданным параметрам, вызывает свой getList($params) */
 	public function getCount($params = [])
 	{
 		$params['select'] = "count(*) AS cnt";
@@ -138,7 +151,10 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		return $r['cnt'];
 	}
 
-/** Возвращает список записей по параметрам*/
+/** Возвращает список записей по параметрам
+ *
+ * @return array Возвращает массив записей по переданным параметрам.
+ * */
 	public function getList($params = [])
 	{
 		$where = [];
@@ -203,11 +219,11 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 				sendBugReport($msg);
 				//die($msg);
 			}
-			$ids = is_array($params['ids']) ? $params['ids'] : explode(',',$params['ids']);
+			$ids = is_array($params['ids']) ? $params['ids'] : explode(',', $params['ids']);
 			$ids = array_filter($ids, function($v){return ($v > 0);});
 			if (count($ids) > 0)
 			{
-				$where[] = "{$params['pkey']} IN (".join(',',$ids).")";
+				$where[] = "{$params['pkey']} IN (".join(',', $ids).")";
 			}
 			else
 			{//если массив передали, но пустой - значит ожидаем явно не весь каталог в случае пустого массива!
@@ -235,7 +251,8 @@ ORDER BY
 		return $this->db->fetchAll($index);
 	}
 
-/** Имя сиквенсы для таблицы. Если отличается от умолчательной для Постгреса - перекрыть*/
+/** Имя сиквенсы для таблицы. Если отличается от умолчательной для Постгреса - перекрыть.
+ * @return array имя сиквенсы для первичного ключа таблицы */
 	public function getSeqName()
 	{
 		return $this->table_name.'_'.$this->key_field.'_seq';
@@ -244,6 +261,7 @@ ORDER BY
 /** Проверка ДО сохранения записи.
  * при перекрытии не забываем вызывать предка, чтобы запустить проверку по отдельным полям.
  * Возвращаем сообщение об ошибке. Пустая строка - все хорошо.
+* @return string Сообщение об ошибке или пустую строку, если все хорошо
  */
 	public function beforeSaveRow($action, &$data, $old_data)
 	{
@@ -260,6 +278,7 @@ ORDER BY
 
 /** Действие ПОСЛЕ сохранения записи
  * Возвращаем сообщение об ошибке. Пустая строка - все хорошо.
+* @return string Сообщение об ошибке или пустую строку, если все хорошо
  */
 	public function afterSaveRow($action, &$data, $old_data)
 	{
@@ -268,7 +287,7 @@ ORDER BY
 
 /** Сохранения строки.
  * Если ключевое поле == 0, то создает новую запись, иначе - обновляет поля
- * Возвращаем сообщение об ошибке. Пустая строка - все хорошо.
+ * @return string Сообщение об ошибке или пустую строку, если все хорошо
  * */
 	public function saveRow($data)
 	{
@@ -317,13 +336,19 @@ ORDER BY
  * для сравнения с предыдущими данными наследник может по $data[$this->key_field] получить старое значение.
  * $old_data = $this->getRawRow($data[$this->key_field]);
  * штука редкая - пусть наследники этим занимаются.
+ * @return string Сообщение об ошибке или пустую строку, если все хорошо
  */
 	public function checkFieldValue($action, $field_name, &$data)
 	{
 		return '';//override - не забыть вызвать родительский beforeSaveRow в beforeSaveRow!
 	}
 
-/** Обновляет одно поле в строке*/
+/** Обновляет одно поле в строке
+ * @param $key_value int ключ
+ * @param $field_name string имя поля
+ * @param $value mixed новое значение поля
+ * @return string Сообщение об ошибке или пустую строку, если все хорошо
+ * */
 	public function updateField($key_value, $field_name, $value)
 	{
 		$data = [
@@ -359,6 +384,7 @@ ORDER BY
 /** Проверка на возможность удаления строки.
  * возвращает "" или NULL если можно удалить запись или сообщение о том, почему нельзя ее удалять.
  * deleteRow() проверяет наличие пустой строки в качестве сообщения
+ * @return string Сообщение о причине невозможности удаления или пустую строку, если все можно удалять
  */
 	public function canDeleteRow($key_value)
 	{
@@ -372,6 +398,7 @@ ORDER BY
  *
  * возвращает пустую строку, если все хорошо, иначе возвращает сообщение об ошибке.
  * чтобы не заморачиваться с возвратом - стоит всегда возвращать parent::beforeDeleteRow($key_value)
+ * @return string Сообщение об ошибке или пустую строку, если все хорошо
  */
 	public function beforeDeleteRow($key_value)
 	{
@@ -389,6 +416,7 @@ ORDER BY
  *
  * возвращает пустую строку, если все хорошо, иначе возвращает сообщение об ошибке.
  * чтобы не заморачиваться с возвратом - стоит всегда возвращать parent::afterDeleteRow($key_value)
+ * @return string Сообщение об ошибке или пустую строку, если все хорошо
  */
 	public function afterDeleteRow($key_value)
 	{
