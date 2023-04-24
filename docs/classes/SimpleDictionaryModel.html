@@ -100,16 +100,17 @@
         <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">67</span>
+    <span class="phpdocumentor-element-found-in__line">69</span>
 
     </aside>
 
             <p class="phpdocumentor-summary">Класс простой словарь - таблица с целым ключом.</p>
 
     <section class="phpdocumentor-description"><p>Название дурацкое, но так исторически сложилось. Но начиналось всё именно со словаря :)</p>
-<p>Модель встраивается в цепочку наследования
-Model-&gt;MainModel-&gt;SimpleDictionaryModel-&gt;SomeProductionModel
-MainModel должна быть в каждом проекте и иметь коннектор к СУБД $this-&gt;db (класс DB/DBPg)</p>
+<p>Модель встраивается в цепочку наследования</p>
+<pre class="prettyprint"><code class="prettyprint">Model-&gt;MainModel-&gt;SimpleDictionaryModel-&gt;SomeProductionModel
+</code></pre>
+<p>MainModel должна быть в каждом проекте и иметь коннектор к СУБД $this-&gt;db (класс DB/DBPg)</p>
 <p>Наследники SimpleDictionaryModel проекта вовсю используют методы из MainModel проекта, поэтому получается дичь, когда
 4 уровня наследования чередуются то в библиотеке то проекте.</p>
 <p>Словарь - таблица, в которой есть ключевое поле и несколько полей атрибутов.</p>
@@ -135,7 +136,7 @@ MainModel должна быть в каждом проекте и иметь к�
 <p>если нужны сложные выборки, то лучше сразу перекрыть getList и вообще не вызывать parent::getList()</p>
 </li>
 </ol>
-<p><em>Концепция обработки ошибок:</em></p>
+<p>Концепция обработки ошибок:</p>
 <p>Методы с проверками возвращают строку.
 Если строка не пустая - то это сообщение об ошибке.
 Если строка пустая - значит всё хорошо пока.</p>
@@ -337,7 +338,7 @@ MainModel должна быть в каждом проекте и иметь к�
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">74</span>
+    <span class="phpdocumentor-element-found-in__line">76</span>
 
     </aside>
 
@@ -371,7 +372,7 @@ MainModel должна быть в каждом проекте и иметь к�
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">72</span>
+    <span class="phpdocumentor-element-found-in__line">74</span>
 
     </aside>
 
@@ -405,7 +406,7 @@ MainModel должна быть в каждом проекте и иметь к�
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">77</span>
+    <span class="phpdocumentor-element-found-in__line">79</span>
 
     </aside>
 
@@ -440,7 +441,7 @@ MainModel должна быть в каждом проекте и иметь к�
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">70</span>
+    <span class="phpdocumentor-element-found-in__line">72</span>
 
     </aside>
 
@@ -478,7 +479,7 @@ MainModel должна быть в каждом проекте и иметь к�
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">80</span>
+    <span class="phpdocumentor-element-found-in__line">82</span>
 
     </aside>
 
@@ -538,7 +539,7 @@ MainModel должна быть в каждом проекте и иметь к�
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">391</span>
+    <span class="phpdocumentor-element-found-in__line">393</span>
 
     </aside>
 
@@ -591,7 +592,7 @@ MainModel должна быть в каждом проекте и иметь к�
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">262</span>
+    <span class="phpdocumentor-element-found-in__line">264</span>
 
     </aside>
 
@@ -652,7 +653,7 @@ MainModel должна быть в каждом проекте и иметь к�
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">374</span>
+    <span class="phpdocumentor-element-found-in__line">376</span>
 
     </aside>
 
@@ -702,7 +703,7 @@ MainModel должна быть в каждом проекте и иметь к�
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">246</span>
+    <span class="phpdocumentor-element-found-in__line">248</span>
 
     </aside>
 
@@ -765,7 +766,7 @@ MainModel должна быть в каждом проекте и иметь к�
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">361</span>
+    <span class="phpdocumentor-element-found-in__line">363</span>
 
     </aside>
 
@@ -812,7 +813,7 @@ deleteRow() проверяет наличие пустой строки в ка�
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">319</span>
+    <span class="phpdocumentor-element-found-in__line">321</span>
 
     </aside>
 
@@ -877,7 +878,7 @@ $old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">405</span>
+    <span class="phpdocumentor-element-found-in__line">407</span>
 
     </aside>
 
@@ -929,7 +930,7 @@ $old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">129</span>
+    <span class="phpdocumentor-element-found-in__line">131</span>
 
     </aside>
 
@@ -973,7 +974,7 @@ $old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">90</span>
+    <span class="phpdocumentor-element-found-in__line">92</span>
 
     </aside>
 
@@ -1006,7 +1007,7 @@ $old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">140</span>
+    <span class="phpdocumentor-element-found-in__line">142</span>
 
     </aside>
 
@@ -1050,7 +1051,7 @@ $old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">106</span>
+    <span class="phpdocumentor-element-found-in__line">108</span>
 
     </aside>
 
@@ -1096,7 +1097,7 @@ $old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">116</span>
+    <span class="phpdocumentor-element-found-in__line">118</span>
 
     </aside>
 
@@ -1143,7 +1144,7 @@ $old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">237</span>
+    <span class="phpdocumentor-element-found-in__line">239</span>
 
     </aside>
 
@@ -1176,7 +1177,7 @@ $old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">98</span>
+    <span class="phpdocumentor-element-found-in__line">100</span>
 
     </aside>
 
@@ -1222,7 +1223,7 @@ $old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">271</span>
+    <span class="phpdocumentor-element-found-in__line">273</span>
 
     </aside>
 
@@ -1269,7 +1270,7 @@ $old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="SimpleDictionaryModel.php"><a href="files/simpledictionarymodel.html"><abbr title="SimpleDictionaryModel.php">SimpleDictionaryModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">325</span>
+    <span class="phpdocumentor-element-found-in__line">327</span>
 
     </aside>
 
