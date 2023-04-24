@@ -1,16 +1,16 @@
 <?php
 /**
  * @NAME: DbMy
- * @DESC: MySQL driver
- * @VERSION: 1.00
- * @DATE: 2016-03-07
+ * @DESC: MySQL wrapper
  * @AUTHOR: Vladimir Nikiforov aka Volod (volod@volod.ru)
  * @COPYRIGHT (C) 2009- Vladimir Nikiforov
  * @LICENSE LGPLv3 - http://www.gnu.org/licenses/lgpl-3.0.html
  */
 
 /** CHANGELOG
- *
+
+ * * 2023-04-24
+ * расставлены type hints везде, куда можно
  * 1.00
  * выделен класс для работы с MySQL
  */
@@ -21,7 +21,7 @@ class DbMy extends Db implements iDb
 {
 	public $pg_dbh = 0;
 
-	public function connect()
+	public function connect():void
 	{
 		$connect_string = "host={$this->host_params['host']} port={$this->host_params['port']} user={$this->host_params['user']} password={$this->host_params['passwd']} dbname={$this->host_params['dbname']} connect_timeout=5";
 
@@ -36,7 +36,7 @@ class DbMy extends Db implements iDb
 		$this->is_connected = true;
 	}
 
-	public function disconnect()
+	public function disconnect():void
 	{
 		if ($this->is_connected)
 		{
@@ -46,7 +46,7 @@ class DbMy extends Db implements iDb
 		}
 	}
 
-	public function exec()
+	public function exec():Db
 	{
 //имитация чего-то вроде $query, $params = array()
 //либо $query, $param1, $param2,.., $paramN
@@ -61,7 +61,7 @@ class DbMy extends Db implements iDb
 
 		if ($this->query == '')//ну а вдруг он пустой?
 		{
-			print "Query is undefined!";
+			print "Query is defined but empty!";
 			return $this;
 		}
 
@@ -172,7 +172,6 @@ class DbMy extends Db implements iDb
 				$user_message = $debug_info;
 			}
 			die($user_message);
-			return;
 		}
 
 //чтобы память не переполнять, $save_executed_sql выключен. для дебагов - включить в прототипе модели проекта class MainModel{}
@@ -240,7 +239,7 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 /**
  * Получить следующее значение из сиквенсы
  */
-	public function nextVal($sequence_name)
+	public function nextVal($sequence_name): int
 	{
 		if (!$this->is_connected)
 		{
@@ -254,7 +253,7 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 /** Все результаты в таблицу, как правило массив структур
  *
  */
-	public function fetchAll($type = PGSQL_ASSOC)
+	public function fetchAll($type = PGSQL_ASSOC): array
 	{
 	}
 
@@ -262,7 +261,7 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
  * Извлечение очередной строки результата, как правило в виде структуры
  *
  */
-	public function fetchRow()/*typical usage: while ($r = $db->fetchRow()) {*/
+	public function fetchRow(): array/*typical usage: while ($r = $db->fetchRow()) {*/
 	{
 		return $this->row < $this->rows ? pg_fetch_array($this->sth, $this->row++, PGSQL_ASSOC) : false;
 	}
@@ -279,7 +278,7 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 /**
  * Количество строк подвергнутых коррекции по ins, upd, del
  */
-	public function affectedRows()
+	public function affectedRows(): int
 	{
 		return pg_affected_rows($this->sth);
 	}
@@ -287,15 +286,17 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 /**
  * FOR DEBUG: Вывести красиво сам запрос и его query-plan
  */
-	public function print_r()
+	public function print_r(): Db
 	{
 		if (!$this->is_connected)
 		{
 			$this->connect();
 		}
 		$explain = '';
-		if ((preg_match("/^\s*(SELECT)/sim", $this->query))
-			&& (! preg_match("/^\s*BEGIN/sim", $this->query)))
+		if (
+				(preg_match("/^\s*(SELECT)/sim", $this->query))
+				&& (! preg_match("/^\s*BEGIN/sim", $this->query))
+			)
 		{
 			$sth = (count($this->params) > 0) ?
 			pg_query_params($this->pg_dbh, "EXPLAIN {$this->query} ", $this->params) :
@@ -313,7 +314,9 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 		print "\n-------------------------\n";
 		print_r($explain);
 		if (count($this->params) > 0)
+		{
 			print "\n-------------------------\nPARAMS: ".var_export($this->params, true);
+		}
 		print "</xmp>";
 		return $this;
 	}

@@ -2,8 +2,6 @@
 /**
  * @NAME: Db, iDb
  * @DESC: Database abstract layer
- * @VERSION: 1.06
- * @DATE: 2017-02-01
  * @AUTHOR: Vladimir Nikiforov aka Volod (volod@volod.ru)
  * @COPYRIGHT (C) 2009- Vladimir Nikiforov
  * @LICENSE LGPLv3 - http://www.gnu.org/licenses/lgpl-3.0.html
@@ -11,6 +9,9 @@
 
 /** CHANGELOG
  *
+ * 2023-04-24
+ * расставлены type hints везде, куда можно
+
  * 1.09
  * DATE: 2020-05-06
  * $executed_sql - теперь в глобальной переменной $application
@@ -67,21 +68,21 @@ class Db
 
 /** просто выключатель поля
  */
-	public function disableReconnects()
+	public function disableReconnects():void
 	{
 		$this->allow_reconnects = false;
 	}
 
 /** просто включатель поля
  */
-	public function enableErorrMessages()
+	public function enableErorrMessages():void
 	{
 		$this->show_error_messages = true;
 	}
 
 /** паблик Морозов
  */
-	public function getHostParams()
+	public function getHostParams():array
 	{
 		return $this->host_params;
 	}
@@ -89,7 +90,7 @@ class Db
 /** разбираем параметры, делаем общую часть.
  *  после вызова этого метода наследник собственно обращается к базе и делает в нее запрос
  */
-	public function exec()
+	public function exec(): Db
 	{
 		//имитация чего-то вроде $query, $params = array()
 		//либо $query, $param1, $param2,.., $paramN
@@ -104,13 +105,12 @@ class Db
 			return $this;
 		}
 
-
 		$this->query = array_shift($args);//уж тут первый аргумент теперь точно есть
 		//da($this->query);
 
 		if ($this->query == '')//ну а вдруг он пустой?
 		{
-			print "Query is undefined!";
+			print "Query is defined but empty!";
 			return $this;
 		}
 
@@ -159,12 +159,13 @@ class Db
 		{
 			$this->connect();
 		}
+		return $this;
 	}
 
 /**
  * Ошибки базы всегда фатальны!
  */
-	public function showErrorMessage($err_msg, $notice_msg)
+	public function showErrorMessage($err_msg, $notice_msg):void
 	{
 		$current_time = date('Y/m/d H:i:s');
 		$url = "http://".$_SERVER['SERVER_NAME'].$_SERVER['SCRIPT_NAME'];
@@ -215,7 +216,7 @@ class Db
  * $fields, $keys - arrays or strings with comma separated fields
  * $data - hash
  */
-	public function insert($table, $keys, $fields, array $data)
+	public function insert($table, $keys, $fields, array $data):Db
 	{
 		if (!is_array($keys))
 		{
@@ -246,7 +247,7 @@ INSERT INTO $table (".join(', ', $ff).") VALUES (".join(', ', $p).")", $v);//->p
  * Изменение
  * параметры - см. Вставку / Insert
  */
-	public function update($table, $keys, $fields, array $data)
+	public function update($table, $keys, $fields, array $data):Db
 	{
 		if (!is_array($keys))
 		{
@@ -267,7 +268,7 @@ INSERT INTO $table (".join(', ', $ff).") VALUES (".join(', ', $p).")", $v);//->p
 			$i++;
 		}
 		$w = [];// for where
-   		foreach ($keys as $f)
+		foreach ($keys as $f)
 		{
 			$w[] = "$f = \$$i";
 			$v[] = (isset($data[$f])) ? $data[$f] : null;
@@ -281,7 +282,7 @@ UPDATE $table SET ".join(', ', $s)." WHERE (".join(') AND (', $w).")", $v);
  * Удаление
  * параметры - см. Вставку / Insert
  */
-	public function delete($table, $keys, array $data)
+	public function delete($table, $keys, array $data):Db
 	{
 		if (!is_array($keys))
 		{
@@ -304,7 +305,7 @@ DELETE FROM $table WHERE (".join(') AND (', $w).")", $v);
  * Наличие строки  по ключу
  * параметры - см. Вставку / Insert
  */
-	public function rowExists($table, $keys, array $data)
+	public function rowExists($table, $keys, array $data): bool
 	{
 		if (!is_array($keys))
 		{
@@ -327,7 +328,7 @@ SELECT ".join(',',$keys)." FROM $table WHERE (".join(') AND (', $w).")", $v)->ro
  * Выдача строки по ключу
  * параметры - см. Вставку / Insert
  */
-	public function getRow($table, $keys, array $data)
+	public function getRow($table, $keys, array $data): array
 	{
 		if (!is_array($keys))
 		{

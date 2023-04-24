@@ -1,15 +1,16 @@
 <?php
 /**
  * @NAME: DbPg
- * @DESC: PostgresQL driver
- * @VERSION: 1.00
- * @DATE: 2016-03-07
+ * @DESC: PostgresQL wrapper
  * @AUTHOR: Vladimir Nikiforov aka Volod (volod@volod.ru)
  * @COPYRIGHT (C) 2009- Vladimir Nikiforov
  * @LICENSE LGPLv3 - http://www.gnu.org/licenses/lgpl-3.0.html
  */
 
 /** CHANGELOG
+ *
+ * 2023-04-24
+ * расставлены type hints везде, куда можно
  *
  * 1.01
  * добавлен метод для работы через команду COPY - bulkLoad($table_name, $fields_list, $data)
@@ -22,7 +23,7 @@ class DbPg extends Db implements iDb
 {
 	public $pg_dbh = 0;
 
-	public function connect()
+	public function connect():void
 	{
 		$connect_string = "host={$this->host_params['host']} port={$this->host_params['port']} user={$this->host_params['user']} password={$this->host_params['passwd']} dbname={$this->host_params['dbname']} connect_timeout=5";
 
@@ -37,7 +38,7 @@ class DbPg extends Db implements iDb
 		$this->is_connected = true;
 	}
 
-	public function disconnect()
+	public function disconnect():void
 	{
 		if ($this->is_connected)
 		{
@@ -49,7 +50,7 @@ class DbPg extends Db implements iDb
 
 /** возвращает self! чтобы делать $db->exec()->fetchAll();
  */
-	public function exec()
+	public function exec():Db
 	{
 		parent::exec(func_get_args());
 //---- СОБСТВЕННО ОБРАЩЕНИЕ К СУБД --
@@ -150,20 +151,20 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 /**
  * Получить следующее значение из сиквенсы
  */
-	public function nextVal($sequence_name)
+	public function nextVal($sequence_name): int
 	{
 		if (!$this->is_connected)
 		{
 			$this->connect();
 		}
-		list($i) = pg_fetch_array(pg_query($this->pg_dbh, "SELECT nextval('$sequence_name')"), 0, PGSQL_NUM);
+		list($i) = pg_fetch_array(pg_query($this->pg_dbh, "SELECT nextval('{$sequence_name}')"), 0, PGSQL_NUM);
 		return $i;
 	}
 
 /** Все результаты в таблицу, массив структур
  *
  */
-	public function fetchAll($hash_index = '')
+	public function fetchAll($hash_index = ''): array
 	{
 		$t = [];
 		for ($row_num = 0; $row_num < $this->rows; $row_num++)
@@ -226,7 +227,7 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 /**
  * Количество строк подвергнутых коррекции по ins, upd, del
  */
-	public function affectedRows()
+	public function affectedRows(): int
 	{
 		return pg_affected_rows($this->sth);
 	}
@@ -234,7 +235,7 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 /**
  * FOR DEBUG: Вывести красиво сам запрос и его query-plan
  */
-	public function print_r()
+	public function print_r(): Db
 	{
 		if (!$this->is_connected)
 		{
@@ -267,13 +268,15 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 		return $this;
 	}
 
-/** $table_name таблица со схемой,
- * $fields_list - массив полей,
- * $data - массив массивов.
+/**
+ * Массовая загружелка через команду COPY
+ * @param $table_name string таблица со схемой,
+ * @param $fields_list array массив полей,
+ * @param $data array массив массивов.
  * осмысленные проверки надо делать на стороне вызывающей стороны!
  * тут заменяются \t на \T в строках и null элементы на \N
  */
-	public function bulkLoad($table_name, $fields_list, $data)
+	public function bulkLoad(string $table_name, array $fields_list, array $data): void
 	{
 		if ((count($fields_list) == 0) ||
 			(count($data) == 0) ||
