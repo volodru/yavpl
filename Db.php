@@ -218,9 +218,11 @@ class Db
 	}
 
 /**
- * Вставка - делается универсально, т.к. это чистый SQL92
- * $fields, $keys - arrays or strings with comma separated fields
- * $data - hash
+ * Вставка записи в базу.
+ * Делается универсально через SQL запрос, т.к. это чистый SQL92, то подходит для всех рапперов к базам
+ * @param $keys - ключевые поля - массив или строка через запятую
+ * @param $fields - остальные поля  - массив или строка через запятую
+ * @param $data - hash с данными вида ключ (поле) -- значение
  */
 	public function insert($table, $keys, $fields, array $data):Db
 	{

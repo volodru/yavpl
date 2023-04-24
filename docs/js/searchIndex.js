@@ -553,7 +553,7 @@ Search.appendIndex(
         },                {
             "fqsen": "\\Db\u003A\u003Ainsert\u0028\u0029",
             "name": "insert",
-            "summary": "\u0412\u0441\u0442\u0430\u0432\u043A\u0430\u0020\u002D\u0020\u0434\u0435\u043B\u0430\u0435\u0442\u0441\u044F\u0020\u0443\u043D\u0438\u0432\u0435\u0440\u0441\u0430\u043B\u044C\u043D\u043E,\u0020\u0442.\u043A.\u0020\u044D\u0442\u043E\u0020\u0447\u0438\u0441\u0442\u044B\u0439\u0020SQL92\n\u0024fields,\u0020\u0024keys\u0020\u002D\u0020arrays\u0020or\u0020strings\u0020with\u0020comma\u0020separated\u0020fields\n\u0024data\u0020\u002D\u0020hash",
+            "summary": "\u0412\u0441\u0442\u0430\u0432\u043A\u0430\u0020\u0437\u0430\u043F\u0438\u0441\u0438\u0020\u0432\u0020\u0431\u0430\u0437\u0443.",
             "url": "classes/Db.html#method_insert"
         },                {
             "fqsen": "\\Db\u003A\u003Aupdate\u0028\u0029",
