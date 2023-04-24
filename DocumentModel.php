@@ -683,7 +683,7 @@ class Document_fieldsModel extends SimpleDictionaryModel
 	private $data_cash = [];
 
 	/**
-	 * Типы данных полей
+	 * Типы данных полей - названия для юзеров
 	 */
 	public $value_types = [
 		'A'	=> 'Строковый', // alphabet
@@ -695,6 +695,9 @@ class Document_fieldsModel extends SimpleDictionaryModel
 		'B'	=> 'Логический', // integer (0|1), 0 - false, not 0 - true
 	];
 
+	/**
+	 * Типы данных полей - названия поля в базе
+	 */
 	public $value_field_names = [
 		'A'	=> 'text_value', // alphabet
 		'I'	=> 'int_value', // integer
@@ -704,6 +707,10 @@ class Document_fieldsModel extends SimpleDictionaryModel
 		'X'	=> 'int_value', // key values
 		'B'	=> 'int_value', // integer
 	];
+
+	/**
+	 * Типы данных полей - названия полей, по которым надо их сортировать
+	 */
 
 	public $sort_field_names = [
 		'A'	=> 'text_value', // alphabet
@@ -758,7 +765,7 @@ ORDER BY {$field_info['x_table_order']}")->fetchAll('id');
 		}
 	}
 
-/** надо для интерфейсов редактирования полей документов
+/** Надо инициализировать запись для интерфейсов редактирования полей документов
  */
 	public function getEmptyRow()
 	{
@@ -773,7 +780,8 @@ ORDER BY {$field_info['x_table_order']}")->fetchAll('id');
 		];
 	}
 
-/** надо для интерфейсов редактирования полей документов
+/** Надо для интерфейсов редактирования полей документов.
+ * Релизовано кеширование с хранение в массиве этого же класса ($data_cash)
  */
 	public function getRow($key_value)
 	{
@@ -803,7 +811,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 			$params['order'] = 'sort_order';
 		}
 		$params['pkey'] = 'id';
-		$params['where'] = $params['where'] ?? [];
+		$params['where'] ??= [];
 
 		$params['where'][] = "document_type_id = {$this->document_type_id}";
 
