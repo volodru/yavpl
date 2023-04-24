@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * @NAME: Class: Document Model
  * @AUTHOR: Vladimir Nikiforov aka Volod (volod@volod.ru)
  * @COPYRIGHT (C) 2018 - Vladimir Nikiforov
@@ -45,8 +45,8 @@
  * файл впервые опубликован
 */
 
-/*
-Модель - вариант сложного словаря:
+/**
+Модель Документ - вариант сложного словаря:
 1. произвольное количество атрибутов (или их очень много, чтобы выдумывать им названия в базе)
 2. прицепленные файлы
 3. дерево документов
@@ -100,8 +100,6 @@ set
 	x_table_order	= 'name',
 	x_list_url	= '/shipments/containertypes'
 where id = 60
-
-
 */
 
 class DocumentModel extends SimpleDictionaryModel
@@ -123,7 +121,7 @@ class DocumentModel extends SimpleDictionaryModel
 
 /** перекрыть, если используется своя модель для полей
  */
-	public function initFieldsModel($scheme, $document_type_id)
+	public function initFieldsModel($scheme, $document_type_id):void
 	{
 		//в перекрытом методе вызываем свою модель
 		$this->fields_model = new Document_fieldsModel($scheme, $document_type_id);
@@ -133,7 +131,7 @@ class DocumentModel extends SimpleDictionaryModel
 
 /** перекрыть, если используется своя модель для значений полей
  */
-	public function initValuesDictsModel($scheme, $document_type_id)
+	public function initValuesDictsModel($scheme, $document_type_id):void
 	{
 		//в перекрытом методе вызываем свою модель
 		$this->values_dicts_model = new Document_values_dictsModel($scheme, $document_type_id);
@@ -148,7 +146,7 @@ print $this->__getDataStructureScript();die('stopped');
 копия из браузера - идет без форматирования, а PgAdmin ругается на одну длинную строку.
 не использовать da(); - там в коде есть ' который экранируется при выводе print_r() и который не нужен в SQL
  */
-	public function __getDataStructureScript()
+	public function __getDataStructureScript(): string
 	{
 		return "
 DROP TABLE {$this->scheme}.documents_values_dicts;
@@ -283,11 +281,13 @@ CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.d
 			'parent_id'			=> 0,
 		];
 	}
+
 /** получить значения полей документа
  * для списков полей и getRow оно вызывается автоматом.
  * если перекрываем метод getRow и не вызываем предка, то значения заполнять именно этой функцией.
+ * @param $document_id int ID документа
  */
-	public function getFieldsValues($document_id)
+	public function getFieldsValues($document_id): array
 	{
 		return $this->db->exec("
 SELECT f.*, v.*, f.id AS field_id
@@ -299,8 +299,9 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
 
 /** получить значение одного поля
  * например в calcAutomatedFields()
+ * @param $document_id int ID документа
  */
-	public function getFieldValue($document_id, $field_id)
+	public function getFieldValue($document_id, $field_id): array
 	{
 		return $this->db->exec("
 SELECT f.*, v.*, f.id AS field_id
@@ -310,7 +311,7 @@ WHERE document_id = $1 AND f.id = $2
 ", $document_id, $field_id)->fetchRow();
 	}
 
-	private function getList_action($action)
+	private function getList_action($action): string
 	{//ну не люблю я конструкцию CASE во всех языках :)
 		if ($action == 'more') {return '>';}
 		if ($action == 'less') {return '<';}
@@ -620,8 +621,11 @@ WHERE document_id = $1 AND field_id = $2 AND {$db_field} = $3", $document_id, $f
 		sendBugReport($msg);
 		die($msg);
 	}
-
-	public function createRow($data)
+/**
+ * Создаем запись.
+ * Выводим пустую строку, если все хорошо, либо сообщение об ошибке.
+ */
+	public function createRow(array $data):string
 	{
 		if (!isset($this->document_type_id))
 		{
@@ -634,7 +638,11 @@ WHERE document_id = $1 AND field_id = $2 AND {$db_field} = $3", $document_id, $f
 		return ($ar == 1) ? '' : "Произошла ошибка при сохранении документа [#{$this->document_id}]: количество измененных записей = {$ar}";
 	}
 
-	public function calcAutomatedFields($document_id = 0)
+	/** В наследниках проходим по всем автоматизированным полям и вычисляем/сохраняем.
+	 * Ошибку в виде строки выводим при любом сохранении любого поля (первого попавшегося) - все должно работать без ошибок!
+	 * @param $document_id int ID документа
+	 */
+	public function calcAutomatedFields($document_id = 0): string
 	{
 		if ($document_id == 0){die('Lost $document_id in calcAutomatedFields($document_id = 0)');}
 

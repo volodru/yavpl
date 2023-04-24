@@ -220,6 +220,7 @@ class Db
 /**
  * Вставка записи в базу.
  * Делается универсально через SQL запрос, т.к. это чистый SQL92, то подходит для всех рапперов к базам
+ * @param $table string - имя таблицы (можно вместе со схемой)
  * @param $keys - ключевые поля - массив или строка через запятую
  * @param $fields - остальные поля  - массив или строка через запятую
  * @param $data - hash с данными вида ключ (поле) -- значение
@@ -240,20 +241,24 @@ class Db
 		$v = [];//linear array of data
 		$ff = [];//fields
 		$i = 1;
-   		foreach (array_merge($keys, $fields) as $f)
+		foreach (array_merge($keys, $fields) as $f)
 		{
 			$p[] = '$'.$i;
 			$ff[] = $f;
-			$v[] = (isset($data[$f])) ? $data[$f] : null;
+			$v[] = $data[$f] ?? null;
 			$i++;
 		}
 		return $this->exec("-- ".get_class($this).", method: ".__METHOD__."
-INSERT INTO $table (".join(', ', $ff).") VALUES (".join(', ', $p).")", $v);//->print_r();
+INSERT INTO {$table} (".join(', ', $ff).") VALUES (".join(', ', $p).")", $v);//->print_r();
 	}
 
 /**
- * Изменение
- * параметры - см. Вставку / Insert
+ * Изменение записи в базе.
+ * Делается универсально через SQL запрос, т.к. это чистый SQL92, то подходит для всех рапперов к базам
+ * @param $table string - имя таблицы (можно вместе со схемой)
+ * @param $keys - ключевые поля - массив или строка через запятую
+ * @param $fields - остальные поля  - массив или строка через запятую
+ * @param $data - hash с данными вида ключ (поле) -- значение
  */
 	public function update($table, $keys, $fields, array $data):Db
 	{
@@ -271,24 +276,27 @@ INSERT INTO $table (".join(', ', $ff).") VALUES (".join(', ', $p).")", $v);//->p
 		$i = 1;//for both "foreach" cycles!
 		foreach ($fields as $f)
 		{
-			$s[] = "$f = \$$i";
-			$v[] = (isset($data[$f])) ? $data[$f] : null;
+			$s[] = "{$f} = \${$i}";
+			$v[] = $data[$f] ?? null;
 			$i++;
 		}
 		$w = [];// for where
 		foreach ($keys as $f)
 		{
-			$w[] = "$f = \$$i";
-			$v[] = (isset($data[$f])) ? $data[$f] : null;
+			$w[] = "{$f} = \${$i}";
+			$v[] = $data[$f] ?? null;
 			$i++;
 		}
 		return $this->exec("-- ".get_class($this).", method: ".__METHOD__."
-UPDATE $table SET ".join(', ', $s)." WHERE (".join(') AND (', $w).")", $v);
+UPDATE {$table} SET ".join(', ', $s)." WHERE (".join(') AND (', $w).")", $v);
 	}
 
 /**
- * Удаление
- * параметры - см. Вставку / Insert
+ * Удаление записи из базы.
+ * Делается универсально через SQL запрос, т.к. это чистый SQL92, то подходит для всех рапперов к базам
+ * @param $table string - имя таблицы (можно вместе со схемой)
+ * @param $keys - ключевые поля - массив или строка через запятую
+ * @param $data - hash с данными вида ключ (поле) -- значение
  */
 	public function delete($table, $keys, array $data):Db
 	{
@@ -299,19 +307,22 @@ UPDATE $table SET ".join(', ', $s)." WHERE (".join(') AND (', $w).")", $v);
 		$i = 1;
 		$w = [];// for where
 		$v = [];// linear array of data
-   		foreach ($keys as $f)
+		foreach ($keys as $f)
 		{
-			$w[] = "$f = \$$i";
-			$v[] = (isset($data[$f])) ? $data[$f] : null;
+			$w[] = "{$f} = \${$i}";
+			$v[] = $data[$f] ?? null;
 			$i++;
 		}
 		return $this->exec("-- ".get_class($this).", method: ".__METHOD__."
-DELETE FROM $table WHERE (".join(') AND (', $w).")", $v);
+DELETE FROM {$table} WHERE (".join(') AND (', $w).")", $v);
 	}
 
 /**
  * Наличие строки  по ключу
- * параметры - см. Вставку / Insert
+ * Делается универсально через SQL запрос, т.к. это чистый SQL92, то подходит для всех рапперов к базам
+ * @param $table string - имя таблицы (можно вместе со схемой)
+ * @param $keys - ключевые поля - массив или строка через запятую
+ * @param $data - hash с данными вида ключ (поле) -- значение
  */
 	public function rowExists($table, $keys, array $data): bool
 	{
@@ -324,7 +335,7 @@ DELETE FROM $table WHERE (".join(') AND (', $w).")", $v);
 		$v = [];// linear array of data
 		foreach ($keys as $f)
 		{
-			$w[] = "$f = \$$i";
+			$w[] = "{$f} = \${$i}";
 			$v[] = (isset($data[$f])) ? $data[$f] : null;
 			$i++;
 		}
@@ -334,7 +345,9 @@ SELECT ".join(',',$keys)." FROM $table WHERE (".join(') AND (', $w).")", $v)->ro
 
 /**
  * Выдача строки по ключу
- * параметры - см. Вставку / Insert
+ * @param $table string - имя таблицы (можно вместе со схемой)
+ * @param $keys - ключевые поля - массив или строка через запятую
+ * @param $data - hash с данными вида ключ (поле) -- значение
  */
 	public function getRow($table, $keys, array $data): array
 	{
@@ -347,12 +360,12 @@ SELECT ".join(',',$keys)." FROM $table WHERE (".join(') AND (', $w).")", $v)->ro
 		$v = [];// linear array of data
 		foreach ($keys as $f)
 		{
-			$w[] = "$f = \$$i";
-			$v[] = (isset($data[$f])) ? $data[$f] : null;
+			$w[] = "{$f} = \${$i}";
+			$v[] = $data[$f] ?? null;
 			$i++;
 		}
 		return $this->exec("-- ".get_class($this).", method: ".__METHOD__."
-SELECT * FROM $table WHERE (".join(') AND (', $w).")", $v)->fetchRow();
+SELECT ".join(',',$keys)." FROM {$table} WHERE (".join(') AND (', $w).")", $v)->fetchRow();
 	}
 
 /**

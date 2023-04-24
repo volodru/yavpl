@@ -100,40 +100,58 @@
         <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="DocumentModel.php"><a href="files/documentmodel.html"><abbr title="DocumentModel.php">DocumentModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">107</span>
+    <span class="phpdocumentor-element-found-in__line">105</span>
 
     </aside>
 
-            <p class="phpdocumentor-summary">CHANGELOG</p>
+            <p class="phpdocumentor-summary">Модель Документ - вариант сложного словаря:
+1. произвольное количество атрибутов (или их очень много, чтобы выдумывать им названия в базе)
+2. прицепленные файлы
+3. дерево документов
+4. для каждого проекта таблица с документами и полями может быть своя (в своей схеме)</p>
 
-    <section class="phpdocumentor-description"><p>1.06
-DATE: 2022-02-09
-в словарь полей добавлен логический тип (0/1) 0 - false/нет, всё что не 0 - true/да</p>
-<p>1.05
-DATE: 2022-01-26
-в словарь полей добавлены поля description(текст) и automated (0/1)
-удалена модель для работы с файлами. файлы к документам теперь тлько через MPFL</p>
-<p>1.04
-DATE: 2021-06-3</p>
-<p>1.03
-DATE: 2021-04-14
-в словаре полей (Document_fieldsModel) убрано поле field_group_id. за 3 года так и не пригодилось.</p>
-<p>1.02
-DATE: 2018-10-15
-В добавлены параметры:
-add_default_value - к списку значений из словаря добавлять нулевое значение - типа НЕ ВЫБРАНО
-default_value_title - заголовок для нулевого значения
-пример для controller-&gt;edit():
-$this-&gt;shipments-&gt;documents-&gt;fields_model-&gt;getList([
-'add_default_value'		=&gt; 1,
-'default_value_title'	=&gt; '-- Значение не выбрано --',
-]);</p>
-<p>1.01
-DATE: 2018-10-04
-в словаре полей (Document_fieldsModel) убрано поле field_type, добавлено поле field_group_id integer</p>
-<p>1.00
-DATE: 2018-03-06
-файл впервые опубликован</p>
+    <section class="phpdocumentor-description"><p>Модель толстая и, в отличии от предка, манипулирует сразу несколькими таблицами, потому в этом файле
+сразу 3 класса и все наследники от simpleDictionary.</p>
+<p>Таблицы с документами, полями, значениями полей, прицепленными файлами, словарями полей и т.п.
+имеют фиксированные названия в пределах схемы проекта:
+documents - документы
+documents_fields - список полей для каждого типа документа
+documents_fields_values - значения полей для документа
+documents_values_dicts - словарь для словарных полей</p>
+<p>document_type_id - тип документа. по-умолчанию = 0, если надо в схеме реализовать несколько
+разных документов и соединить их в иерархию через parent_id, то вот тут то и надо использовать
+разные document_type_id для разных типов в рамках одной таблицы.</p>
+<p>Типы документов и их проверки пока только хардкодить, т.к. по дефолту их может и не быть, т.е. будет всего один тип с id=0 и
+ради него не стоит каждый раз городить таблицу вида document_types с одной строкой только для того,
+чтобы сделать 2 констрэйнта с documents и documents_fields.
+Целостность проверяем в коде модели, т.е. при модификации списка полей и модификации documents.document_type_id)
+смотреть во внутреннюю таблицу типов документов на предмет соответствия.
+Вариант отдать редактирование типов документов юзеру не рассматривается даже в перспективе.</p>
+<p>Поля для документов сгруппированы по типу документа, т.е. в таблице documents_fields есть ссылка на тип документа.</p>
+<p>Каждый документ имеет родителя по ссылке в parent_id в таблице documents.
+Т.е. в рамках проекта можно констрэйнтами связать дерево документов в единое целое.
+Для констрэйнта надо в пустой таблице с документами создать пустой документ с ID=0 (как бы root :) )</p>
+<p>Документы наследуются от SimpleDictionary, но их поведение более сложное, поэтому parent::saveRow() запрещен.
+Для создания нового документа надо применять метод creatRow().
+Модификация документа допустима через изменение атрибутов и поштучный вызов updateField().</p>
+<p>Для инициализации проекта имеет смысл использовать вывод функции
+print $this-&gt;__getDataStructureScript();die('stopped');
+см. её код.</p>
+<p>Создание нового поля с внешним словарем.
+0. через интерфейс его как правило создать нельзя, ибо там поля которые прямо вставляются в запрос и это место для SQL-инъекций</p>
+<ol>
+<li>создаем новое поле целого типа, заполняем название, сортировку, единицы измерения - через интерфейс, если он есть.</li>
+<li>идем в базу и там к этому полю делаем (пусть наше новое поле с ID=60)
+shipments -- например
+update shipments.documents_fields
+set
+value_type = 'X',
+x_value_field_name = 'name',
+x_table_name	= 'shipments.container_types',
+x_table_order	= 'name',
+x_list_url	= '/shipments/containertypes'
+where id = 60</li>
+</ol>
 </section>
 
 
@@ -194,7 +212,7 @@ DATE: 2018-03-06
             <dt class="phpdocumentor-table-of-contents__entry -method -public">
     <a href="classes/DocumentModel.html#method___getDataStructureScript">__getDataStructureScript()</a>
     <span>
-                                &nbsp;: mixed    </span>
+                                &nbsp;: string    </span>
 </dt>
 <dd>когда создаем новый тип документов, можно сразу получить SQL скрипт для создания всех таблиц схемы
 USAGE:
@@ -233,9 +251,9 @@ print $this-&gt;__getDataStructureScript();die(&#039;stopped&#039;);
             <dt class="phpdocumentor-table-of-contents__entry -method -public">
     <a href="classes/DocumentModel.html#method_calcAutomatedFields">calcAutomatedFields()</a>
     <span>
-                                &nbsp;: mixed    </span>
+                                &nbsp;: string    </span>
 </dt>
-<dd></dd>
+<dd>В наследниках проходим по всем автоматизированным полям и вычисляем/сохраняем.</dd>
 
             <dt class="phpdocumentor-table-of-contents__entry -method -public">
     <a href="classes/SimpleDictionaryModel.html#method_canDeleteRow">canDeleteRow()</a>
@@ -254,9 +272,9 @@ print $this-&gt;__getDataStructureScript();die(&#039;stopped&#039;);
             <dt class="phpdocumentor-table-of-contents__entry -method -public">
     <a href="classes/DocumentModel.html#method_createRow">createRow()</a>
     <span>
-                                &nbsp;: mixed    </span>
+                                &nbsp;: string    </span>
 </dt>
-<dd></dd>
+<dd>Создаем запись.</dd>
 
             <dt class="phpdocumentor-table-of-contents__entry -method -public">
     <a href="classes/SimpleDictionaryModel.html#method_deleteRow">deleteRow()</a>
@@ -294,7 +312,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
             <dt class="phpdocumentor-table-of-contents__entry -method -public">
     <a href="classes/DocumentModel.html#method_getFieldsValues">getFieldsValues()</a>
     <span>
-                                &nbsp;: mixed    </span>
+                                &nbsp;: array&lt;string|int, mixed&gt;    </span>
 </dt>
 <dd>получить значения полей документа
 для списков полей и getRow оно вызывается автоматом.</dd>
@@ -302,7 +320,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
             <dt class="phpdocumentor-table-of-contents__entry -method -public">
     <a href="classes/DocumentModel.html#method_getFieldValue">getFieldValue()</a>
     <span>
-                                &nbsp;: mixed    </span>
+                                &nbsp;: array&lt;string|int, mixed&gt;    </span>
 </dt>
 <dd>получить значение одного поля
 например в calcAutomatedFields()</dd>
@@ -340,14 +358,14 @@ $this-&gt;document_info[&#039;fields&#039;] = [
             <dt class="phpdocumentor-table-of-contents__entry -method -public">
     <a href="classes/DocumentModel.html#method_initFieldsModel">initFieldsModel()</a>
     <span>
-                                &nbsp;: mixed    </span>
+                                &nbsp;: void    </span>
 </dt>
 <dd>перекрыть, если используется своя модель для полей</dd>
 
             <dt class="phpdocumentor-table-of-contents__entry -method -public">
     <a href="classes/DocumentModel.html#method_initValuesDictsModel">initValuesDictsModel()</a>
     <span>
-                                &nbsp;: mixed    </span>
+                                &nbsp;: void    </span>
 </dt>
 <dd>перекрыть, если используется своя модель для значений полей</dd>
 
@@ -382,7 +400,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
             <dt class="phpdocumentor-table-of-contents__entry -method -private">
     <a href="classes/DocumentModel.html#method_getList_action">getList_action()</a>
     <span>
-                                &nbsp;: mixed    </span>
+                                &nbsp;: string    </span>
 </dt>
 <dd></dd>
 
@@ -550,7 +568,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="DocumentModel.php"><a href="files/documentmodel.html"><abbr title="DocumentModel.php">DocumentModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">109</span>
+    <span class="phpdocumentor-element-found-in__line">107</span>
 
     </aside>
 
@@ -588,7 +606,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="DocumentModel.php"><a href="files/documentmodel.html"><abbr title="DocumentModel.php">DocumentModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">111</span>
+    <span class="phpdocumentor-element-found-in__line">109</span>
 
     </aside>
 
@@ -640,7 +658,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="DocumentModel.php"><a href="files/documentmodel.html"><abbr title="DocumentModel.php">DocumentModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">151</span>
+    <span class="phpdocumentor-element-found-in__line">149</span>
 
     </aside>
 
@@ -651,7 +669,7 @@ print $this-&gt;__getDataStructureScript();die(&#039;stopped&#039;);
 
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">public</span>
-                    <span class="phpdocumentor-signature__name">__getDataStructureScript</span><span>(</span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">mixed</span></code>
+                    <span class="phpdocumentor-signature__name">__getDataStructureScript</span><span>(</span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">string</span></code>
 
         <section class="phpdocumentor-description"><p>копия из браузера - идет без форматирования, а PgAdmin ругается на одну длинную строку.
 не использовать da(); - там в коде есть ' который экранируется при выводе print_r() и который не нужен в SQL</p>
@@ -661,7 +679,7 @@ print $this-&gt;__getDataStructureScript();die(&#039;stopped&#039;);
     
 
         <h5 class="phpdocumentor-return-value__heading">Return values</h5>
-    <span class="phpdocumentor-signature__response_type">mixed</span>
+    <span class="phpdocumentor-signature__response_type">string</span>
             &mdash;
         
     
@@ -906,25 +924,28 @@ print $this-&gt;__getDataStructureScript();die(&#039;stopped&#039;);
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="DocumentModel.php"><a href="files/documentmodel.html"><abbr title="DocumentModel.php">DocumentModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">637</span>
+    <span class="phpdocumentor-element-found-in__line">645</span>
 
     </aside>
 
-    
+        <p class="phpdocumentor-summary">В наследниках проходим по всем автоматизированным полям и вычисляем/сохраняем.</p>
+
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">public</span>
-                    <span class="phpdocumentor-signature__name">calcAutomatedFields</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$document_id</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">mixed</span></code>
+                    <span class="phpdocumentor-signature__name">calcAutomatedFields</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type"><a href=""><abbr title=""></abbr></a>&nbsp;</span><span class="phpdocumentor-signature__argument__name">$document_id</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">string</span></code>
 
-        <section class="phpdocumentor-description"></section>
+        <section class="phpdocumentor-description"><p>Ошибку в виде строки выводим при любом сохранении любого поля (первого попавшегося) - все должно работать без ошибок!</p>
+</section>
 
         <h5 class="phpdocumentor-argument-list__heading">Parameters</h5>
     <dl class="phpdocumentor-argument-list">
                     <dt class="phpdocumentor-argument-list__entry">
                 <span class="phpdocumentor-signature__argument__name">$document_id</span>
-                : <span class="phpdocumentor-signature__argument__return-type">mixed</span>
+                : <span class="phpdocumentor-signature__argument__return-type"><a href=""><abbr title=""></abbr></a></span>
                             </dt>
             <dd class="phpdocumentor-argument-list__definition">
-                    <section class="phpdocumentor-description"></section>
+                    <section class="phpdocumentor-description"><p>int ID документа</p>
+</section>
 
             </dd>
             </dl>
@@ -932,7 +953,7 @@ print $this-&gt;__getDataStructureScript();die(&#039;stopped&#039;);
     
 
         <h5 class="phpdocumentor-return-value__heading">Return values</h5>
-    <span class="phpdocumentor-signature__response_type">mixed</span>
+    <span class="phpdocumentor-signature__response_type">string</span>
             &mdash;
         
     
@@ -1062,22 +1083,24 @@ $old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="DocumentModel.php"><a href="files/documentmodel.html"><abbr title="DocumentModel.php">DocumentModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">624</span>
+    <span class="phpdocumentor-element-found-in__line">628</span>
 
     </aside>
 
-    
+        <p class="phpdocumentor-summary">Создаем запись.</p>
+
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">public</span>
-                    <span class="phpdocumentor-signature__name">createRow</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$data</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">mixed</span></code>
+                    <span class="phpdocumentor-signature__name">createRow</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type">array&lt;string|int, mixed&gt;&nbsp;</span><span class="phpdocumentor-signature__argument__name">$data</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">string</span></code>
 
-        <section class="phpdocumentor-description"></section>
+        <section class="phpdocumentor-description"><p>Выводим пустую строку, если все хорошо, либо сообщение об ошибке.</p>
+</section>
 
         <h5 class="phpdocumentor-argument-list__heading">Parameters</h5>
     <dl class="phpdocumentor-argument-list">
                     <dt class="phpdocumentor-argument-list__entry">
                 <span class="phpdocumentor-signature__argument__name">$data</span>
-                : <span class="phpdocumentor-signature__argument__return-type">mixed</span>
+                : <span class="phpdocumentor-signature__argument__return-type">array&lt;string|int, mixed&gt;</span>
                             </dt>
             <dd class="phpdocumentor-argument-list__definition">
                     <section class="phpdocumentor-description"></section>
@@ -1088,7 +1111,7 @@ $old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
     
 
         <h5 class="phpdocumentor-return-value__heading">Return values</h5>
-    <span class="phpdocumentor-signature__response_type">mixed</span>
+    <span class="phpdocumentor-signature__response_type">string</span>
             &mdash;
         
     
@@ -1158,7 +1181,7 @@ $old_data = $this-&gt;getRawRow($data[$this-&gt;key_field]);
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="DocumentModel.php"><a href="files/documentmodel.html"><abbr title="DocumentModel.php">DocumentModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">468</span>
+    <span class="phpdocumentor-element-found-in__line">469</span>
 
     </aside>
 
@@ -1259,7 +1282,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="DocumentModel.php"><a href="files/documentmodel.html"><abbr title="DocumentModel.php">DocumentModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">278</span>
+    <span class="phpdocumentor-element-found-in__line">276</span>
 
     </aside>
 
@@ -1301,7 +1324,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
 
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">public</span>
-                    <span class="phpdocumentor-signature__name">getFieldsValues</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$document_id</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">mixed</span></code>
+                    <span class="phpdocumentor-signature__name">getFieldsValues</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type"><a href=""><abbr title=""></abbr></a>&nbsp;</span><span class="phpdocumentor-signature__argument__name">$document_id</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">array&lt;string|int, mixed&gt;</span></code>
 
         <section class="phpdocumentor-description"><p>если перекрываем метод getRow и не вызываем предка, то значения заполнять именно этой функцией.</p>
 </section>
@@ -1310,10 +1333,11 @@ $this-&gt;document_info[&#039;fields&#039;] = [
     <dl class="phpdocumentor-argument-list">
                     <dt class="phpdocumentor-argument-list__entry">
                 <span class="phpdocumentor-signature__argument__name">$document_id</span>
-                : <span class="phpdocumentor-signature__argument__return-type">mixed</span>
+                : <span class="phpdocumentor-signature__argument__return-type"><a href=""><abbr title=""></abbr></a></span>
                             </dt>
             <dd class="phpdocumentor-argument-list__definition">
-                    <section class="phpdocumentor-description"></section>
+                    <section class="phpdocumentor-description"><p>int ID документа</p>
+</section>
 
             </dd>
             </dl>
@@ -1321,7 +1345,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
     
 
         <h5 class="phpdocumentor-return-value__heading">Return values</h5>
-    <span class="phpdocumentor-signature__response_type">mixed</span>
+    <span class="phpdocumentor-signature__response_type">array&lt;string|int, mixed&gt;</span>
             &mdash;
         
     
@@ -1339,7 +1363,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="DocumentModel.php"><a href="files/documentmodel.html"><abbr title="DocumentModel.php">DocumentModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">303</span>
+    <span class="phpdocumentor-element-found-in__line">304</span>
 
     </aside>
 
@@ -1348,17 +1372,18 @@ $this-&gt;document_info[&#039;fields&#039;] = [
 
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">public</span>
-                    <span class="phpdocumentor-signature__name">getFieldValue</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$document_id</span></span><span class="phpdocumentor-signature__argument"><span>, </span><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$field_id</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">mixed</span></code>
+                    <span class="phpdocumentor-signature__name">getFieldValue</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type"><a href=""><abbr title=""></abbr></a>&nbsp;</span><span class="phpdocumentor-signature__argument__name">$document_id</span></span><span class="phpdocumentor-signature__argument"><span>, </span><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$field_id</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">array&lt;string|int, mixed&gt;</span></code>
 
     
         <h5 class="phpdocumentor-argument-list__heading">Parameters</h5>
     <dl class="phpdocumentor-argument-list">
                     <dt class="phpdocumentor-argument-list__entry">
                 <span class="phpdocumentor-signature__argument__name">$document_id</span>
-                : <span class="phpdocumentor-signature__argument__return-type">mixed</span>
+                : <span class="phpdocumentor-signature__argument__return-type"><a href=""><abbr title=""></abbr></a></span>
                             </dt>
             <dd class="phpdocumentor-argument-list__definition">
-                    <section class="phpdocumentor-description"></section>
+                    <section class="phpdocumentor-description"><p>int ID документа</p>
+</section>
 
             </dd>
                     <dt class="phpdocumentor-argument-list__entry">
@@ -1374,7 +1399,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
     
 
         <h5 class="phpdocumentor-return-value__heading">Return values</h5>
-    <span class="phpdocumentor-signature__response_type">mixed</span>
+    <span class="phpdocumentor-signature__response_type">array&lt;string|int, mixed&gt;</span>
             &mdash;
         
     
@@ -1392,7 +1417,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="DocumentModel.php"><a href="files/documentmodel.html"><abbr title="DocumentModel.php">DocumentModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">325</span>
+    <span class="phpdocumentor-element-found-in__line">326</span>
 
     </aside>
 
@@ -1483,7 +1508,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="DocumentModel.php"><a href="files/documentmodel.html"><abbr title="DocumentModel.php">DocumentModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">607</span>
+    <span class="phpdocumentor-element-found-in__line">608</span>
 
     </aside>
 
@@ -1563,7 +1588,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="DocumentModel.php"><a href="files/documentmodel.html"><abbr title="DocumentModel.php">DocumentModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">126</span>
+    <span class="phpdocumentor-element-found-in__line">124</span>
 
     </aside>
 
@@ -1571,7 +1596,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
 
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">public</span>
-                    <span class="phpdocumentor-signature__name">initFieldsModel</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$scheme</span></span><span class="phpdocumentor-signature__argument"><span>, </span><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$document_type_id</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">mixed</span></code>
+                    <span class="phpdocumentor-signature__name">initFieldsModel</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$scheme</span></span><span class="phpdocumentor-signature__argument"><span>, </span><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$document_type_id</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">void</span></code>
 
     
         <h5 class="phpdocumentor-argument-list__heading">Parameters</h5>
@@ -1597,7 +1622,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
     
 
         <h5 class="phpdocumentor-return-value__heading">Return values</h5>
-    <span class="phpdocumentor-signature__response_type">mixed</span>
+    <span class="phpdocumentor-signature__response_type">void</span>
             &mdash;
         
     
@@ -1615,7 +1640,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="DocumentModel.php"><a href="files/documentmodel.html"><abbr title="DocumentModel.php">DocumentModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">136</span>
+    <span class="phpdocumentor-element-found-in__line">134</span>
 
     </aside>
 
@@ -1623,7 +1648,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
 
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">public</span>
-                    <span class="phpdocumentor-signature__name">initValuesDictsModel</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$scheme</span></span><span class="phpdocumentor-signature__argument"><span>, </span><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$document_type_id</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">mixed</span></code>
+                    <span class="phpdocumentor-signature__name">initValuesDictsModel</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$scheme</span></span><span class="phpdocumentor-signature__argument"><span>, </span><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$document_type_id</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">void</span></code>
 
     
         <h5 class="phpdocumentor-argument-list__heading">Parameters</h5>
@@ -1649,7 +1674,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
     
 
         <h5 class="phpdocumentor-return-value__heading">Return values</h5>
-    <span class="phpdocumentor-signature__response_type">mixed</span>
+    <span class="phpdocumentor-signature__response_type">void</span>
             &mdash;
         
     
@@ -1713,7 +1738,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="DocumentModel.php"><a href="files/documentmodel.html"><abbr title="DocumentModel.php">DocumentModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">490</span>
+    <span class="phpdocumentor-element-found-in__line">491</span>
 
     </aside>
 
@@ -1785,7 +1810,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="DocumentModel.php"><a href="files/documentmodel.html"><abbr title="DocumentModel.php">DocumentModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">617</span>
+    <span class="phpdocumentor-element-found-in__line">618</span>
 
     </aside>
 
@@ -1892,14 +1917,14 @@ $this-&gt;document_info[&#039;fields&#039;] = [
     <aside class="phpdocumentor-element-found-in">
     <abbr class="phpdocumentor-element-found-in__file" title="DocumentModel.php"><a href="files/documentmodel.html"><abbr title="DocumentModel.php">DocumentModel.php</abbr></a></abbr>
     :
-    <span class="phpdocumentor-element-found-in__line">313</span>
+    <span class="phpdocumentor-element-found-in__line">314</span>
 
     </aside>
 
     
     <code class="phpdocumentor-code phpdocumentor-signature ">
     <span class="phpdocumentor-signature__visibility">private</span>
-                    <span class="phpdocumentor-signature__name">getList_action</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$action</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">mixed</span></code>
+                    <span class="phpdocumentor-signature__name">getList_action</span><span>(</span><span class="phpdocumentor-signature__argument"><span class="phpdocumentor-signature__argument__return-type">mixed&nbsp;</span><span class="phpdocumentor-signature__argument__name">$action</span></span><span>)</span><span> : </span><span class="phpdocumentor-signature__response_type">string</span></code>
 
         <section class="phpdocumentor-description"></section>
 
@@ -1918,7 +1943,7 @@ $this-&gt;document_info[&#039;fields&#039;] = [
     
 
         <h5 class="phpdocumentor-return-value__heading">Return values</h5>
-    <span class="phpdocumentor-signature__response_type">mixed</span>
+    <span class="phpdocumentor-signature__response_type">string</span>
             &mdash;
         
     
