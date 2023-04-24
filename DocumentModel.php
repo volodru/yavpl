@@ -106,7 +106,7 @@ where id = 60
 
 class DocumentModel extends SimpleDictionaryModel
 {
-	protected $document_type_id;//TODO: а оно вообще надо тут? пока еще не было больше одного типа документов в одной схеме.
+	protected $document_type_id;//а оно вообще надо тут? пока еще не было больше одного типа документов в одной схеме.
 
 	public function __construct($scheme, $document_type_id = 0)
 	{

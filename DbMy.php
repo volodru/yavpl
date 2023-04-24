@@ -256,7 +256,6 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
  */
 	public function fetchAll($type = PGSQL_ASSOC)
 	{
-//TODO
 	}
 
 /**
