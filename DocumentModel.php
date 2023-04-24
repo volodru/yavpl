@@ -680,10 +680,11 @@ WHERE document_id = $1 AND field_id = $2 AND {$db_field} = $3", $document_id, $f
  */
 class Document_fieldsModel extends SimpleDictionaryModel
 {
+	/** Приватный локальный кеш данных
+	 */
 	private $data_cash = [];
 
-	/**
-	 * Типы данных полей - названия для юзеров
+	/** Типы данных полей - названия для юзеров
 	 */
 	public $value_types = [
 		'A'	=> 'Строковый', // alphabet
@@ -695,8 +696,7 @@ class Document_fieldsModel extends SimpleDictionaryModel
 		'B'	=> 'Логический', // integer (0|1), 0 - false, not 0 - true
 	];
 
-	/**
-	 * Типы данных полей - названия поля в базе
+	/** Типы данных полей - названия поля в базе
 	 */
 	public $value_field_names = [
 		'A'	=> 'text_value', // alphabet
@@ -708,8 +708,7 @@ class Document_fieldsModel extends SimpleDictionaryModel
 		'B'	=> 'int_value', // integer
 	];
 
-	/**
-	 * Типы данных полей - названия полей, по которым надо их сортировать
+	/** Типы данных полей - названия полей, по которым надо их сортировать
 	 */
 
 	public $sort_field_names = [
@@ -732,7 +731,7 @@ class Document_fieldsModel extends SimpleDictionaryModel
 		$this->document_type_id = $document_type_id;
 	}
 
-/** отдает массив значений для словарных полей в виде хеша
+/** Отдает массив значений для словарных полей в виде хеша
  * id =>
  * 	'id'	=> ID_значения
  * 	'value'	=> значение в виде текста
@@ -853,9 +852,10 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		return $list;
 	}
 
-/** все значения для поля.
- * надо, например, если в поле ID юзера и надо взять всех юзеров, которые упоминались во всех документах.
- * для фильтров списков документом по юзеру, например. чтобы не все юзеры, а только те, кто упоминался.
+/** Отдает все значения для поля.
+ * Надо, например, если в поле ID юзера и надо взять всех юзеров, которые упоминались во всех документах.
+ * Для фильтров списков документом по юзеру, например. Чтобы не все юзеры, а только те, кто упоминался в авторах документов.
+ * Работает, очевидно, долго и когда-нибудь работать перестанет :)
  */
 	public function getDistinctValues($key_value)
 	{
@@ -863,7 +863,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 			$key_value)->fetchAll('value'));
 	}
 
-/** надо для интерфейсов редактирования полей документов
+/** Для интерфейсов редактирования полей документов
  */
 	public function saveRow($data)
 	{
@@ -922,7 +922,7 @@ WHERE field_id = $1", $field_info['id']);
 		}
 	}
 
-/** нельзя удалять поля с имеющимися значениями
+/** Нельзя удалять поля с имеющимися значениями
  */
 	public function canDeleteRow($key_value)
 	{
@@ -938,8 +938,8 @@ WHERE v.field_id = {$key_value} LIMIT 1")->rows > 0)
 	}
 }
 
-/** словарики для простых словарных полей
- * ID значений уникальны в рамках схемы схемы
+/** Словарики для простых словарных полей
+ * ID значений уникальны в рамках схемы
  */
 class Document_values_dictsModel extends SimpleDictionaryModel
 {
@@ -957,7 +957,7 @@ class Document_values_dictsModel extends SimpleDictionaryModel
 		{
 			$params['order'] = 'value';
 		}
-		$params['where'] = $params['where'] ?? [];
+		$params['where'] ??= [];
 
 		$f = 'field_id';
 		if (isset($params[$f]))
