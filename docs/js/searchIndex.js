@@ -908,7 +908,7 @@ Search.appendIndex(
         },                {
             "fqsen": "\\Document_fieldsModel",
             "name": "Document_fieldsModel",
-            "summary": "\u043F\u043E\u043B\u044F\u0020\u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430",
+            "summary": "\u041F\u043E\u043B\u044F\u0020\u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u0430.",
             "url": "classes/Document-fieldsModel.html"
         },                {
             "fqsen": "\\Document_fieldsModel\u003A\u003A__construct\u0028\u0029",
@@ -963,7 +963,7 @@ Search.appendIndex(
         },                {
             "fqsen": "\\Document_fieldsModel\u003A\u003A\u0024value_types",
             "name": "value_types",
-            "summary": "",
+            "summary": "\u0422\u0438\u043F\u044B\u0020\u0434\u0430\u043D\u043D\u044B\u0445\u0020\u043F\u043E\u043B\u0435\u0439",
             "url": "classes/Document-fieldsModel.html#property_value_types"
         },                {
             "fqsen": "\\Document_fieldsModel\u003A\u003A\u0024value_field_names",
