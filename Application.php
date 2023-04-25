@@ -328,7 +328,7 @@ class Application
 		{
 			require_once($file_name);//it does not depend on __autoload - мы тут сами как-нибудь
 			$s1 = (($this->module_name != '') ? $this->module_name.'_' : '')."{$this->class_name}Controller";
-			$s2 = 'Controllers\\'.$this->module_name.'\\'.$this->class_name;
+			$s2 = CONTROLLERS_BASE_PATH.'\\'.$this->module_name.'\\'.$this->class_name;
 			if (class_exists($s1, false))
 			{
 				$this->controller = new $s1();//делаем экземпляр класса
@@ -349,7 +349,7 @@ class Application
 			}
 			else
 			{
-				$this->fatalError("Cannot find classes [{$s1}]/[[{$s2}]] in file [{$file_name}]");//фаталити - файл есть, а класса в нем нет.
+				$this->fatalError("Cannot find classes [{$s1}] OR [{$s2}] in file [{$file_name}]");//фаталити - файл есть, а класса в нем нет.
 				return false;
 			}
 		}
