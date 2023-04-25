@@ -138,8 +138,16 @@ class Model
 		elseif (in_array($name, $this->__sub_models))
 		{
 			$matches = [];
-			preg_match("/^(.+)Model/", get_class($this), $matches);
-			$s = $matches[1].'_'.ucfirst($name).'Model';
+			//da(get_class($this).'--'.$name);
+			if (get_class($this) == 'AdproductModel' && in_array($name, ['paymentsplan']))
+			{
+				$s = "Models\\Adproduct\\".ucfirst($name);
+			}
+			else
+			{
+				preg_match("/^(.+)Model/", get_class($this), $matches);
+				$s = $matches[1].'_'.ucfirst($name).'Model';
+			}
 			$this->__sub_models_cache[$name] = new $s();
 			$this->__sub_models_cache[$name]->__parent = $this;
 			return $this->__sub_models_cache[$name];

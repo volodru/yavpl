@@ -302,7 +302,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
  * например в calcAutomatedFields()
  * @param $document_id int ID документа
  */
-	public function getFieldValue($document_id, $field_id): array
+	public function getFieldValue($document_id, $field_id)
 	{
 		return $this->db->exec("
 SELECT f.*, v.*, f.id AS field_id

@@ -327,10 +327,20 @@ class Application
 		if (file_exists(APPLICATION_PATH.'/'.$file_name))
 		{
 			require_once($file_name);//it does not depend on __autoload - мы тут сами как-нибудь
-			$s = (($this->module_name != '') ? $this->module_name.'_' : '')."{$this->class_name}Controller";
-			if (class_exists($s))
+			$s1 = (($this->module_name != '') ? $this->module_name.'_' : '')."{$this->class_name}Controller";
+			$s2 = 'Controllers\\'.$this->module_name.'\\'.$this->class_name;
+			if (class_exists($s1, false))
 			{
-				$this->controller = new $s();//делаем экземпляр класса
+				$this->controller = new $s1();//делаем экземпляр класса
+				$this->controller->setModuleName($this->module_name);//эти методы там просто устанавливают протектед поля
+				$this->controller->setClassName($this->class_name);
+				$this->controller->setMethodName($this->method_name);
+				$this->controller->setDefaultResourceId((($this->module_name != '') ? $this->module_name.'/' : '') . $this->class_name.'/'.$this->method_name);
+				return true;
+			}
+			elseif (class_exists($s2, false))
+			{
+				$this->controller = new $s2();//делаем экземпляр класса
 				$this->controller->setModuleName($this->module_name);//эти методы там просто устанавливают протектед поля
 				$this->controller->setClassName($this->class_name);
 				$this->controller->setMethodName($this->method_name);
@@ -339,7 +349,7 @@ class Application
 			}
 			else
 			{
-				$this->fatalError("Cannot find class [{$s}] in file [{$file_name}]");//фаталити - файл есть, а класса в нем нет.
+				$this->fatalError("Cannot find classes [{$s1}]/[[{$s2}]] in file [{$file_name}]");//фаталити - файл есть, а класса в нем нет.
 				return false;
 			}
 		}
@@ -466,6 +476,7 @@ class Application
 	public static function __autoload($class_name)
 	{
 		//print "<p>__autoload loading: {$class_name}</p>";
+		//__printBackTrace();
 		// свои библиотечные файлы проверяем первыми.
 		// оно меняется раз в несколько лет. пусть лежит в виде массива прямо тут.
 		if (in_array($class_name, [
@@ -531,6 +542,16 @@ class Application
 		}
 		else
 		{
+			//for namespaces
+			$s = explode('\\', strtolower($class_name));
+			$file_name = join('/', $s).".php";
+			//da($s);			da($file_name);
+			if (file_exists(APPLICATION_PATH.'/'.$file_name))
+			{
+				require_once($file_name);
+				return true;
+			}
+
 			//continue __autoload chain
 			//!!! print "__autoload error: couldn't construct appropriate file for class [$class_name]";
 			//!!! __printBackTrace();
