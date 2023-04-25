@@ -367,10 +367,15 @@ class Application
 		if (file_exists(APPLICATION_PATH.'/'.$file_name))
 		{
 			require_once($file_name);//it does not depend on __autoload
-			$s = (($this->module_name != '') ? $this->module_name.'_':'' ). "{$this->class_name}View";
-			if (class_exists($s))
+			$s1 = (($this->module_name != '') ? $this->module_name.'_' : '' ). "{$this->class_name}View";
+			$s2 = 'Views\\'.(($this->module_name != '') ? $this->module_name : '').'\\'.$this->class_name;
+			if (class_exists($s1, false))
 			{
-				$this->view = new $s();
+				$this->view = new $s1();
+			}
+			elseif (class_exists($s2, false))
+			{
+				$this->view = new $s2();
 			}//else и хрен бы с классом
 		}//else и хрен бы с файлом
 	}
