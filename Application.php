@@ -364,6 +364,7 @@ class Application
 	public function loadView(): void
 	{
 		$file_name = "views/".(($this->module_name != '') ? $this->module_name.'/' : '')."{$this->class_name}.php";
+
 		if (file_exists(APPLICATION_PATH.'/'.$file_name))
 		{
 			require_once($file_name);//it does not depend on __autoload
@@ -438,7 +439,7 @@ class Application
 //вызвали рисовалку представления
 		if ($this->controller->__need_render)
 		{//обычная отрисовка, html, body, блоки и все дела.
-			if (method_exists($this->view, 'render'))
+			if (isset($this->view) && method_exists($this->view, 'render'))
 			{
 				$this->view->render($this->method_name);//метод представления вызывается из $this->body()
 			}
