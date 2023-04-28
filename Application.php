@@ -361,7 +361,7 @@ class Application
 	}
 
 /** Загрузчик Представления */
-	public function loadView(): void
+	public function loadView(): bool
 	{
 		$file_name = "views/".(($this->module_name != '') ? $this->module_name.'/' : '')."{$this->class_name}.php";
 
@@ -373,12 +373,22 @@ class Application
 			if (class_exists($s1, false))
 			{
 				$this->view = new $s1();
+				return true;
 			}
 			elseif (class_exists($s2, false))
 			{
 				$this->view = new $s2();
-			}//else и хрен бы с классом
-		}//else и хрен бы с файлом
+				return true;
+			}
+			else
+			{//else и хрен бы с классом
+				return false;
+			}
+		}
+		else //и хрен бы с файлом
+		{
+			return false;
+		}
 	}
 
 /** Разборщик URI - если проект не ложится в схему Модуль->Класс->Метод перекрываем этот метод
@@ -435,10 +445,11 @@ class Application
 
 //для WEB режима идем дальше
 //загрузили файл и создали представление - вызвали его конструктор
-		$this->loadView();
+
 
 		//если представление вообще загрузилось, то продолжаем.
-		if (isset($this->view))
+		//if (isset($this->view))
+		if ($this->loadView())
 		{//вызвали рисовалку представления
 			if ($this->controller->__need_render)
 			{//обычная отрисовка, html, body, блоки и все дела.
