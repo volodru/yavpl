@@ -7,7 +7,7 @@
  * @LICENSE LGPLv3 - http://www.gnu.org/licenses/lgpl-3.0.html
  */
 
-/* CHANGELOG
+/** CHANGELOG
  * 1.11
  * DATE: 2020-05-22
  * Добавлена возможность работы через CLI
