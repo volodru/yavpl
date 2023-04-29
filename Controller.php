@@ -1,4 +1,5 @@
 <?php
+namespace YAVPL;
 /**
  * @NAME: Controller
  * @DESC: Main Controller

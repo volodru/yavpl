@@ -1,7 +1,7 @@
 <?php
+namespace YAVPL;
 /**
  * @NAME: Application
- * @DESC: Application prototype
  * @AUTHOR: Vladimir Nikiforov aka Volod (volod@volod.ru)
  * @COPYRIGHT (C) 2009- Vladimir Nikiforov
  * @LICENSE LGPLv3 - http://www.gnu.org/licenses/lgpl-3.0.html
@@ -100,112 +100,12 @@ else
 	die('Wrong APPLICATION_RUNNING_MODE: '.APPLICATION_RUNNING_MODE);
 }
 
+require_once('DebugFunctions.php');
+
 //регистрируем автозагрузчик для классов библиотеки
-spl_autoload_register('Application::__autoload');
+spl_autoload_register('\YAVPL\Application::__autoload');
 
-/** Мега универсальный отладчик. Название - сокращение от DumpArray
- */
-function da($v)
-{
-	if (APPLICATION_RUNNING_MODE == 'cli')
-	{
-		print var_export($v, true)."\n";
-	}
-	else
-	{
-		print "<xmp>".var_export($v, true)."</xmp>";
-	}
-}
 
-/** DumpArray in temp File - специально для отладки кукиев и сессий
- */
-function daf($v)
-{
-	if (APPLICATION_ENV != 'production')
-	{
-		$l = fopen('/tmp/'.($_SERVER['SERVER_NAME']??'SERVER').'__'.date('Y_m_d__H_i_s').'.log', 'a+');
-		fwrite($l, var_export($v, true)."\n");
-		fclose($l);
-	}
-}
-
-/** Обертка над print_backtrace - возвращает трейс в красивом виде через print_r
- */
-function __getBacktrace()
-{
-	return print_r(debug_backtrace(0, 5), true);
-}
-
-/** Обертка для вывода только на девелопе/тесте, короче, кроме продакшн
- */
-function __printBacktrace()
-{
-	if (defined('APPLICATION_ENV') && (APPLICATION_ENV != 'production'))
-	{
-		da(__getBacktrace());
-	}
-}
-
-/** Мегаотладчик по почте - в случае проблем высылаем ошибку по email
- */
-function sendBugReport($subject = 'Bug report', $message = 'Common bug', $is_fatal = false)
-{
-	if (APPLICATION_RUNNING_MODE != 'cli')
-	{
-		if (!isset($_SESSION)){session_start();}
-	}
-
-	$a = [];
-	exec('hostname', $a);
-	$server_name = $_SERVER['SERVER_NAME'] ?? trim(join('', $a));//именно имя сервера - чтобы отличать проекты друг от друга. для CLI уже пофигу
-
-	if (APPLICATION_ENV != 'production')
-	{//на девелопе убивать баги на месте, а с продакшена пусть придет письмо
-		print "
-<h1>BUG REPORT from [{$server_name}]</h1>
-<h2>{$subject}</h2>
-<h2>{$message}</h2>
-<div>TRACE:<xmp>".__getBacktrace()."</xmp></div>";
-		exit();
-	}
-
-	(new Mail(ADMIN_EMAIL, "[{$server_name}] {$subject}", "{$message}
-{$_SERVER['SCRIPT_URI']}".((isset($_SERVER['QUERY_STRING']) && $_SERVER['QUERY_STRING'] != '') ? '?'.$_SERVER['QUERY_STRING'] : '')."
-____________________________________________________
-TRACE\n".__getBacktrace()."
---------------------------
-SERVER\n" . print_r($_SERVER, true) ."
---------------------------
-GET\n" . print_r($_GET, true) ."
---------------------------
-POST\n" . print_r($_POST, true) ."
---------------------------
-COOKIE\n" . print_r($_COOKIE, true) ."
---------------------------
-SESSION\n" . print_r($_SESSION, true)))->send();
-	if ($is_fatal)
-	{
-		print $subject.CRLF.$message;
-		die();
-	}
-}
-
-/** Инструмент для посылки технических уведомлений.
- * Уведомления предполагаются административного характера или бизнес-процессы и т.п.
- * Не для ошибочных ситуаций! Для потециальных ошибок и предупреждений использовать sendBugReport()
- */
-function sendNotification($subject = 'Notification', $message = 'Message')
-{
-	if (!isset($_SESSION)){session_start();}
-
-	$a = [];
-	exec('hostname', $a);
-	$server_name = $_SERVER['SERVER_NAME'] ?? trim(join('', $a));//именно имя сервера - чтобы отличать проекты друг от друга. для CLI уже пофигу
-
-	(new Mail(ADMIN_EMAIL, "[{$server_name}] {$subject}", "{$message}
-____________________________________________________
-SESSION\n" . print_r($_SESSION, true)))->send();
-}
 
 /** Свой обработчик ошибок. Ошибки надо исправлять. Непроверенный индекс в массиве или неинициализированная переменная - это ошибки!
  */
@@ -239,7 +139,7 @@ function __my_shutdown_handler()
 	}
 	return false;
 }
-register_shutdown_function('__my_shutdown_handler');
+register_shutdown_function('\\YAVPL\\__my_shutdown_handler');
 
 /** Свой обработчик фатальных ошибок.
  */
@@ -258,7 +158,7 @@ function __my_exception_handler($exception)
 		print '<h1>Uncaught exception. eMail to the system administrator already has been sent.</h1>';
 	}
 }
-set_exception_handler('__my_exception_handler');
+set_exception_handler('\\YAVPL\\__my_exception_handler');
 
 /** Класс приложение
  *
@@ -323,7 +223,25 @@ class Application
 	public function loadController(): bool
 	{//работает для форматов в виде модуль/класс/метод или класс/метод (для простых проектов)
 	// для сложных структур - это надо всё будет переопределить, например для проект/раздел/модуль/класс/метод.
-		$file_name = CONTROLLERS_BASE_PATH.'/'.(($this->module_name != '') ? $this->module_name."/" : '')."{$this->class_name}.php";
+		//$file_name = CONTROLLERS_BASE_PATH.'/'.(($this->module_name != '') ? $this->module_name."/" : '')."{$this->class_name}.php";
+		$s2 = CONTROLLERS_BASE_PATH.'\\'.$this->module_name.'\\'.$this->class_name;
+		if (class_exists($s2))//тут запускается автозагружалка
+		{
+			$this->controller = new $s2();//делаем экземпляр класса
+			$this->controller->setModuleName($this->module_name);//эти методы там просто устанавливают протектед поля
+			$this->controller->setClassName($this->class_name);
+			$this->controller->setMethodName($this->method_name);
+			$this->controller->setDefaultResourceId((($this->module_name != '') ? $this->module_name.'/' : '') . $this->class_name.'/'.$this->method_name);
+			return true;
+		}
+		else
+		{
+			$this->fatalError("Cannot load class [{$s2}]");//
+			return false;
+		}
+/*
+
+
 		if (file_exists(APPLICATION_PATH.'/'.$file_name))
 		{
 			require_once($file_name);//it does not depend on __autoload - мы тут сами как-нибудь
@@ -358,11 +276,24 @@ class Application
 			$this->fileNotFound();
 			return false;
 		}
+		*/
 	}
 
 /** Загрузчик Представления */
 	public function loadView(): bool
 	{
+		$s2 = 'Views\\'.(($this->module_name != '') ? $this->module_name : '').'\\'.$this->class_name;
+		if (class_exists($s2))
+		{
+			$this->view = new $s2();
+			return true;
+		}
+		else
+		{//else и хрен бы с классом
+			return false;
+		}
+		/*
+
 		$file_name = "views/".(($this->module_name != '') ? $this->module_name.'/' : '')."{$this->class_name}.php";
 
 		if (file_exists(APPLICATION_PATH.'/'.$file_name))
@@ -388,7 +319,7 @@ class Application
 		else //и хрен бы с файлом
 		{
 			return false;
-		}
+		}*/
 	}
 
 /** Разборщик URI - если проект не ложится в схему Модуль->Класс->Метод перекрываем этот метод
@@ -485,6 +416,31 @@ class Application
 		}
 	}
 
+	public function getMainDBConnector(): \YAVPL\Db
+	{
+		die('У класса приложения должна быть реализована функция getMainDBConnector()');
+	}
+
+	public function getEntityTypesInstance()
+	{
+		die('У класса приложения должна быть реализована функция getEntityTypesInstance()');
+	}
+
+	public function getBasicModel($name)
+	{
+		global $application;
+		if ($application->getBasicModelCash($name) == false)
+		{
+			$model_name = "\\Models\\".$name;
+			//da("new model $model_name");
+			$model = new $model_name();
+			//da("model created $model_name");
+			$application->setBasicModelCash($name, $model);
+			//da("after setBasicModelCash");
+		}
+		return $application->getBasicModelCash($name);
+	}
+
 /** Обработчик ситуации когда не нашли Контроллер по URI */
 	protected function fileNotFound(): void
 	{//override it to handle 404 errors
@@ -501,11 +457,13 @@ class Application
 /** Автозагрузчик всего и вся */
 	public static function __autoload($class_name)
 	{
-		//print "<p>__autoload loading: {$class_name}</p>";
+		//print "<p>Application::__autoload loading: {$class_name}</p>";
 		//__printBackTrace();
 		// свои библиотечные файлы проверяем первыми.
 		// оно меняется раз в несколько лет. пусть лежит в виде массива прямо тут.
-		if (in_array($class_name, [
+		$s = preg_replace("/YAVPL\\\\/", "", $class_name);
+
+		if (in_array($s, [
 			'Db', 'DbPg', 'DbPgSingleton', 'DbMy',//СУБД
 			'Mail',//Почта
 			'Model', 'SimpleDictionaryModel', 'SimpleFilesModel', 'BasicUserModel', 'DocumentModel',//модельки
@@ -513,12 +471,15 @@ class Application
 			'ToolBar', 'Test',//плюшки
 		]))
 		{
-			require_once($class_name.'.php');
+			//da("Loading YAVPL file: $s");
+			require_once($s.'.php');
 			return true;
 		}
 
 //вызовы классов-предков. непосредственный контроллер грузится в loadController - предки и все остальные грузятся тут
+
 		$matches = [];
+		/*
 		if (preg_match("/(.+)_(.+)Controller/", $class_name, $matches))
 		{//контроллеры
 			if ($matches[2] == 'default') {$matches[2] = '_default';}
@@ -544,10 +505,30 @@ class Application
 		elseif ($class_name == 'defaultView')
 		{//главное представление проекта - именно там шаблон всех страниц проекта
 			$file_name = "views/_default.php";
+		}*/
+//новая схема для моделей
+		if (preg_match("/^Models\\\\(.+)/", $class_name, $matches))
+		{//модельки грузятся по необходимости
+			//da('new model naming');da('classname: '.$class_name);da($matches);
+			$file_name = strtolower("models/{$matches[1]}.php");
+			//da('filename: '.$file_name);
+			if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
+			{
+				$file_name = "models/".strtolower(preg_replace("/\\\\/", '/', $matches[1])).".php";
+				//da('filename for submodels: '.$file_name);
+				if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
+				{
+					print "<div>BACKTRACE\n<xmp>".__getBacktrace()."</xmp></div>";
+					die("Cannot find file while loading model : $file_name");
+				}
+			}
 		}
+		/*
 		elseif (preg_match("/(.+)(Model)/", $class_name, $matches))
 		{//модельки грузятся по необходимости
 			$file_name = "models/".preg_replace("/_/", '/', $matches[1]).".php";
+			//da($file_name);
+			//__printBackTrace();
 			if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
 			{
 				$file_name = "models/".strtolower(preg_replace("/_/", '/', $matches[1])).".php";
@@ -565,10 +546,11 @@ class Application
 			{
 				$file_name = "helpers/".strtolower($matches[1]).".php";
 			}
-		}
+		}*/
 		else
 		{
 			//for namespaces
+			//da($class_name);
 			$s = explode('\\', strtolower($class_name));
 			$file_name = join('/', $s).".php";
 			//da($s);			da($file_name);

@@ -1,4 +1,6 @@
 <?php
+namespace YAVPL;
+
 /**
  * @NAME: Trait: Simple Dictionary Controller
  * @AUTHOR: Vladimir Nikiforov aka Volod (volod@volod.ru)

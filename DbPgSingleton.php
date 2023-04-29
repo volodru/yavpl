@@ -1,4 +1,6 @@
 <?php
+namespace YAVPL;
+
 /**
  * @NAME: DbPgSingleton
  * @VERSION: 1.00

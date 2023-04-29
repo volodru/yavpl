@@ -1,4 +1,5 @@
 <?php
+namespace YAVPL;
 /**
  * @NAME: BasicUserModel
  * @DESC: Prototype for users models

@@ -1,4 +1,6 @@
 <?php
+namespace YAVPL;
+
 /**
  * @NAME: Model
  * @DESC: Model prototype
@@ -138,16 +140,26 @@ class Model
 		elseif (in_array($name, $this->__sub_models))
 		{
 			$matches = [];
-			//da(get_class($this).'--'.$name);
-			if (get_class($this) == 'AdproductModel' && in_array($name, ['paymentsplan']))
+			//da('MODEL->__get submodels'); da(get_class($this).'--'.$name);
+			if (preg_match("/^Models\\\\(.+)/", get_class($this), $matches))
+			{
+				//da($matches);
+				$s = "Models\\{$matches[1]}\\".ucfirst($name);
+			}
+			/*
+			elseif (get_class($this) == 'AdproductModel' && in_array($name, ['paymentsplan']))
 			{
 				$s = "Models\\Adproduct\\".ucfirst($name);
+			}*/
+			/*
+			elseif (preg_match("/^(.+)Model/", get_class($this), $matches))
+			{
+				$s = $matches[1].'_'.ucfirst($name).'Model';
 			}
 			else
 			{
-				preg_match("/^(.+)Model/", get_class($this), $matches);
-				$s = $matches[1].'_'.ucfirst($name).'Model';
-			}
+				die('Unknown submodel class notation');
+			}*/
 			$this->__sub_models_cache[$name] = new $s();
 			$this->__sub_models_cache[$name]->__parent = $this;
 			return $this->__sub_models_cache[$name];

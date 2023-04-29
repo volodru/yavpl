@@ -1,4 +1,6 @@
 <?php
+namespace YAVPL;
+
 /**
  * @NAME: View
  * @DESC: View prototype
@@ -97,7 +99,7 @@ class View
  */
 	public function registerHelper($helper_class_name)//class
 	{
-		$this->__methods = array_merge($this->__methods, Helper::registerHelper($helper_class_name, $this));
+		$this->__methods = array_merge($this->__methods, \YAVPL\Helper::registerHelper($helper_class_name, $this));
 		return $this;
 	}
 

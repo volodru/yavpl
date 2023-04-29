@@ -1,4 +1,5 @@
 <?php
+namespace YAVPL;
 /**
  * @NAME: Helper
  * @DESC: Helper prototype
@@ -77,7 +78,8 @@ class Helper
  */
 	public static function registerHelper($helper_class_name, $owner)//class
 	{//if register more than one helper with the same method - method of the last helper will be called. I guess. :)
-		$name = $helper_class_name.'Helper';
+		$name = '\\Helpers\\'.$helper_class_name;
+		//da("making new Helper class {$name}");
 		$helper = new $name();
 		$helper->setOwner($owner);
 		$methods = [];
@@ -87,5 +89,4 @@ class Helper
 		}
 		return $methods;
 	}
-
 }

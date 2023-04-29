@@ -1,4 +1,6 @@
 <?php
+namespace YAVPL;
+
 /**
  * @NAME: Class: Document Model
  * @AUTHOR: Vladimir Nikiforov aka Volod (volod@volod.ru)

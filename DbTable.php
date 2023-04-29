@@ -1,43 +1,21 @@
 <?php
 namespace YAVPL;
 /**
- * @NAME: Class: Simple Dictionary Model
+ * @NAME: Class: Db Table
  * @AUTHOR: Vladimir Nikiforov aka Volod (volod@volod.ru)
- * @COPYRIGHT (C) 2016 - Vladimir Nikiforov
+ * @COPYRIGHT (C) 2023 - Vladimir Nikiforov
  * @LICENSE LGPLv3 - http://www.gnu.org/licenses/lgpl-3.0.html
 */
 
 /* CHANGELOG
  *
  * DATE: 2023-04-28
- * Теперь наследуется от здешней модели и пока временно использует глобальную переменную $application
- * чтобы получить коннектор к главной базе данных
- *
- * DATE: 2019-07-31
- * beforeSaveRow - теперь пытается сделать проверки всех полей через метод checkFieldValue.
- * Если этого не надо - например, для ускорения работы, то не надо вызывать предка parent::beforeSaveRow.
- * Иначе, если перекрыт checkFieldValue для хоть каких-то полей, то предка вызывать как раз необходимо.
- *
- * DATE: 2016-11-01
- * Удалено логгирование ins-upd-del по-умолчанию.
- *
- * DATE: 2016-11-01
- * файл опубликован в библиотеке
+ * Это новая инкарнация SimpleDictionaryModel, без проблем с наследованием.
 */
 
 /**
- * *Класс простой словарь - таблица с целым ключом*
+ * *Класс таблица с целым ключом*
  *
- * Название дурацкое, но так исторически сложилось. Но начиналось всё именно со словаря :)
- *
- * Модель встраивается в цепочку наследования
- * ```
- * Model->MainModel->SimpleDictionaryModel->SomeProductionModel
- * ```
- * MainModel должна быть в каждом проекте и иметь коннектор к СУБД $this->db (класс DB/DBPg)
- *
- * Наследники SimpleDictionaryModel проекта вовсю используют методы из MainModel проекта, поэтому получается дичь, когда
- * 4 уровня наследования чередуются то в библиотеке то проекте.
  *
  * Словарь - таблица, в которой есть ключевое поле и несколько полей атрибутов.
  *
@@ -70,7 +48,7 @@ namespace YAVPL;
  * Например: "Бренд удалить нельзя, т.к. на него ссылается 1 и более артикулов. Удалите все артикулы бренда."
  */
 
-class SimpleDictionaryModel extends \YAVPL\Model
+class DbTable extends \YAVPL\Model
 {
 /** Имя таблица в базе (со схемой) */
 	public string $table_name = '';
@@ -93,9 +71,6 @@ class SimpleDictionaryModel extends \YAVPL\Model
 		$this->table_name = $table_name;
 		$this->key_field = $key_field;
 		$this->fields = $fields;
-
-		global $application;
-		$this->db = $application->getMainDBConnector();
 	}
 
 /** Запись отдаваемая по ключу == 0
@@ -491,24 +466,5 @@ ORDER BY
 			return "Что-то не так: affected rows = {$this->affected_rows}";
 		}
 		return '';//все хорошо, а ошибки уходят по early return
-	}
-
-	public function getEntityTypeInfo()
-	{
-		global $application;
-
-		return $application->getEntityTypesInstance()->byTable($this->table_name) ??
-			sendBugReport('getEntityTypeInfo', "Не найден тип сущности по таблице {$this->table_name}", true);
-	}
-
-	public function getEntityTypeId()
-	{
-		return $this->getEntityTypeInfo()['id'];
-	}
-
-	public function getBasicModel($name)
-	{
-		global $application;
-		return $application->getBasicModel($name);
 	}
 }

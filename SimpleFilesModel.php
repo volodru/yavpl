@@ -1,5 +1,7 @@
 <?php
-/*
+namespace YAVPL;
+
+/**
  * @NAME: Class: Simple Files Model
  * @AUTHOR: Vladimir Nikiforov aka Volod (volod@volod.ru)
  * @COPYRIGHT (C) 2018 - Vladimir Nikiforov

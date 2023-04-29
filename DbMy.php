@@ -1,4 +1,5 @@
 <?php
+die('OBSOLETE');
 /**
  * @NAME: DbMy
  * @DESC: MySQL wrapper

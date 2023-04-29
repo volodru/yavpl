@@ -1,4 +1,6 @@
 <?php
+namespace YAVPL;
+
 /**
  * @NAME: DbPg
  * @DESC: PostgresQL wrapper
