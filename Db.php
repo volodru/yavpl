@@ -215,7 +215,7 @@ class Db
 <xmp style='color: #F00;'>{$err_msg}</xmp>
 <xmp style='color: #0FF;'>{$notice_msg}</xmp>";
 		}
-		throw new Exception($debug_info);
+		throw new \Exception($debug_info);
 	}
 
 /**
