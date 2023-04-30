@@ -1,4 +1,5 @@
 <?php
+namespace YAVPL;
 die('OBSOLETE');
 /**
  * @NAME: DbMy
