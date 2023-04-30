@@ -110,9 +110,9 @@ class BasicUserModel extends SimpleDictionaryModel
  */
 	public function __construct(array $params = [])
 	{
-		$params['table_name'] = isset($params['table_name']) ? $params['table_name'] : BASIC_USER_TABLE_NAME;
-		$params['key_field'] = isset($params['key_field']) ? $params['key_field'] : BASIC_USER_TABLE_KEY_FIELD;
-		$params['fields'] = isset($params['fields']) ? $params['fields'] : [];//в худшем случае будет таблица из одного PK
+		$params['table_name'] ??= BASIC_USER_TABLE_NAME;
+		$params['key_field'] ??= BASIC_USER_TABLE_KEY_FIELD;
+		$params['fields'] ??= [];//в худшем случае будет таблица из одного PK
 //предок - простой словарик, отдаем ему таблицу, ПК и поля
 		parent::__construct($params['table_name'], $params['key_field'], $params['fields']);
 
@@ -570,7 +570,7 @@ CREATE TABLE public.user_activity_logs
 		if (is_null(self::$current_instance))
 		{
 /*@TODO: убрать эту порнуху. */
-			self::$current_instance = new UserModel();//this is a porn (UserModel extends this class in real project)
+			self::$current_instance = new \Models\User();//this is a porn (UserModel extends this class in real project)
 			self::$current_instance->continueCurrentSession();
 		}
 		return self::$current_instance;
