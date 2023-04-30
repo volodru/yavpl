@@ -550,7 +550,7 @@ class Application
 		else
 		{
 			//for namespaces
-			//da($class_name);
+			//da("Classname ".$class_name);
 			$s = explode('\\', strtolower($class_name));
 			$file_name = join('/', $s).".php";
 			//da($s);			da($file_name);
