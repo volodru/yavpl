@@ -224,7 +224,9 @@ class Application
 	{//работает для форматов в виде модуль/класс/метод или класс/метод (для простых проектов)
 	// для сложных структур - это надо всё будет переопределить, например для проект/раздел/модуль/класс/метод.
 		//$file_name = CONTROLLERS_BASE_PATH.'/'.(($this->module_name != '') ? $this->module_name."/" : '')."{$this->class_name}.php";
-		$s2 = CONTROLLERS_BASE_PATH.'\\'.$this->module_name.'\\'.$this->class_name;
+		//da($this->module_name);
+		$s2 = CONTROLLERS_BASE_PATH.'\\'.(($this->module_name != '') ? $this->module_name."\\" : '').$this->class_name;
+		//da($s2);
 		if (class_exists($s2))//тут запускается автозагружалка
 		{
 			$this->controller = new $s2();//делаем экземпляр класса
@@ -553,7 +555,7 @@ class Application
 			//da("Classname ".$class_name);
 			$s = explode('\\', strtolower($class_name));
 			$file_name = join('/', $s).".php";
-			//da($s);			da($file_name);
+			//da($s);			da("file_name = ".$file_name);
 			if (file_exists(APPLICATION_PATH.'/'.$file_name))
 			{
 				require_once($file_name);
