@@ -284,7 +284,7 @@ class Application
 /** Загрузчик Представления */
 	public function loadView(): bool
 	{
-		$s2 = 'Views\\'.(($this->module_name != '') ? $this->module_name : '').'\\'.$this->class_name;
+		$s2 = 'Views\\'.(($this->module_name != '') ? $this->module_name.'\\' : '').$this->class_name;
 		if (class_exists($s2))
 		{
 			$this->view = new $s2();
