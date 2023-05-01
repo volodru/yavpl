@@ -219,17 +219,20 @@ class Application
 	/** URI как для CGI так и CLI*/
 	protected string $__request_uri;
 
-/** Загрузчик Контроллера */
+/** Загрузчик Контроллера
+ *
+ * Формируем имя класса контроллера из разобранных module и class names
+ *
+ * Используется константа CONTROLLERS_BASE_PATH - controllers|api|cli в зависимости от типа вызова
+ *
+ * */
 	public function loadController(): bool
 	{//работает для форматов в виде модуль/класс/метод или класс/метод (для простых проектов)
 	// для сложных структур - это надо всё будет переопределить, например для проект/раздел/модуль/класс/метод.
-		//$file_name = CONTROLLERS_BASE_PATH.'/'.(($this->module_name != '') ? $this->module_name."/" : '')."{$this->class_name}.php";
-		//da($this->module_name);
-		$s2 = CONTROLLERS_BASE_PATH.'\\'.(($this->module_name != '') ? $this->module_name."\\" : '').$this->class_name;
-		//da($s2);
-		if (class_exists($s2))//тут запускается автозагружалка
+		$fq_class_name = CONTROLLERS_BASE_PATH.'\\'.(($this->module_name != '') ? $this->module_name."\\" : '').$this->class_name;
+		if (class_exists($fq_class_name))//тут запускается автозагружалка
 		{
-			$this->controller = new $s2();//делаем экземпляр класса
+			$this->controller = new $fq_class_name();//делаем экземпляр класса
 			$this->controller->setModuleName($this->module_name);//эти методы там просто устанавливают протектед поля
 			$this->controller->setClassName($this->class_name);
 			$this->controller->setMethodName($this->method_name);
@@ -238,90 +241,27 @@ class Application
 		}
 		else
 		{
-			$this->fatalError("Cannot load class [{$s2}]");//
+			$this->fatalError("Cannot load controller class [{$fq_class_name}]. File with class not found (check autoloader) OR class was not defined in loaded file (check class name in file). ");
 			return false;
 		}
-/*
-
-
-		if (file_exists(APPLICATION_PATH.'/'.$file_name))
-		{
-			require_once($file_name);//it does not depend on __autoload - мы тут сами как-нибудь
-			$s1 = (($this->module_name != '') ? $this->module_name.'_' : '')."{$this->class_name}Controller";
-			$s2 = CONTROLLERS_BASE_PATH.'\\'.$this->module_name.'\\'.$this->class_name;
-			if (class_exists($s1, false))
-			{
-				$this->controller = new $s1();//делаем экземпляр класса
-				$this->controller->setModuleName($this->module_name);//эти методы там просто устанавливают протектед поля
-				$this->controller->setClassName($this->class_name);
-				$this->controller->setMethodName($this->method_name);
-				$this->controller->setDefaultResourceId((($this->module_name != '') ? $this->module_name.'/' : '') . $this->class_name.'/'.$this->method_name);
-				return true;
-			}
-			elseif (class_exists($s2, false))
-			{
-				$this->controller = new $s2();//делаем экземпляр класса
-				$this->controller->setModuleName($this->module_name);//эти методы там просто устанавливают протектед поля
-				$this->controller->setClassName($this->class_name);
-				$this->controller->setMethodName($this->method_name);
-				$this->controller->setDefaultResourceId((($this->module_name != '') ? $this->module_name.'/' : '') . $this->class_name.'/'.$this->method_name);
-				return true;
-			}
-			else
-			{
-				$this->fatalError("Cannot find classes [{$s1}] OR [{$s2}] in file [{$file_name}]");//фаталити - файл есть, а класса в нем нет.
-				return false;
-			}
-		}
-		else
-		{
-			$this->fileNotFound();
-			return false;
-		}
-		*/
 	}
 
-/** Загрузчик Представления */
+/** Загрузчик Представления
+ *
+ * Представления работают только для UI режима, и всегда лежать в namespace (и папке) views
+ * */
 	public function loadView(): bool
 	{
-		$s2 = 'Views\\'.(($this->module_name != '') ? $this->module_name.'\\' : '').$this->class_name;
-		if (class_exists($s2))
+		$fq_class_name = 'Views\\'.(($this->module_name != '') ? $this->module_name.'\\' : '').$this->class_name;
+		if (class_exists($fq_class_name))
 		{
-			$this->view = new $s2();
+			$this->view = new $fq_class_name();
 			return true;
 		}
 		else
-		{//else и хрен бы с классом
+		{//else и хрен бы с классом - может это AJAX вызов
 			return false;
 		}
-		/*
-
-		$file_name = "views/".(($this->module_name != '') ? $this->module_name.'/' : '')."{$this->class_name}.php";
-
-		if (file_exists(APPLICATION_PATH.'/'.$file_name))
-		{
-			require_once($file_name);//it does not depend on __autoload
-			$s1 = (($this->module_name != '') ? $this->module_name.'_' : '' ). "{$this->class_name}View";
-			$s2 = 'Views\\'.(($this->module_name != '') ? $this->module_name : '').'\\'.$this->class_name;
-			if (class_exists($s1, false))
-			{
-				$this->view = new $s1();
-				return true;
-			}
-			elseif (class_exists($s2, false))
-			{
-				$this->view = new $s2();
-				return true;
-			}
-			else
-			{//else и хрен бы с классом
-				return false;
-			}
-		}
-		else //и хрен бы с файлом
-		{
-			return false;
-		}*/
 	}
 
 /** Разборщик URI - если проект не ложится в схему Модуль->Класс->Метод перекрываем этот метод
@@ -330,7 +270,7 @@ class Application
 	public function parseURI(): void
 	{
 		if (APPLICATION_RUNNING_MODE == 'cli')
-		{//CLI - первый параметр в режиме CLI - модуль/класс/метод, потом все остальные параметры
+		{//CLI - для этого режима первый параметр магическая строка в виде "модуль/класс/метод", потом все остальные параметры для программы
 			$this->__request_uri = $_SERVER['argv'][1];
 		}
 		else//WEB And API
@@ -428,6 +368,15 @@ class Application
 		die('У класса приложения должна быть реализована функция getEntityTypesInstance()');
 	}
 
+/** Получить экземпляр класса модели ("базовой", т.е. НЕ суюмодели, т.е. сразу в папке с моделями - \models\)
+ * вызовы кешируются в глобальной переменной приложения.
+ *
+ * Имеет смысл использовать в магических методах базовой модели \Models\Main проекта и главной контроллере проекта.
+ *
+ * Хорошая практика:
+ * Все контроллеры должны иметь возможность "создать" (получить экземпляр класса) модель просто упомянув ее.
+ * Все модели тоже.
+ */
 	public function getBasicModel($name)
 	{
 		global $application;
@@ -459,13 +408,14 @@ class Application
 /** Автозагрузчик всего и вся */
 	public static function __autoload($class_name)
 	{
-		//print "<p>Application::__autoload loading: {$class_name}</p>";
-		//__printBackTrace();
+		//print "<p>Application::__autoload loading: {$class_name}</p>";//для отладки
+		//__printBackTrace();//для отладки
+
 		// свои библиотечные файлы проверяем первыми.
 		// оно меняется раз в несколько лет. пусть лежит в виде массива прямо тут.
-		$s = preg_replace("/YAVPL\\\\/", "", $class_name);
+		$file_name = preg_replace("/YAVPL\\\\/", "", $class_name);
 
-		if (in_array($s, [
+		if (in_array($file_name, [
 			'Db', 'DbPg', 'DbPgSingleton', 'DbMy',//СУБД
 			'Mail',//Почта
 			'Model', 'SimpleDictionaryModel', 'SimpleFilesModel', 'BasicUserModel', 'DocumentModel',//модельки
@@ -474,102 +424,14 @@ class Application
 		]))
 		{
 			//da("Loading YAVPL file: $s");
-			require_once($s.'.php');
+			require_once($file_name.'.php');
 			return true;
 		}
 
-//вызовы классов-предков. непосредственный контроллер грузится в loadController - предки и все остальные грузятся тут
-
-		$matches = [];
-		/*
-		if (preg_match("/(.+)_(.+)Controller/", $class_name, $matches))
-		{//контроллеры
-			if ($matches[2] == 'default') {$matches[2] = '_default';}
-			$file_name = CONTROLLERS_BASE_PATH."/{$matches[1]}/{$matches[2]}.php";
-			if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
-			{
-				$file_name = CONTROLLERS_BASE_PATH."/".strtolower($matches[1])."/".strtolower($matches[2]).".php";
-			}
-		}
-		elseif (preg_match("/(.+)_(.+)View/", $class_name, $matches))
-		{//представления
-			if ($matches[2] == 'default') {$matches[2] = '_default';}
-			$file_name = "views/{$matches[1]}/{$matches[2]}.php";
-			if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
-			{
-				$file_name = "views/".strtolower($matches[1])."/".strtolower($matches[2]).".php";
-			}
-		}
-		elseif ($class_name == 'defaultController')
-		{//главный контроллер проекта
-			$file_name = CONTROLLERS_BASE_PATH."/_default.php";
-		}
-		elseif ($class_name == 'defaultView')
-		{//главное представление проекта - именно там шаблон всех страниц проекта
-			$file_name = "views/_default.php";
-		}*/
-//новая схема для моделей
-		if (preg_match("/^Models\\\\(.+)/", $class_name, $matches))
-		{//модельки грузятся по необходимости
-			//da('new model naming');da('classname: '.$class_name);da($matches);
-			$file_name = strtolower("models/{$matches[1]}.php");
-			//da('filename: '.$file_name);
-			if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
-			{
-				$file_name = "models/".strtolower(preg_replace("/\\\\/", '/', $matches[1])).".php";
-				//da('filename for submodels: '.$file_name);
-				if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
-				{
-					print "<div>BACKTRACE\n<xmp>".__getBacktrace()."</xmp></div>";
-					die("Cannot find file while loading model : $file_name");
-				}
-			}
-		}
-		/*
-		elseif (preg_match("/(.+)(Model)/", $class_name, $matches))
-		{//модельки грузятся по необходимости
-			$file_name = "models/".preg_replace("/_/", '/', $matches[1]).".php";
-			//da($file_name);
-			//__printBackTrace();
-			if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
-			{
-				$file_name = "models/".strtolower(preg_replace("/_/", '/', $matches[1])).".php";
-				if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
-				{
-					print "<div>BACKTRACE\n<xmp>".__getBacktrace()."</xmp></div>";
-					die("Cannot find file: $file_name");
-				}
-			}
-		}
-		elseif (preg_match("/(.+)(Helper)/", $class_name, $matches))
-		{//хелперы - грузятся по необходимости
-			$file_name = "helpers/{$matches[1]}.php";
-			if (!(file_exists(APPLICATION_PATH.'/'.$file_name)))
-			{
-				$file_name = "helpers/".strtolower($matches[1]).".php";
-			}
-		}*/
-		else
-		{
-			//for namespaces
-			//da("Classname ".$class_name);
-			$s = explode('\\', strtolower($class_name));
-			$file_name = join('/', $s).".php";
-			//da($s);			da("file_name = ".$file_name);
-			if (file_exists(APPLICATION_PATH.'/'.$file_name))
-			{
-				require_once($file_name);
-				return true;
-			}
-
-			//continue __autoload chain
-			//!!! print "__autoload error: couldn't construct appropriate file for class [$class_name]";
-			//!!! __printBackTrace();
-			//!!! exit(1);
-			return false;
-		}
-
-		//are we still here? т.е. пока еще все хорошо - мы сформировали путь к файлу
+		//da("Classname ".$class_name);//DEBUG
+		$s = explode('\\', strtolower($class_name));
+		$file_name = join('/', $s).".php";
+		//da($s);			da("file_name = ".$file_name);
 		if (file_exists(APPLICATION_PATH.'/'.$file_name))
 		{
 			require_once($file_name);
@@ -577,9 +439,9 @@ class Application
 		}
 		else
 		{//can be another helpers models and controllers in third party libraries, ex. PHPExcel*
-			//print "__autoload error: file [$file_name] for class [$class_name] doesn't exists";
-			//__printBackTrace();
-			//exit(1);
+		//print "__autoload error: file [$file_name] for class [$class_name] doesn't exists";
+		//__printBackTrace();
+		//exit(1);
 			return false;
 		}
 	}
