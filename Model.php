@@ -57,7 +57,7 @@ namespace YAVPL;
  * $this->brands, $this->articles и т.д.
  * Конструктор подмодели вызывается при первом упоминании имени через __get(), т.е. при первом упоминании
  * подмодели загружается файл с исходником (из подкаталога strtolower{Mainmodel})
- * и делается new {Mainmodel}_{Submodel}Model().
+ * и делается new Model\Mainmodel\Submodel().
  *
  * Фактически, при этом конструктор подмодели исключается из процесса, т.к.
  * в него невозможно передать параметры и ХЗ когда он вообще запустится.
@@ -65,14 +65,6 @@ namespace YAVPL;
  * Плюс этого подхода - подмодели инициируются (и вообще грузится исходник) только
  * по мере необходимости.
  *
- * Если нужно явно инициировать подмодель через ее конструктор , то надо
- * явно создать подмодель со всем параметрами конструктора
- * $sub_model = new Mainmodel_SubmodelModel($arg1, ..., $argN)
- * и потом обязательно вызвать setSubModel($sub_model), чтобы при
- * упоминании подмодели она не создалась через __get() с конструктором без параметров.
- *
- * Минус - нужно не забыть подгрузить подмодель и как-то позаботиться о повторных вызовах,
- * если вызывать не из конструктора.
 
 EXAMPLE:
 class CompetitorsModel extends Model
@@ -82,17 +74,8 @@ class CompetitorsModel extends Model
 		parent::__construct();
 		//автозагрузка
 		$this->__sub_models = array('brands');
-		//конструктор главной модели - не самое лучшее место, т.к. теперь подмодель грузится ВСЕГДА, когда упоминается главная модель.
-		$this->setSubModel(new Competitors_BrandsModel([1,2,3,4]));
 	 }
  }
---------------------------------------------------------------
- *
- * Свойства по умолчанию:
- *
- * Если в проекте используются свойства, то надо не забывать вызывать родительский __get(),
- * т.к. подмодели работают именно через него.
- *
  **/
 
 class Model
@@ -101,6 +84,9 @@ class Model
 	private $__sub_models_cache = [];
 	private $__methods = [];
 	/* ! public $db = null; - коннектор к главной базе проекта. заполняется магией __get*/
+
+	protected $log = [];
+
 
 	public 	function __construct()
 	{
@@ -129,19 +115,6 @@ class Model
 		global $application;
 		return $application->getBasicModel($name);
 	}
-
-	/*
-	public function setSubModel(Model $sub_model)
-	{
-		$matches = [];
-		preg_match("/^(.+)Model/", get_class($this), $matches);//главная модель
-		$this_class_name = $matches[1];
-//@TODO - поправить для работы с вложенными субмоделями, буде таковые когда-нибудь понадобятся.
-//!!это не будет работать на вложенных подмоделях!!!
-		preg_match("/^{$this_class_name}_(.+)Model/", get_class($sub_model), $matches);//имя подмодели
-		$sub_model->__parent = $this;
-		return $this->__sub_models_cache[$matches[1]] = $sub_model;
-	}*/
 
 	public function __get($name)
 	{
@@ -201,5 +174,22 @@ class Model
 	{
 		$this->__methods = array_merge($this->__methods, Helper::registerHelper($helper_class_name, $this));
 		return $this;
+	}
+
+
+	public function getLog($delimeter = CRLF)
+	{
+		return join($delimeter, $this->log);
+	}
+
+	//шаблон паблик Морозов :(
+	public function getRawLog()
+	{
+		return $this->log;
+	}
+
+	public function clearLog()
+	{
+		$this->log = [];
 	}
 }
