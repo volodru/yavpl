@@ -552,6 +552,13 @@ class Controller
  */
 	public function __get($name)
 	{
+		global $application;
+		$this->$name = $application->getBasicModel($name);
+		if (isset($this->$name))
+		{
+			return $this->$name;
+		}
+
 		sendBugReport("CONTROLLER: variable {$name} is undefined", $name);
 		return null;
 	}

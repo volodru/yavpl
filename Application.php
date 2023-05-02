@@ -216,8 +216,18 @@ class Application
 	/** название метода по умолчанию*/
 	public string $default_method_name = 'index';
 
+	/** список "базовых" моделей проекта
+	 * для работы getBasicModel и магии __get на его основе в наследнике надо заполнить и поддерживать актуальный список базовых моделей */
+	public array $basic_models_names = [];
+
+	/** кеширование базовых моделей, дабы не плодить дубли.
+	 */
+	private $__basic_models_cash = [];
+
 	/** URI как для CGI так и CLI*/
 	protected string $__request_uri;
+
+
 
 /** Загрузчик Контроллера
  *
@@ -376,20 +386,29 @@ class Application
  * Хорошая практика:
  * Все контроллеры должны иметь возможность "создать" (получить экземпляр класса) модель просто упомянув ее.
  * Все модели тоже.
+ *
+ * @return Model возвращает экземпляр модели или NULL, если нет в списке.
  */
-	public function getBasicModel($name)
+
+	public function getBasicModel($name): ?Model
 	{
-		global $application;
-		if ($application->getBasicModelCash($name) == false)
+		//global $application;
+		$name = strtolower($name);
+		if (in_array($name, $this->basic_models_names))
 		{
-			$model_name = "\\Models\\".$name;
-			//da("new model $model_name");
-			$model = new $model_name();
-			//da("model created $model_name");
-			$application->setBasicModelCash($name, $model);
-			//da("after setBasicModelCash");
+			if (!isset($this->__basic_models_cash[$name]))
+			{
+				$model_name = "\\Models\\".$name;//базовые модели в пространстве \Models
+				$model = new $model_name();
+				$this->__basic_models_cash[$name] = $model;
+			}
+			return $this->__basic_models_cash[$name];
 		}
-		return $application->getBasicModelCash($name);
+		else
+		{
+			return null;
+		}
+
 	}
 
 /** Обработчик ситуации когда не нашли Контроллер по URI */

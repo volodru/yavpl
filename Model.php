@@ -106,15 +106,31 @@ class Model
 	{
 	}
 
+	/** устанавливает shared переменную для триггеров сохраняющих логи
+	 * надо делать именно от той модели, с которой делается загрузка
+	 */
+	public function setGlobalDescription($description)
+	{
+		$this->db->exec("SELECT set_var('description', '{$description}')");
+	}
+
 	protected function connectToMainDB()
 	{
-		/*TODO что-то типа
+		/*
+		 * в наследниках делать что-то типа
 		global $application;
-		return $this->db = $application->get('DB');
-		 * */
+		return $this->db = $application->getMainDBConnector();
+		 */
 		return null; //override
 	}
 
+	public function getBasicModel($name)
+	{
+		global $application;
+		return $application->getBasicModel($name);
+	}
+
+	/*
 	public function setSubModel(Model $sub_model)
 	{
 		$matches = [];
@@ -125,7 +141,7 @@ class Model
 		preg_match("/^{$this_class_name}_(.+)Model/", get_class($sub_model), $matches);//имя подмодели
 		$sub_model->__parent = $this;
 		return $this->__sub_models_cache[$matches[1]] = $sub_model;
-	}
+	}*/
 
 	public function __get($name)
 	{
@@ -140,26 +156,12 @@ class Model
 		elseif (in_array($name, $this->__sub_models))
 		{
 			$matches = [];
-			//da('MODEL->__get submodels'); da(get_class($this).'--'.$name);
+			//da('MODEL->__get submodels'); da(get_class($this).'--'.$name);//FOR DEBUG
 			if (preg_match("/^Models\\\\(.+)/", get_class($this), $matches))
 			{
-				//da($matches);
+				//da($matches);//FOR DEBUG
 				$s = "Models\\{$matches[1]}\\".ucfirst($name);
 			}
-			/*
-			elseif (get_class($this) == 'AdproductModel' && in_array($name, ['paymentsplan']))
-			{
-				$s = "Models\\Adproduct\\".ucfirst($name);
-			}*/
-			/*
-			elseif (preg_match("/^(.+)Model/", get_class($this), $matches))
-			{
-				$s = $matches[1].'_'.ucfirst($name).'Model';
-			}
-			else
-			{
-				die('Unknown submodel class notation');
-			}*/
 			$this->__sub_models_cache[$name] = new $s();
 			$this->__sub_models_cache[$name]->__parent = $this;
 			return $this->__sub_models_cache[$name];
