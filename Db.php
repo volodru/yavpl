@@ -175,9 +175,12 @@ class Db
 	public function showErrorMessage($err_msg, $notice_msg):void
 	{
 		$current_time = date('Y/m/d H:i:s');
-		$url = "http://".$_SERVER['SERVER_NAME'].$_SERVER['SCRIPT_NAME'];
+		$url = (isset($_SERVER['SERVER_NAME'])) ? "http://".$_SERVER['SERVER_NAME'].$_SERVER['SCRIPT_NAME'] : '';
 
-		if ($_SERVER['QUERY_STRING']) {$url .= '?'.$_SERVER['QUERY_STRING'];}
+		if (isset($_SERVER['QUERY_STRING']))
+		{
+			$url .= '?'.$_SERVER['QUERY_STRING'];
+		}
 
 		ob_start();
 		debug_print_backtrace();
@@ -186,8 +189,8 @@ class Db
 
 		$debug_info = "
 		<h3>Critical error</h3>{$current_time}
-		<br />URL {$url} (URI {$_SERVER['REQUEST_URI']})
-		<br />AGENT: {$_SERVER['HTTP_USER_AGENT']}
+		<br />URL {$url} (URI ".($_SERVER['REQUEST_URI'] ?? '').")
+		<br />AGENT: ".($_SERVER['HTTP_USER_AGENT'] ?? '')."
 		<br />REFERER: ".urldecode($_SERVER['HTTP_REFERER'] ?? '')."
 		<br />QUERY ON HOST {$this->host_params['host']}:{$this->host_params['port']} TO DB [{$this->host_params['dbname']}] AS USER [{$this->host_params['user']}]:
 		<br /><xmp>QUERY: ".htmlspecialchars($this->query)."</xmp>
@@ -214,6 +217,10 @@ class Db
 <h2>Ответ от базы данных</h2>
 <xmp style='color: #F00;'>{$err_msg}</xmp>
 <xmp style='color: #0FF;'>{$notice_msg}</xmp>";
+		}
+		if (APPLICATION_RUNNING_MODE == 'cli')
+		{
+			$debug_info = strip_tags($debug_info);
 		}
 		throw new \Exception($debug_info);
 	}

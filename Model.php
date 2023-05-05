@@ -110,6 +110,13 @@ class Model
 		return null; //override
 	}
 
+/** Поле __sub_models - READ ONLY
+ */
+	public function getSubModelList()
+	{
+		return $this->__sub_models;
+	}
+
 	public function getBasicModel($name)
 	{
 		global $application;
@@ -175,7 +182,6 @@ class Model
 		$this->__methods = array_merge($this->__methods, Helper::registerHelper($helper_class_name, $this));
 		return $this;
 	}
-
 
 	public function getLog($delimeter = CRLF)
 	{
