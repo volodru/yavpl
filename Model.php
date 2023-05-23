@@ -125,18 +125,23 @@ class Model
 
 	public function __get($name)
 	{
+		global $application;
 		if ($name == 'db')
 		{
 			return $this->connectToMainDB();
 		}
 		elseif (isset($this->__sub_models_cache[$name]))
 		{
+			//da('IN __sub_models_cache');
 			return $this->__sub_models_cache[$name];
 		}
 		elseif (in_array($name, $this->__sub_models))
 		{
-			$matches = [];
+			//DEBUG
 			//da('MODEL->__get submodels'); da(get_class($this).'--'.$name);//FOR DEBUG
+			//END DEBUG
+
+			$matches = [];
 			if (preg_match("/^Models\\\\(.+)/", get_class($this), $matches))
 			{
 				//da($matches);//FOR DEBUG
@@ -145,6 +150,11 @@ class Model
 			$this->__sub_models_cache[$name] = new $s();
 			$this->__sub_models_cache[$name]->__parent = $this;
 			return $this->__sub_models_cache[$name];
+		}
+		$this->$name = $application->getBasicModel($name);
+		if (isset($this->$name))
+		{
+			return $this->$name;
 		}
 		else
 		{
