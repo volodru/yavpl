@@ -491,10 +491,11 @@ ORDER BY
 		return '';//все хорошо, а ошибки уходят по early return
 	}
 
+/** Поддержка хранилища сущностей в проекте.
+ */
 	public function getEntityTypeInfo()
 	{
 		global $application;
-
 		return $application->getEntityTypesInstance()->byTable($this->table_name) ??
 			sendBugReport('getEntityTypeInfo', "Не найден тип сущности по таблице {$this->table_name}", true);
 	}

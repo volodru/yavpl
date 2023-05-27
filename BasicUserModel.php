@@ -62,13 +62,13 @@ class BasicUserModel extends SimpleDictionaryModel
 
 	// 0 - anonymous, запись может физически присутствовать в базе! Например, под именем Anonymous.
 	// и как правило она там и должна присутсвовать, т.к. должен быть внешний ключ на таблицу юзеров с таблицы логов активностей.
-	public $id = 0;
+	public int $id = 0;
 
 	// данные из select * по юзеру. использовать: $this->user->data['name_r'], например.
-	public $data;
+	public array $data;
 
 	// дефолтные настройки проекта. всё, что не нравится, надо указать явно при вызове конструктора.
-	protected $options = [
+	protected array $options = [
 		'autologin_field_name'			=> 'autologin',
 		'autologin_cookie_name'			=> 'autologin',
 		'autologin_cookie_ttl'			=> 60*60*24*365,// 1 год
@@ -117,39 +117,29 @@ class BasicUserModel extends SimpleDictionaryModel
 		parent::__construct($params['table_name'], $params['key_field'], $params['fields']);
 
 //опции для параметров работы класса, которые отличаются от дефолтных
-		foreach ($this->options as $k => $v)
+		foreach (array_keys($this->options) as $k)
 		{
-			$this->options[$k] = isset($params['options'][$k]) ? $params['options'][$k] : $this->options[$k];
+			$this->options[$k] = $params['options'][$k] ?? $this->options[$k];
 		}
 //??? а оно тут надо всегда???
 //проверки в зависимости от опций
 		if ($this->options['auth_by_login_and_password'])
 		{
-			if (!in_array('login', $this->fields)) die ('auth_by_login_and_password required field login');
-			if (!in_array('password', $this->fields)) die ('auth_by_login_and_password required field password');
+			if (!in_array('login', $this->fields)) {die ('auth_by_login_and_password required field login');}
+			if (!in_array('password', $this->fields)) {die ('auth_by_login_and_password required field password');}
 		}
 	}
 
 /** Просто shortcut.
  */
-	public function is($id)
+	public function is(int $id): bool
 	{
 		return ($this->id == $id);
 	}
 
-/** Максимально быстрая проверка наличия юзера в таблице.
- * Кто знает как быстрее, перекрывает метод :)
- * Технически, это получение экземпляра PK прямо из индекса, без обращения к данным. Быстрее уж некуда.
- */
-	public function exists($id)
-	{
-		return $this->db->exec("-- ".get_class($this).", method: ".__METHOD__."
-SELECT {$this->key_field} FROM {$this->table_name} WHERE {$this->key_field} = $1", $id)->rows == 1;
-	}
-
 /** Получить строку данных по уникальному полю (код авторизации, логин, почта, телефон и т.п.)
  */
-	public function getRowByUniqueField($field_name, $value)
+	public function getRowByUniqueField(string $field_name, string $value)
 	{
 		if (!in_array($field_name, $this->fields))
 		{
@@ -160,7 +150,7 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE {$this->key_field} = $1
 
 /** Получить ID по уникальному полю (код авторизации, логин, почта, телефон и т.п.)
  */
-	public function getIdByUniqueField($field_name, $value)
+	public function getIdByUniqueField(string $field_name, string $value)
 	{
 		if (!in_array($field_name, $this->fields))
 		{
@@ -173,8 +163,8 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE {$this->key_field} = $1
 			list($id) = $this->db->fetchRowArray();
 		}
 		else
-		{//не нашли. почему именно false: 0 это валидный аноним, -1 это извращение, IMHO.
-			$id = false;
+		{//не нашли. почему именно null: 0 это валидный аноним, -1 это извращение, IMHO.
+			$id = null;
 		}
 		return $id;
 	}
@@ -182,7 +172,7 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE {$this->key_field} = $1
 /** Получить ID юзера по логину и незашифрованному паролю. Пароль в базе зашифрован и во время этой проверки закже шифруется.
  * Кому этого мало - перекрывают метод и шифруют пароли, как хотят.
  */
-	public function getIdByLoginAndPassword($login, $password)
+	public function getIdByLoginAndPassword(string $login, string $password)
 	{
 		if (!$this->options['auth_by_login_and_password'])
 		{
@@ -197,7 +187,7 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
 		}
 		else
 		{
-			$id = 0;
+			$id = null;
 		}
 		return $id;
 	}
@@ -207,7 +197,7 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
  * Вызываем из всех скриптов типа login, после успешной проверки ID юзера.
  * Метод просто стартует сессию, ничего больше не проверяя!!!
  */
-	public function createCurrentSession($id)
+	public function createCurrentSession(int $id)
 	{
 		daf(__METHOD__);
 		if (!isset($_SESSION)){ session_start();}
@@ -418,7 +408,7 @@ CREATE TABLE public.user_activity_logs
 		return $this;
 	}
 
-/** Если не устраивает SELECT * по PK, перекрывают и далеют сложные селекты, грузят картинки и пр.
+/** Если не устраивает SELECT * по PK, перекрывают и делают сложные селекты, грузят картинки и пр.
  * Должно работать быстро, т.к. делается при каждом посещении каждой страницы.
  */
 	public function loadCurrentData()
@@ -484,7 +474,7 @@ CREATE TABLE public.user_activity_logs
 
 /** Нужен в validateSettings()
  */
-	protected function verifyDefaultValue($type)
+	protected function verifyDefaultValue(string $type)
 	{
 		if ($type == 'string')
 		{
@@ -508,7 +498,7 @@ CREATE TABLE public.user_activity_logs
  * Наследникам с другим форматом валидатора надо полностью перекрыть этот метод и не беспокоить предка.
  * $options - массив [тип, дефотное значение, список допустимых значений]
  */
-	protected function validateSettings($key, $options = null)
+	protected function validateSettings(string $key, $options = null)
 	{
 		// при переборе опции передаются сразу, при проверки одной строки вытягиваем их из валидатора
 		$options = isset($options) ? $options : $this->valid_settings[$key];
@@ -537,7 +527,7 @@ CREATE TABLE public.user_activity_logs
 
 /** Изменить отдельную настройку. Меняем данные в памяти и пишем в базу или в куку.
  */
-	public function changeSettings($key, $val)
+	public function changeSettings(string $key, string $val)
 	{
 		if (!isset($this->valid_settings[$key]))
 		{//фаталити. надо сразу звать программиста. где-то ставится настройка, которой нет в валидаторе.

@@ -7,7 +7,18 @@ namespace YAVPL;
  * @LICENSE LGPLv3 - http://www.gnu.org/licenses/lgpl-3.0.html
 */
 
-/* CHANGELOG
+/** CHANGELOG
+ * DATE: 2023-05-27
+ * изменения относительно SimpleDictionaryModel:
+ * 1.типизация
+ * 2. getList-
+ * 	limit/offset = 0 значит без лимита и/или без офсета
+ * 	params['select'] - должен начинаться со слова SELECT
+ *	params['from'] - должен начинаться со слова FROM
+ * 3. rowExist переименована в exists(key_value)
+ * 4. при создании записи новый PK сохраняется в переменной $key_value (а не $key_field_value, как в SimpleDictionaryModel)
+ * 5. getEmptyRow() по-умолчанию набивает массив пустыми строками.
+ * 6. getRow() возвращает null, если нет записи по ключу
  *
  * DATE: 2023-04-28
  * Это новая инкарнация SimpleDictionaryModel, без проблем с наследованием.
@@ -50,12 +61,15 @@ class DbTable extends \YAVPL\Model
 {
 /** Имя таблица в базе (со схемой) */
 	public string $table_name = '';
+
 /** Ключевое поле - как правило - id*/
 	public string $key_field = 'id';
+
 /** Список полей - массив */
 	public array $fields = [];
+
 /** Последний добавленный ключ
- * - после сохранения строки с ключом 0 в этой переменной будет новый id записи*/
+ * - после сохранения строки (saveRow) с ключом 0 в этой переменной будет новый id записи*/
 	public int $key_value;
 
 /** Берем таблицу, ключ и поля
@@ -63,7 +77,7 @@ class DbTable extends \YAVPL\Model
  * @param $key_field string ключевое поле (как правило "id")
  * @param $fields array массив полей
  */
-	public function __construct($table_name, $key_field, $fields)
+	public function __construct(string $table_name, string $key_field, array $fields)
 	{
 		parent::__construct();
 		$this->table_name = $table_name;
@@ -84,7 +98,7 @@ class DbTable extends \YAVPL\Model
  * @param $key_value int - значение ключевого поля
  * @return bool есть строка или нет
  */
-	public function exists($key_value): bool
+	public function exists(int $key_value): bool
 	{
 		return (!empty($this->db->exec("SELECT {$this->key_field} FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->fetchRow()));
 	}
@@ -96,10 +110,11 @@ class DbTable extends \YAVPL\Model
  * @param $key_value int - значение ключевого поля
  * @return array всю строку по ключу
  */
-	public function getRawRow($key_value)
+	public function getRawRow(int $key_value): ?array
 	{
-		return $this->db->exec("-- ".get_class($this).", method: ".__METHOD__."
+		$row = $this->db->exec("-- ".get_class($this).", method: ".__METHOD__."
 SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->fetchRow();
+		return (empty($row)) ? null : $row;//костыль на переходный период. когда db->fetchRow будет сама давать null, можно его убрать.
 	}
 
 /**
@@ -110,96 +125,36 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
  * @param $key_value int - значение ключевого поля
  * @return array всю строку по ключу, но наследники могут делать join и отдавать еще что-нибудь из прицепленных таблиц
  */
-	public function getRow($key_value)
+	public function getRow(int $key_value): ?array
 	{
 		return ($key_value == 0) ? $this->getEmptyRow() : $this->getRawRow($key_value);
-	}
-
-/** DEPRECATED
- * Вместо списка с данными выдает количество записей по переданным параметрам, вызывает свой getList($params) */
-	public function getCount($params = [])
-	{
-		$params['select'] = "count(*) AS cnt";
-		$params['index'] = '';
-		$params['limit'] = 0;
-		$params['offset'] = 0;
-		list($r) = $this->getList($params);
-		return $r['cnt'];
 	}
 
 /** Возвращает список записей по параметрам
  *
  * @return array Возвращает массив записей по переданным параметрам.
  * */
-	public function getList($params = [])
+	public function getList(array $params = []): array
 	{
-		$where = [];
-		$limit = $offset = -1;
-		$select = '*';
-		$from = $this->table_name;
-		$index = $order = $this->key_field;
-		$group = $having = '';
+		$params['select'] ??= "SELECT *";
+		$params['from'] ??= "FROM {$this->table_name}";
+		$params['where'] ??= [];//массив для склеивания по AND
+		$params['order'] ??= $this->key_field;
+		$params['limit'] ??= 0;//no limits
+		$params['offset'] ??= 0;//from start
+		$params['index'] ??= $this->key_field;
+		$params['pkey'] ??= $this->key_field;//но если просто выборка по одной таблице без JOIN то и так сработает.
+
 		$this->__last_list_params = $params;//на случай если контроллер захочет сохранить себе сформированные параметры вызова getList() для следующего раза.
-		if (isset($params['order']) && $params['order'] != '')
-		{
-			$order = $params['order'];
-		}
 
-		if (isset($params['index']))
+		$f = 'ids';
+		if (isset($params[$f]))//либо массив, либо сразу список через запятую
 		{
-			$index = $params['index'];
-		}
-
-		if (isset($params['limit']) && $params['limit'] > 0)
-		{
-			$limit = $params['limit'];
-		}
-
-		if (isset($params['offset']) && $params['offset'] > 0)
-		{
-			$offset = $params['offset'];
-		}
-
-		if (isset($params['select']) && $params['select'] != '')
-		{
-			$select = $params['select'];
-		}
-
-		if (isset($params['from']) && $params['from'] != '')
-		{
-			$from = $params['from'];
-		}
-
-		if (isset($params['group']) && $params['group'] != '')
-		{
-			$group = $params['group'];
-		}
-
-		if (isset($params['having']) && $params['having'] != '')
-		{
-			$having = $params['having'];
-		}
-
-		if (isset($params['where']) && is_array($params['where']))
-		{
-			$where = $params['where'];
-		}
-
-		if (isset($params['ids']))//либо массив, либо сразу список через запятую
-		{
-			if (!isset($params['pkey']))//$params['pkey'] надо устанавливать в перекрытых методах getList, т.к. только там понятно какой алиас у PK
-			{// в секцию WHERE надо указывать алиас и поле, например FROM genarts AS g ..... WHERE g.id IN (...)
-			// а оно у всех разное.
-				$params['pkey'] = $this->key_field;//но если просто выборка по одной таблице без JOIN то и так сработает.
-				$msg = 'When passing ids array - the $params[pkey] value should be set.';
-				sendBugReport($msg);
-				//die($msg);
-			}
-			$ids = is_array($params['ids']) ? $params['ids'] : explode(',', $params['ids']);
+			$ids = is_array($params[$f]) ? $params[$f] : explode(',', $params[$f]);
 			$ids = array_filter($ids, function($v){return ($v > 0);});
 			if (count($ids) > 0)
 			{
-				$where[] = "{$params['pkey']} IN (".join(',', $ids).")";
+				$params['where'][] = "{$params['pkey']} IN (".join(',', $ids).")";
 			}
 			else
 			{//если массив передали, но пустой - значит ожидаем явно не весь каталог в случае пустого массива!
@@ -208,30 +163,25 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		}
 
 		$this->db->exec("-- ".get_class($this).", method: ".__METHOD__."
-SELECT
-	{$select}
-FROM
-	{$from}
-".((count($where) > 0) ? "WHERE ".join(" AND ", $where):'')
-.(($group != '') ? "\n".$group : '')
-.(($having != '') ? "\n".$having : '')."
-ORDER BY
-	{$order}
-".(($limit >= 0) ? "\nLIMIT ".$limit : '')."
-".(($offset >= 0) ? "\nOFFSET ".$offset : ''));//->print_r();
+{$params['select']}
+{$params['from']}
+".((count($params['where']) > 0) ? "WHERE ".join(" AND ", $params['where']):'')."
+ORDER BY {$params['order']}
+".(($params['limit'] > 0) ? "\nLIMIT ".$params['limit'] : '')."
+".(($params['offset'] > 0) ? "\nOFFSET ".$params['offset'] : ''));//->print_r();
 
 		$this->last_query = [
 			'query'		=> $this->db->query,
 			'params'	=> $this->db->params,
 		];
-		return $this->db->fetchAll($index);
+		return $this->db->fetchAll($params['index']);
 	}
 
 /**
  * Имя сиквенсы для таблицы. Если отличается от умолчательной для Постгреса - перекрыть.
  *
  * @return array имя сиквенсы для первичного ключа таблицы */
-	public function getSeqName()
+	public function getSeqName(): string
 	{
 		return $this->table_name.'_'.$this->key_field.'_seq';
 	}
@@ -242,7 +192,7 @@ ORDER BY
  * При перекрытии не забываем вызывать предка, чтобы запустить проверку по отдельным полям.
  * @return string Сообщение об ошибке или пустую строку, если все хорошо
  */
-	public function beforeSaveRow($action, &$data, $old_data)
+	public function beforeSaveRow(string $action, array &$data, array $old_data): string
 	{
 		foreach ($this->fields as $field_name)
 		{//данные ($data) передаются по ссылке, так что overhead от пустых выхзовов должен быть минимальным.
@@ -259,7 +209,7 @@ ORDER BY
  * Действие ПОСЛЕ сохранения записи
  * @return string Сообщение об ошибке или пустую строку, если все хорошо
  */
-	public function afterSaveRow($action, &$data, $old_data)
+	public function afterSaveRow(array $action, array &$data, array $old_data): string
 	{
 		return '';//override
 	}
@@ -270,15 +220,16 @@ ORDER BY
  * Если ключевое поле == 0, то создает новую запись, иначе - обновляет поля.
  * @return string Сообщение об ошибке или пустую строку, если все хорошо
  * */
-	public function saveRow($data)
+	public function saveRow(array $data): string
 	{
-		//  ?? а надо ли? $data[$this->key_field] = $data[$this->key_field] ?? 0;
+		$data[$this->key_field] ??= 0;
+
 		$action = ($data[$this->key_field] == 0) ? 'insert' : 'update';
 
 		$old_data = $this->getRow($data[$this->key_field]);
 
 		$message = $this->beforeSaveRow($action, $data, $old_data);
-		if (isset($message) && ($message != ''))
+		if (!empty($message))
 		{
 			return $message;
 		}
@@ -293,14 +244,14 @@ ORDER BY
 			$ar = $this->db->update($this->table_name, $this->key_field, $this->fields, $data)->affectedRows();
 		}
 		$this->affected_rows = $ar;
-		$this->key_field_value = $data[$this->key_field];//new value will be here, in case of "insert"
+		$this->key_value = $data[$this->key_field];//new value will be here, in case of "insert"
 		//проверки вставилось/обновилось делаем по $this->affected_rows
 		if ($this->affected_rows == 1)
 		{
 			$message = $this->afterSaveRow($action, $data, $old_data);
 			// наследники могут вернуть NULL, а мы, как старшие, не можем.
 			// у нас ответственность перед контроллером, который проверяет только на пустую строку.
-			if (isset($message) && ($message != ''))
+			if (!empty($message))
 			{
 				return $message;
 			}
@@ -322,7 +273,7 @@ ORDER BY
  * Штука редкая - пусть наследники этим занимаются.
  * @return string Сообщение об ошибке или пустую строку, если все хорошо
  */
-	public function checkFieldValue($action, $field_name, &$data)
+	public function checkFieldValue(string $action, string$field_name, array &$data): string
 	{
 		return '';//override - не забыть вызвать родительский beforeSaveRow в beforeSaveRow!
 	}
@@ -333,7 +284,7 @@ ORDER BY
  * @param $value mixed новое значение поля
  * @return string Сообщение об ошибке или пустую строку, если все хорошо
  * */
-	public function updateField($key_value, $field_name, $value)
+	public function updateField(int $key_value, string $field_name, $value): string
 	{
 		$data = [
 			$this->key_field	=> $key_value,
@@ -341,20 +292,20 @@ ORDER BY
 		];
 		if (!in_array($field_name, $this->fields))
 		{//ошибка на этапе разработки. в продакшене это недопустимо.
-			die("Wrong field name [{$field_name}] passed to updateField()");
+			sendBugReport("Wrong field name [{$field_name}] passed to updateField()", "FATALITY", true);
 		}
 		elseif ($key_value == 0)
 		{
 			return "Переданный первичный ключ равен нулю.";
 		}
-		elseif (!$this->rowExists($key_value))
+		elseif (!$this->exists($key_value))
 		{
 			return "По переданному первичному ключу ({$key_value}) не найдена запись в базе.";
 		}
 		else
 		{
 			$message = $this->checkFieldValue('update', $field_name, $data);
-			if (isset($message) && ($message != ''))
+			if (!empty($message))
 			{
 				return $message;
 			}
@@ -371,7 +322,7 @@ ORDER BY
  * deleteRow() проверяет наличие пустой строки в качестве сообщения.
  * @return string Сообщение о причине невозможности удаления или пустую строку, если все можно удалять
  */
-	public function canDeleteRow($key_value)
+	public function canDeleteRow(int $key_value): string
 	{
 		return '';
 	}
@@ -386,7 +337,7 @@ ORDER BY
  * Чтобы не заморачиваться с возвратом - стоит всегда возвращать parent::beforeDeleteRow($key_value).
  * @return string Сообщение об ошибке или пустую строку, если все хорошо
  */
-	public function beforeDeleteRow($key_value)
+	public function beforeDeleteRow(int $key_value): string
 	{
 		return '';
 	}
@@ -404,7 +355,7 @@ ORDER BY
  * Чтобы не заморачиваться с возвратом - стоит всегда возвращать parent::afterDeleteRow($key_value)
  * @return string Сообщение об ошибке или пустую строку, если все хорошо
  */
-	public function afterDeleteRow($key_value)
+	public function afterDeleteRow(int $key_value): string
 	{
 		return '';
 	}
@@ -419,17 +370,17 @@ ORDER BY
  * @param int $key_value id записи
  * @return string Строка с ошибкой или пустая строка если все хорошо.
  */
-	public function deleteRow($key_value)
+	public function deleteRow(int $key_value): string
 	{
 //можем ли мы удалить запись
 		$message = $this->canDeleteRow($key_value);
-		if (isset($message) && $message != '')
+		if (!empty($message))
 		{
 			return $message;
 		}
 //делаем что надо ДО удаления
 		$message = $this->beforeDeleteRow($key_value);
-		if (isset($message) && $message != '')
+		if (!empty($message))
 		{
 			return $message;
 		}
@@ -447,7 +398,7 @@ ORDER BY
 			$message = $this->afterDeleteRow($key_value);
 // наследники могут вернуть NULL, а мы, как старшие, не можем.
 // у нас ответственность перед контроллером, который проверяет только на пустую строку.
-			if (isset($message) && $message != '')
+			if (!empty($message))
 			{
 				return $message;
 			}

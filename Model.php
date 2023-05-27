@@ -100,15 +100,15 @@ class Model
 		$this->db->exec("SELECT set_var('description', '{$description}')");
 	}
 
+	/*
 	protected function connectToMainDB()
 	{
-		/*
-		 * в наследниках делать что-то типа
+
 		global $application;
 		return $this->db = $application->getMainDBConnector();
-		 */
-		return null; //override
-	}
+
+		//return null; //override
+	}*/
 
 /** Поле __sub_models - READ ONLY
  */
@@ -117,18 +117,19 @@ class Model
 		return $this->__sub_models;
 	}
 
-	public function getBasicModel($name): Model
+	public function getBasicModel(string $name): Model
 	{
 		global $application;
 		return $application->getBasicModel($name);
 	}
 
-	public function __get($name)//: mixed
+	public function __get(string $name)//: mixed
 	{
 		global $application;
 		if ($name == 'db')
 		{
-			return $this->connectToMainDB();
+			//return $this->connectToMainDB();
+			return $this->db = $application->getMainDBConnector();
 		}
 		elseif (isset($this->__sub_models_cache[$name]))
 		{

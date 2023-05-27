@@ -54,7 +54,8 @@ class DbPg extends Db implements iDb
  */
 	public function exec():Db
 	{
-		parent::exec(func_get_args());
+		parent::exec(func_get_args());//там всякие подготовки безотносительно к Постгресу
+
 //---- СОБСТВЕННО ОБРАЩЕНИЕ К СУБД --
 		$this->sth = (count($this->params) > 0) ?
 			@pg_query_params($this->pg_dbh, $this->query, $this->params) : @pg_query($this->pg_dbh, $this->query);
@@ -154,7 +155,7 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 /**
  * Получить следующее значение из сиквенсы
  */
-	public function nextVal($sequence_name): int
+	public function nextVal(string $sequence_name): int
 	{
 		if (!$this->is_connected)
 		{
@@ -167,7 +168,7 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 /** Все результаты в таблицу, массив структур
  *
  */
-	public function fetchAll($hash_index = ''): array
+	public function fetchAll(string $hash_index = ''): array
 	{
 		$t = [];
 		for ($row_num = 0; $row_num < $this->rows; $row_num++)
@@ -188,14 +189,14 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 					{
 						sendBugReport('Wrong index in fetchAll()', "index: {$hash_index}", true);
 					}
-					if (is_string($row[$index]))
+					if (is_string($row[$index]))//но строковых значений в индексе массива лучше избегать,
 					{
 						$row[$index] = str_replace("'", '', $row[$index]);//we have to do it
-						/** @TO_DO - вопрос спорный что делать с обратными слэшами. если оставить */
+						/** @TODO - вопрос спорный что делать с обратными слэшами. если оставить
 						//$row[$index] = preg_replace("/^(.+)\\$/", '$1', $row[$index]);//в конце строки, чтобы не ломался eval со скобкой ]
+						*/
 						$row[$index] = trim($row[$index], '\\');
-
-						//96308617\
+						//вот такой попался артикул: 96308617\ и его нельзя было смешивать с 96308617
 						$code .= "['".$row[$index]."']" ;
 					}
 					else
@@ -213,18 +214,18 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
  * Извлечение очередной строки результата в виде структуры
  * typical usage: while ($r = $db->fetchRow()){...}
  */
-	public function fetchRow()
+	public function fetchRow(): ?array
 	{
-		return $this->row < $this->rows ? pg_fetch_array($this->sth, $this->row++, PGSQL_ASSOC) : false;
+		return ($this->row < $this->rows) ? pg_fetch_array($this->sth, $this->row++, PGSQL_ASSOC) : null;
 	}
 
 /**
  * Извлечение строки в массив
  * typical usage: list($var1, $var2) = $db->fetchRowArray();
  */
-	public function fetchRowArray()
+	public function fetchRowArray(): ?array
 	{
-		return $this->row < $this->rows ? pg_fetch_array($this->sth, $this->row++, PGSQL_NUM) : false;
+		return ($this->row < $this->rows) ? pg_fetch_array($this->sth, $this->row++, PGSQL_NUM) : null;
 	}
 
 /**

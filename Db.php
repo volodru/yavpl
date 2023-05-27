@@ -37,7 +37,7 @@ class Db
 	public $log_path = '/tmp/';
 	public $min_cost_to_save_log = 300;
 	public $sth = false;
-	public $rows;//number of rows after executing SELECT, for upd,del,ins results - see affectedRows()
+	public $rows;//number of rows after executing SELECT (pg_numrows), for upd,del,ins results - see affectedRows()
 
 	protected $host_params = [];//параметры подключения. устанавляваются в контрукторе, использу.тся в
 	protected $executed_sql_queries_per_session = 0;//счетчик, сколько запросов делать до реконнекта
@@ -55,7 +55,6 @@ class Db
 	public function __construct(array $host_params)
 	{
 		$this->host_params = $host_params;
-		//!!!!!!!$this->connect() - используем lazy evaluation, коннектимся не в конструкторе, а только по мере необходимости.
 	}
 
 /** если надо преждевременно оторваться от БД, можно просто сделать unset($this->db) в модели
@@ -69,21 +68,21 @@ class Db
 
 /** просто выключатель поля
  */
-	public function disableReconnects():void
+	public function disableReconnects(): void
 	{
 		$this->allow_reconnects = false;
 	}
 
 /** просто включатель поля
  */
-	public function enableErorrMessages():void
+	public function enableErorrMessages(): void
 	{
 		$this->show_error_messages = true;
 	}
 
 /** паблик Морозов
  */
-	public function getHostParams():array
+	public function getHostParams(): array
 	{
 		return $this->host_params;
 	}
@@ -126,7 +125,6 @@ class Db
 			}
 			else
 			{//передали много аргументов - собираем из них тот же массив
-				//for ($i = 1; $i < count($args); $i++)
 				foreach ($args as $arg)
 				{
 					$this->params[] = $arg;
@@ -149,9 +147,9 @@ class Db
 		$this->executed_sql_queries_per_session++;
 
 		if ($this->is_connected &&
-				$this->allow_reconnects &&
-				$this->transaction_depth == 0 &&
-				$this->executed_sql_queries_per_session >= $this->max_executed_sql_queries_per_session)
+			$this->allow_reconnects &&
+			$this->transaction_depth == 0 &&
+			$this->executed_sql_queries_per_session >= $this->max_executed_sql_queries_per_session)
 		{
 			//print "reconnection at: ".$this->executed_sql_queries_per_session.CRLF;
 			$this->disconnect();
@@ -172,7 +170,7 @@ class Db
  * @param $err_msg string сообщение об ошибке
  * @param $notice_msg string замечание от базы (для PG - pg_last_notice)
  */
-	public function showErrorMessage($err_msg, $notice_msg):void
+	public function showErrorMessage(string $err_msg, string $notice_msg): void
 	{
 		$current_time = date('Y/m/d H:i:s');
 		$url = (isset($_SERVER['SERVER_NAME'])) ? "http://".$_SERVER['SERVER_NAME'].$_SERVER['SCRIPT_NAME'] : '';
@@ -233,7 +231,7 @@ class Db
  * @param $fields - остальные поля  - массив или строка через запятую
  * @param $data - hash с данными вида ключ (поле) -- значение
  */
-	public function insert($table, $keys, $fields, array $data):Db
+	public function insert(string $table, $keys, $fields, array $data):Db
 	{
 		if (!is_array($keys))
 		{
@@ -268,7 +266,7 @@ INSERT INTO {$table} (".join(', ', $ff).") VALUES (".join(', ', $p).")", $v);//-
  * @param $fields - остальные поля  - массив или строка через запятую
  * @param $data - hash с данными вида ключ (поле) -- значение
  */
-	public function update($table, $keys, $fields, array $data):Db
+	public function update(string $table, $keys, $fields, array $data):Db
 	{
 		if (!is_array($keys))
 		{
@@ -306,7 +304,7 @@ UPDATE {$table} SET ".join(', ', $s)." WHERE (".join(') AND (', $w).")", $v);
  * @param $keys - ключевые поля - массив или строка через запятую
  * @param $data - hash с данными вида ключ (поле) -- значение
  */
-	public function delete($table, $keys, array $data):Db
+	public function delete(string $table, $keys, array $data):Db
 	{
 		if (!is_array($keys))
 		{
@@ -332,7 +330,7 @@ DELETE FROM {$table} WHERE (".join(') AND (', $w).")", $v);
  * @param $keys - ключевые поля - массив или строка через запятую
  * @param $data - hash с данными вида ключ (поле) -- значение
  */
-	public function rowExists($table, $keys, array $data): bool
+	public function rowExists(string $table, $keys, array $data): bool
 	{
 		if (!is_array($keys))
 		{
@@ -357,7 +355,7 @@ SELECT ".join(',',$keys)." FROM $table WHERE (".join(') AND (', $w).")", $v)->ro
  * @param $keys - ключевые поля - массив или строка через запятую
  * @param $data - hash с данными вида ключ (поле) -- значение
  */
-	public function getRow($table, $keys, array $data): array
+	public function getRow(string $table, $keys, array $data): ?array
 	{
 		if (!is_array($keys))
 		{
@@ -416,9 +414,9 @@ interface iDb
 
 	public function exec();
 
-	public function nextVal($sequence_name);
+	public function nextVal(string $sequence_name): int;
 
-	public function fetchAll($hash__index);
+	public function fetchAll(string $hash_index): array;
 
 	public function fetchRow();
 
