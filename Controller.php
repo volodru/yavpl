@@ -111,34 +111,69 @@ class Controller
 	//!!!
 	//все поля, которые может видеть представление с помощью магии, должны быть публичными!
 	//
-	public $breadcrumbs_delimiter = " &raquo;&raquo;\n\t";
 
-	public $user = null;//текущий залогиненный юзер. рекомендуется синглтон, как правило - наследник или экземпляр UserModel
-
-	public $running_method_name;
-	public $__need_render = true;
-	public $__is_json = false;
+/** Хлебные крошки. Т.к. оно реализовано в виде 1 массива и двух методов, то делать отдельный класс для этого - нунафиг.
+Тулбар - штука посложнее, поэтому он в отдельном классе. см. ToolBar.php
+ */
+	public $__breadcrumbs_delimiter = " &raquo;&raquo;\n\t";
 	public $__breadcrumbs = [];
 
-	protected $default_resource_id;
+/** Текущий залогиненный юзер. рекомендуется синглтон, как правило - наследник или экземпляр UserModel
+ */
+	public $user = null;
 
-	private $__title = 'THIS IS THE TITLE OF THE PROJECT';
-
-	private $__params_array = [];
-	private $__document_ts = 0;
-
+/** Модуль класса контроллера
+ */
 	private $__module_name;
+
+/** Имя класса контроллера
+ */
 	private $__class_name;
 
+/** Вызванный метод контроллера
+ */
+	public $running_method_name;
+
+/** Включать ли рендер всей страницы (meta/head/body) или это AJAX в виде простого потока HTML
+ */
+	public $__need_render = true;
+
+/** Если это просто JSON вызов (отключаем рендер и отдаем результата в виде json_encode)
+ */
+	public $__is_json = false;
+
+/** см. метод getResourceId()
+ */
+	protected $default_resource_id;
+
+/** Заголовок страниц проекта по умолчанию.
+ */
+	private $__title = 'THIS IS THE TITLE OF THE PROJECT';
+
+/** Массив с параметрами скрипта (берем из GET/POST/ARGV/COOKIES/Globals)
+ */
+	private $__params_array = [];
+
+/** TS документа на случай управления кешированием страниц
+ */
+	private $__document_ts = 0;
+
+/** Обеспечение Хелперов - список подключенных методов. Кто подключился последним - тот и работает.
+ */
 	private $__methods = [];//for Helper
 
-/**
- *  В конструкторе ничего особенного не делаем, а разбор параметров для консольного режима тут лежит от безысходности.
- *  Его бы куда-нибудь в другое место...
+/** Самый главный контструктор всея контроллеров.
+ *
+ * Для UI|API режимов тут ничего не делаем.
+ *
+ * Для консольного режима разбираем командную строку на параметры вида key=value
+ * Всё, что не в этом формате - игнорим.
+ * Параметры заполняем в глобальный массив через setParam.
  */
 	public function __construct()
 	{
-		/* Заполняем параметры для CLI режима */
+		/* Заполняем параметры для CLI режима, только в формате key=value */
+		//@TODO сделать вменяемый разбор строковых значений, т.к. вот щас нельзя в значениях иметь знак =
 		if (APPLICATION_RUNNING_MODE == 'cli')
 		{
 			foreach ($_SERVER['argv'] ?? [] as $param)
@@ -150,6 +185,13 @@ class Controller
 				}
 			}
 		}
+	}
+
+/** Что надо сделать ПОСЛЕ конструктора, имея на руках $this->running_method_name
+ * Например, глобальный ACL базирующийся на типовых названиях методов (save/delete)
+ */
+	public function init(): void
+	{
 	}
 
 /**
@@ -165,7 +207,7 @@ class Controller
 /**
  * Вызывается после вызова конструктора контроллера в Application
  */
-	public function setModuleName($module_name)
+	public function setModuleName($module_name): void
 	{
 		$this->__module_name = $module_name;
 	}
@@ -173,7 +215,7 @@ class Controller
 /**
  * Мало ли понадобится, например, для определения текущего каталога исходника
  */
-	public function getModuleName()
+	public function getModuleName(): string
 	{
 		return $this->__module_name;
 	}
@@ -181,7 +223,7 @@ class Controller
 /**
  * Вызывается после вызова конструктора контроллера в Application
  */
-	public function setClassName($class_name)
+	public function setClassName($class_name): void
 	{
 		$this->__class_name = $class_name;
 	}
@@ -189,7 +231,7 @@ class Controller
 /**
  *  см. getModuleName()
  */
-	public function getClassName()
+	public function getClassName(): string
 	{
 		return $this->__class_name;
 	}
@@ -200,7 +242,7 @@ class Controller
  * Бывает нужен в программе. Модуль и класс в программе редко нужен, т.к. это епархия Application.
  * Если контроллер манипулирует названиями методов, то это может пригодиться.
  */
-	public function setMethodName($method_name)
+	public function setMethodName($method_name): void
 	{
 		$this->running_method_name = $method_name;
 	}
@@ -208,13 +250,13 @@ class Controller
 /**
  * Надо иногда получить название метода именно с т.з. фреймворка.
  */
- 	public function getMethodName()
+ 	public function getMethodName(): string
 	{
 		return $this->running_method_name;
 	}
 
 /**
- * Методо по-умолчанию.
+ * Метод по-умолчанию.
  * По-умолчанию вообще ничего не делаем,
  * Это нужно, чтобы для статических страниц не писать липовых контроллеров, т.к. Application хочет иметь контроллер - ему так проще.
  * Если хочется чуть упростить отладку, можно наследовать метод в главном контроллере проекта:
@@ -222,6 +264,8 @@ class Controller
 	{
 		die("Declare method [$method_name] or defaultMetod() in descendant controller");
 	}
+
+	Можно перекрыть этот метод в контроллере и организовать собственный маршрутизатор в пределах класса.
  * */
 	public function defaultMethod($method_name)
 	{
@@ -231,13 +275,15 @@ class Controller
  * Устанавливается после вызова конструктора контроллера в Application.
  * Для проектов с ACL.
  */
-	public function setDefaultResourceId($resource_id)
+	public function setDefaultResourceId($resource_id): void
 	{
 		$this->default_resource_id = $resource_id;
 	}
 
 /**
- * Для проектов с ACL
+ * Для проектов с ACL.
+ * По-умолчанию тут имя класса.
+ * Если надо иметь ACL сюда пишем вменяемое имя роли для всего класса контроллера (или дефолтного контроллера раздела)
  */
 	protected function getResourceId()
 	{
@@ -251,7 +297,7 @@ class Controller
  *
  * Принцип выделения минимального - 99% страниц отдаются в виде именно страницы с шапкой, хлебными крошками и подвалом.
  */
-	public function disableRender()
+	public function disableRender(): Controller
 	{
 		$this->__need_render = false;
 		return $this;
@@ -260,7 +306,7 @@ class Controller
 /**
  * Перед отдачей бинарника вызвать этот метод. Экономит 1 строчку :)
  */
-	public function isBINARY($content_type = '')
+	public function isBINARY($content_type = ''): Controller
 	{
 		if ($content_type != '')
 		{
@@ -273,7 +319,7 @@ class Controller
 /**
  * Для аджаксных вызовов, если результат в виде HTML
  */
-	public function isAJAX()
+	public function isAJAX(): Controller
 	{//просто отдаём HTML без обёрток из шапки и подвала сайта
 		$this->disableRender();
 		return $this;
@@ -287,7 +333,7 @@ class Controller
  * по-умолчанию, конечный контроллер заполняет массив $this->result, который просто отдается браузеру через json_encode
  * ну и Content-type тут выставляем, чтобы было красиво.
  */
-	public function isJSON()
+	public function isJSON(): Controller
 	{
 		header("Content-type: application/json");
 		$this->disableRender();
@@ -298,7 +344,7 @@ class Controller
 /**
  * Для вызовов text/event-stream
  */
-	public function isEventStream()
+	public function isEventStream(): Controller
 	{
 		header('Content-Type: text/event-stream');
 		// recommended to prevent caching of event data.
@@ -323,7 +369,7 @@ class Controller
 /**
  * Больше для нужд тестирования. Хотя где-то может и пригодится.
  */
-	protected function resetParams()
+	protected function resetParams(): Controller
 	{
 		$this->__params_array = [];
 		return $this;
@@ -332,7 +378,7 @@ class Controller
 /**
  * Для простых контроллеров без представления - выполнил работу и перешел на другую страницу.
  */
-	protected function redirect($url = '/', $exit = true)
+	protected function redirect($url = '/', $exit = true): void
 	{
 		header("Location: {$url}");
 		if ($exit)
@@ -341,12 +387,11 @@ class Controller
 		}
 	}
 
-//Хлебные крошки. Т.к. оно реализовано в виде 1 массива и двух методов, то делать отдельный класс для этого - нунафиг.
-//Тулбар - штука посложнее, поэтому он в отдельном классе. см. ToolBar.php
 /**
- * получить приватное поле с крошками
+ *
+Получить приватное поле с крошками
  */
-	public function getBreadcrumbs()
+	public function getBreadcrumbs(): array
 	{
 		return $this->__breadcrumbs;
 	}
@@ -356,7 +401,7 @@ class Controller
  * $title заголовок
  * $link гиперссылка (лучше локальная, без протокола)
  */
-	protected function addBreadcrumb($title, $link = '')
+	protected function addBreadcrumb($title, $link = ''): Controller
 	{
 		$this->__breadcrumbs[] = ($link != '') ? "<a href='{$link}'>{$title}</a>" : $title;
 		return $this;
@@ -369,7 +414,7 @@ class Controller
  * не подходит для передачи параметров из Application в Controller,
  * т.к. параметры нужны уже в конструкторе Контроллера, а там только $_GET etc. и глобальные переменные.
  */
-	public function setParam($name, $value)
+	public function setParam($name, $value): Controller
 	{
 		$this->__params_array[$name] = $value;
 		return $this;
@@ -506,7 +551,7 @@ class Controller
 /**
  * Устанавливает TS документа для нужд поисковых систем.
  */
-	public function setDocumentTS($ts) //FOR POSTGRESQL: EXTRACT(epoch FROM ts)::integer as epoch_ts
+	public function setDocumentTS($ts): void //FOR POSTGRESQL: EXTRACT(epoch FROM ts)::integer as epoch_ts
 	{//берем только самое новое значение. получаем во времени документа - время самой молодой его части.
 		if ($ts > $this->__document_ts)
 		{
@@ -516,7 +561,7 @@ class Controller
 
 /**  Устанавливает title Документа.
  */
-	public function setTitle($title = '')
+	public function setTitle($title = ''): Controller
 	{
 		if ($title != '')
 		{//либо рисуем, что передали
@@ -541,7 +586,7 @@ class Controller
 /**  Возвращает title Документа.
  * "public Морозов", по сути.
  */
-	public function getTitle()
+	public function getTitle(): string
 	{
 		return $this->__title;
 	}
@@ -568,7 +613,7 @@ class Controller
  * После регистрации помощника, все его методы доступны в представлении как свои собственные.
  * Используется магия __call()
  *
- * по сути, это имитация trait-ов другими средствами языка.
+ * По сути, это имитация trait-ов другими средствами языка.
  */
 	public function __call($method_name, $args)
 	{
@@ -584,7 +629,7 @@ class Controller
 		}
 	}
 
-	public function registerHelper($helper_class_name)//class
+	public function registerHelper($helper_class_name): Controller
 	{
 		$this->__methods = array_merge($this->__methods, Helper::registerHelper($helper_class_name, $this));
 		return $this;

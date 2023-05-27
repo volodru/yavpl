@@ -17,12 +17,10 @@ namespace YAVPL;
  * *Класс таблица с целым ключом*
  *
  *
- * Словарь - таблица, в которой есть ключевое поле и несколько полей атрибутов.
- *
  * Этот класс позволяет:
  * 1. получить строку из базы по (одному!) (целочисленному!!!) ключу
  * 2. получить множество строк по фильтру
- * 3. создать запись (если ключ == 0) или обновить запись (ключ > 0)
+ * 3. создать запись (если ключ == null || 0) или обновить запись (ключ > 0)
  * 4. обновить поле или запись по ключу и имени поля
  * 5. удалить строку по ключу
  * 6. есть хуки на до/после изменения/удаления.
@@ -45,7 +43,7 @@ namespace YAVPL;
  * Тоже про удаление deleteRow и beforeDeleteRow/afterDeleteRow.
  * Проверка перед удалением должна выдавать осмысленный совет
  * вида "А теперь сделать следующее ...", раз удалить нельзя.
- * Например: "Бренд удалить нельзя, т.к. на него ссылается 1 и более артикулов. Удалите все артикулы бренда."
+ * Например: "Бренд удалить нельзя, т.к. на него ссылается один и более артикулов. Удалите все артикулы бренда."
  */
 
 class DbTable extends \YAVPL\Model
@@ -53,12 +51,12 @@ class DbTable extends \YAVPL\Model
 /** Имя таблица в базе (со схемой) */
 	public string $table_name = '';
 /** Ключевое поле - как правило - id*/
-	public string $key_field = '';
+	public string $key_field = 'id';
 /** Список полей - массив */
 	public array $fields = [];
 /** Последний добавленный ключ
  * - после сохранения строки с ключом 0 в этой переменной будет новый id записи*/
-	public int $key_field_value;
+	public int $key_value;
 
 /** Берем таблицу, ключ и поля
  * @param $table_name string таблица
@@ -76,9 +74,9 @@ class DbTable extends \YAVPL\Model
 /** Запись отдаваемая по ключу == 0
  * @return array Дефолтные значения для новой записи.
  */
-	public function getEmptyRow()
+	public function getEmptyRow(): array
 	{
-		//override!
+		return [$this->key_field => 0] + array_fill_keys($this->fields, '');
 	}
 
 /** Максимально быстрый и корректный способ проверить наличие строки в базе.
@@ -86,9 +84,9 @@ class DbTable extends \YAVPL\Model
  * @param $key_value int - значение ключевого поля
  * @return bool есть строка или нет
  */
-	public function rowExists($key_value)
+	public function exists($key_value): bool
 	{
-		return ($this->db->exec("SELECT {$this->key_field} FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->fetchRow() !== false);
+		return (!empty($this->db->exec("SELECT {$this->key_field} FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->fetchRow()));
 	}
 
 /**
@@ -114,14 +112,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
  */
 	public function getRow($key_value)
 	{
-		if ($key_value == 0)
-		{
-			return $this->getEmptyRow();
-		}
-		else
-		{
-			return $this->getRawRow($key_value);
-		}
+		return ($key_value == 0) ? $this->getEmptyRow() : $this->getRawRow($key_value);
 	}
 
 /** DEPRECATED

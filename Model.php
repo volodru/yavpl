@@ -92,10 +92,10 @@ class Model
 	{
 	}
 
-	/** устанавливает shared переменную для триггеров сохраняющих логи
-	 * надо делать именно от той модели, с которой делается загрузка
-	 */
-	public function setGlobalDescription($description)
+/** устанавливает shared переменную для триггеров сохраняющих логи
+ * надо делать именно от той модели, с которой делается загрузка
+ */
+	public function setGlobalDescription($description): void
 	{
 		$this->db->exec("SELECT set_var('description', '{$description}')");
 	}
@@ -112,18 +112,18 @@ class Model
 
 /** Поле __sub_models - READ ONLY
  */
-	public function getSubModelList()
+	public function getSubModelList(): array
 	{
 		return $this->__sub_models;
 	}
 
-	public function getBasicModel($name)
+	public function getBasicModel($name): Model
 	{
 		global $application;
 		return $application->getBasicModel($name);
 	}
 
-	public function __get($name)
+	public function __get($name)//: mixed
 	{
 		global $application;
 		if ($name == 'db')
@@ -172,7 +172,7 @@ class Model
  * После регистрации помощника, все его методы доступны в представлении как свои собственные.
  * Используется магия __call()
  */
-	public function __call($method_name, $args)
+	public function __call($method_name, $args)//: mixed
 	{
 		if (isset($this->__methods[$method_name]))
 		{
@@ -187,24 +187,29 @@ class Model
 		}
 	}
 
-	public function registerHelper($helper_class_name)//class
+	public function registerHelper($helper_class_name): Model
 	{
 		$this->__methods = array_merge($this->__methods, Helper::registerHelper($helper_class_name, $this));
 		return $this;
 	}
 
-	public function getLog($delimeter = CRLF)
+	public function getLog($delimeter = CRLF): string
 	{
 		return join($delimeter, $this->log);
 	}
 
-	//шаблон паблик Морозов :(
-	public function getRawLog()
+/** Возвращает лог в виде массива строк
+ * шаблон паблик Морозов :(
+ */
+	public function getRawLog(): array
 	{
 		return $this->log;
 	}
 
-	public function clearLog()
+/** Очищает лог до []
+ */
+
+	public function clearLog(): void
 	{
 		$this->log = [];
 	}

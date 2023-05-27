@@ -269,13 +269,13 @@ class View
  * Возвращает накопленные контроллерами "хлебные крошки".
  * Использовать желательно в defaultView проекта.
  */
-	public function getBreadcrumbs()
+	public function getBreadcrumbs(): string
 	{
-		$this->breadcrumbs = $this->controller->getBreadcrumbs();
-		if (count($this->breadcrumbs) > 0)
+		$breadcrumbs = $this->controller->getBreadcrumbs();
+		if (count($breadcrumbs) > 0)
 		{
-			$this->breadcrumbs[count($this->breadcrumbs)-1] = strip_tags($this->breadcrumbs[count($this->breadcrumbs)-1]);
-			return "\n<div id='breadcrumbs'>\n\t<span class='breadcrumb'>".join("</span>\n\t{$this->breadcrumbs_delimiter}<span class='breadcrumb'>", $this->breadcrumbs)."</span>\n</div>\n";
+			$breadcrumbs[count($breadcrumbs)-1] = strip_tags($breadcrumbs[count($breadcrumbs)-1]);
+			return "\n<div id='breadcrumbs'>\n\t<span class='breadcrumb'>".join("</span>\n\t{$this->__breadcrumbs_delimiter}<span class='breadcrumb'>", $breadcrumbs)."</span>\n</div>\n";
 		}
 		else
 		{

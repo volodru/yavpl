@@ -8,6 +8,12 @@ namespace YAVPL;
  */
 
 /** CHANGELOG
+ *
+ * DATE: 2023-05-27
+ * убран fatalError
+ * fileNotFound теперь понимает режим JSON
+ * добавлен вызов метода init контроллера сразу после создания класса контроллера и заполнения его полей типа $this->running_method_name
+ *
  * 1.11
  * DATE: 2020-05-22
  * Добавлена возможность работы через CLI
@@ -68,13 +74,6 @@ namespace YAVPL;
  *
  * fileNotFound() - теперь просто выдает header("HTTP/1.0 404 Not Found"); и если надо обрабатывать
  * ЧПУ, то этот метод надо перекрыть, чтобы он ничего не делал, а 404 выдавать уже в обработчике ЧПУ
- *
- * fatalError($msg) - просто выводит сообщение и умирает. хедеры там не выводятся.
- *
- * 1.01
- * DATE: 2013-10-17
- * добавлен заголовок с версией, описанием и проч. к этому файлу
- * подкорректировано описание концепции
  */
 
 //приложение работает в одном из 3х режимов: веб интерфейс (UI), API и CLI
@@ -164,15 +163,17 @@ set_exception_handler('\\YAVPL\\__my_exception_handler');
  *
  * Порядок работы:
  * * в приложении создается контроллер, вызывается его конструктор (ну и предки по желанию конструктора контроллера)
- * * вызывается запрошенный метод контроллера
- * * в приложении создается представление ($application->view = new XXYYView())
- * * вызывается метод представления render()
- * * метод run приложения вызывает либо view->render (обертка), либо сразу запрошенный метод из view, если рендер заблокирован
- * * view->render печатает в вывод стандартную обертку для HTML файла (тэг html, заголовки head и тэг body)
+ * конроллеру устанавливаются поля $this->running_method_name (ну и модуль и класс)
+ * вызывается метод init()
+ * вызывается запрошенный метод контроллера
+ * в приложении создается представление ($application->view = new XXYYView())
+ * вызывается метод представления render()
+ * метод run приложения вызывает либо view->render (обертка), либо сразу запрошенный метод из view, если рендер заблокирован
+ * view->render печатает в вывод стандартную обертку для HTML файла (тэг html, заголовки head и тэг body)
  * и вызывает метод view->body($method_name) внутри тэга body
- * * view->body должен быть переопределен где-то в наследниках View (как правило в defaultView проекта) и
- * * отрисовывает обертку конкретного проекта (шапку, меню, футер и т.п.) и где-то среди нее вызывает this->$method_name
- * * !!! представление имеет доступ ко всем полям класса вызвавшего его контроллера через магию __get
+ * view->body должен быть переопределен где-то в наследниках View (как правило в defaultView проекта) и
+ * отрисовывает обертку конкретного проекта (шапку, меню, футер и т.п.) и где-то среди нее вызывает this->$method_name
+ * !!! представление имеет доступ ко всем полям класса вызвавшего его контроллера через магию __get
  *
  * чтобы отрисовать отдельный элемент в AJAX или iframe в контроллере нужно установить disableRender()
  *
@@ -222,12 +223,13 @@ class Application
 
 	/** кеширование базовых моделей, дабы не плодить дубли.
 	 */
-	private $__basic_models_cash = [];
+	private array $__basic_models_cash = [];
 
 	/** URI как для CGI так и CLI*/
 	protected string $__request_uri;
 
-
+	/** Полное название класса, каким мы пытались его создать по заданному URI */
+	private string $__controller_fq_class_name;
 
 /** Загрузчик Контроллера
  *
@@ -239,19 +241,14 @@ class Application
 	public function loadController(): bool
 	{//работает для форматов в виде модуль/класс/метод или класс/метод (для простых проектов)
 	// для сложных структур - это надо всё будет переопределить, например для проект/раздел/модуль/класс/метод.
-		$fq_class_name = CONTROLLERS_BASE_PATH.'\\'.(($this->module_name != '') ? $this->module_name."\\" : '').$this->class_name;
+		$this->__controller_fq_class_name = $fq_class_name = CONTROLLERS_BASE_PATH.'\\'.(($this->module_name != '') ? $this->module_name."\\" : '').$this->class_name;
 		if (class_exists($fq_class_name))//тут запускается автозагружалка
 		{
 			$this->controller = new $fq_class_name();//делаем экземпляр класса
-			$this->controller->setModuleName($this->module_name);//эти методы там просто устанавливают протектед поля
-			$this->controller->setClassName($this->class_name);
-			$this->controller->setMethodName($this->method_name);
-			$this->controller->setDefaultResourceId((($this->module_name != '') ? $this->module_name.'/' : '') . $this->class_name.'/'.$this->method_name);
 			return true;
 		}
 		else
 		{
-			$this->fatalError("Cannot load controller class [{$fq_class_name}]. File with class not found (check autoloader) OR class was not defined in loaded file (check class name in file). ");
 			return false;
 		}
 	}
@@ -274,19 +271,10 @@ class Application
 		}
 	}
 
-/** Разборщик URI - если проект не ложится в схему Модуль->Класс->Метод перекрываем этот метод
- * в перекрытом методе надо присвоить значение $this->__request_uri, т.к. его потом использует метод fileNotFound
- * */
+/** Разборщик URI - если проект не ложится в схему Модуль->Класс->Метод перекрываем этот метод и пишем в module_name, например, пустую строку.
+*/
 	public function parseURI(): void
 	{
-		if (APPLICATION_RUNNING_MODE == 'cli')
-		{//CLI - для этого режима первый параметр магическая строка в виде "модуль/класс/метод", потом все остальные параметры для программы
-			$this->__request_uri = $_SERVER['argv'][1];
-		}
-		else//WEB And API
-		{
-			$this->__request_uri = trim(preg_replace("/(.+?)\?.+/", "$1", $_SERVER['REQUEST_URI']), '/');
-		}
 //берем все, что до знака вопроса, убираем последний и первый слэш и разрываем через слэш
 		$uri = explode('/', $this->__request_uri);
 		$this->module_name = ($uri[0] != '') ? $uri[0] : $this->default_module_name;
@@ -297,20 +285,35 @@ class Application
 /** Главный метод приложения */
 	public function run(): void
 	{
-//разобрали URI
-		$this->parseURI();//sets global module, class, method
+		if (APPLICATION_RUNNING_MODE == 'cli')
+		{//CLI - для этого режима первый параметр магическая строка в виде "модуль/класс/метод", потом все остальные параметры для программы
+			$this->__request_uri = $_SERVER['argv'][1];
+		}
+		else
+		{//WEB And API
+			$this->__request_uri = trim(preg_replace("/(.+?)\?.+/", "$1", $_SERVER['REQUEST_URI']), '/');
+		}
+//разобираем URI
+		$this->parseURI();//устанавливаем переменные module_name, class_name, method_name
+
 //создали экземпляр контроллера - вызвали конструктор класса контроллера
 		if (!$this->loadController())
-		{
-			if (APPLICATION_RUNNING_MODE == 'cli')
-			{
-				$this->fatalError("CLI mode: Cannot load appropriate controller for URI [{$this->__request_uri}]");
-			}
-			else
-			{
-				return;//а чё ещё делать, если контроллер не нашелся. пусть программист сам ищет контроллер.
-			}
+		{//ну тогда программа закончена.
+			$this->fileNotFound();
+			return;//а чё ещё делать, если контроллер не нашелся. пусть программист сам ищет контроллер.
 		}
+
+//эти методы там просто устанавливают протектед поля
+		$this->controller->setModuleName($this->module_name);
+		$this->controller->setClassName($this->class_name);
+		$this->controller->setMethodName($this->method_name);
+//дефолтный ресурс для ACL - полное имя класса
+		$this->controller->setDefaultResourceId($this->__controller_fq_class_name);
+
+//инициализация класса ПОСЛЕ конструктора, но ПЕРЕД вызовом запрошенного метода.
+//именно в этом методе можно проверять имя вызываемого метода и делать ACL по имени running_method_name
+		$this->controller->init();
+
 //вызвали нужный метод контроллера
 		if (method_exists($this->controller, $this->method_name))
 		{
@@ -329,9 +332,7 @@ class Application
 //для WEB режима идем дальше
 //загрузили файл и создали представление - вызвали его конструктор
 
-
 		//если представление вообще загрузилось, то продолжаем.
-		//if (isset($this->view))
 		if ($this->loadView())
 		{//вызвали рисовалку представления
 			if ($this->controller->__need_render)
@@ -378,21 +379,18 @@ class Application
 		die('У класса приложения должна быть реализована функция getEntityTypesInstance()');
 	}
 
-/** Получить экземпляр класса модели ("базовой", т.е. НЕ суюмодели, т.е. сразу в папке с моделями - \models\)
+/** Получить экземпляр класса модели ("базовой", т.е. НЕ субмодели, т.е. сразу в папке с моделями - \models\)
  * вызовы кешируются в глобальной переменной приложения.
  *
- * Имеет смысл использовать в магических методах базовой модели \Models\Main проекта и главной контроллере проекта.
+ * Имеет смысл использовать в магических методах базовой модели \Models\Main проекта и главном контроллере проекта.
  *
  * Хорошая практика:
- * Все контроллеры должны иметь возможность "создать" (получить экземпляр класса) модель просто упомянув ее.
- * Все модели тоже.
+ * Все контроллеры должны иметь возможность "создать" (получить экземпляр класса) модель просто упомянув ее. Все модели тоже.
  *
  * @return Model возвращает экземпляр модели или NULL, если нет в списке.
  */
-
 	public function getBasicModel($name): ?Model
 	{
-		//global $application;
 		$name = strtolower($name);
 		if (in_array($name, $this->basic_models_names))
 		{
@@ -408,21 +406,40 @@ class Application
 		{
 			return null;
 		}
-
 	}
 
 /** Обработчик ситуации когда не нашли Контроллер по URI */
 	protected function fileNotFound(): void
-	{//override it to handle 404 errors
+	{//
 		header("HTTP/1.0 404 Not Found");
+		$message = "Cannot load appropriate controller [{$this->__controller_fq_class_name}] for URI [{$this->__request_uri}].
+Why:
+1. Mistyped URL
+2. File with class not found (check autoloader)
+3. Class was not defined in loaded file (check class name in file)";
+		if (APPLICATION_RUNNING_MODE == 'api')
+		{
+			header("Content-type: application/json");
+			print json_encode([
+				'status'	=> 'Not found',
+				'message'	=> preg_replace("/[\s]+/", " ", $message),
+				'http_response_code'	=> 404,
+			]);
+		}
+		else
+		{
+			print "<xmp>".$message."</xmp>";
+		}
 	}
 
-/** Обработчик фатальный ситуаций - можно перекрыть, чтобы посылать их себе на почту */
+/** DEPRECATED
+ * Обработчик фатальный ситуаций - можно перекрыть, чтобы посылать их себе на почту */
+	/*
 	public function fatalError($msg)
-	{//override method fatalError to log errors or send them via an email
+	{
 		print $msg."\n";
 		exit(0);
-	}
+	}*/
 
 /** Автозагрузчик всего и вся */
 	public static function __autoload($class_name)

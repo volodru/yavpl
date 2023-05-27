@@ -9,6 +9,9 @@ namespace YAVPL;
 
 /* CHANGELOG
  *
+ * DATE: 2023-05-27
+ * getEmptyRow() теперь отдает массив пустых строк по всем полям
+ *
  * DATE: 2023-04-28
  * Теперь наследуется от здешней модели и пока временно использует глобальную переменную $application
  * чтобы получить коннектор к главной базе данных
@@ -99,11 +102,12 @@ class SimpleDictionaryModel extends \YAVPL\Model
 	}
 
 /** Запись отдаваемая по ключу == 0
+ * По-умолчанию отдает пустые строки. Для получения осмысленных значений метод стоит перекрыть.
  * @return array Дефолтные значения для новой записи.
  */
 	public function getEmptyRow()
-	{
-		//override!
+	{//should override!
+		return [$this->key_field => 0] + array_fill_keys($this->fields, '');
 	}
 
 /** Максимально быстрый и корректный способ проверить наличие строки в базе.
@@ -111,9 +115,9 @@ class SimpleDictionaryModel extends \YAVPL\Model
  * @param $key_value int - значение ключевого поля
  * @return bool есть строка или нет
  */
-	public function rowExists($key_value)
+	public function exists($key_value): bool
 	{
-		return ($this->db->exec("SELECT {$this->key_field} FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->fetchRow() !== false);
+		return (!empty($this->db->exec("SELECT {$this->key_field} FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->fetchRow()));
 	}
 
 /**
@@ -139,18 +143,12 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
  */
 	public function getRow($key_value)
 	{
-		if ($key_value == 0)
-		{
-			return $this->getEmptyRow();
-		}
-		else
-		{
-			return $this->getRawRow($key_value);
-		}
+		return ($key_value == 0) ? $this->getEmptyRow() : $this->getRawRow($key_value);
 	}
 
 /** DEPRECATED
  * Вместо списка с данными выдает количество записей по переданным параметрам, вызывает свой getList($params) */
+/* Proposed for deletion, volod, 27-05-2023
 	public function getCount($params = [])
 	{
 		$params['select'] = "count(*) AS cnt";
@@ -159,7 +157,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		$params['offset'] = 0;
 		list($r) = $this->getList($params);
 		return $r['cnt'];
-	}
+	}*/
 
 /** Возвращает список записей по параметрам
  *
@@ -381,7 +379,7 @@ ORDER BY
 		{
 			return "Переданный первичный ключ равен нулю.";
 		}
-		elseif (!$this->rowExists($key_value))
+		elseif (!$this->exists($key_value))
 		{
 			return "По переданному первичному ключу ({$key_value}) не найдена запись в базе.";
 		}
@@ -506,9 +504,4 @@ ORDER BY
 		return $this->getEntityTypeInfo()['id'];
 	}
 
-	public function getBasicModel($name)
-	{
-		global $application;
-		return $application->getBasicModel($name);
-	}
 }
