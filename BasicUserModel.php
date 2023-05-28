@@ -65,7 +65,7 @@ class BasicUserModel extends SimpleDictionaryModel
 	public int $id = 0;
 
 	// данные из select * по юзеру. использовать: $this->user->data['name_r'], например.
-	public array $data;
+	public ?array $data;
 
 	// дефолтные настройки проекта. всё, что не нравится, надо указать явно при вызове конструктора.
 	protected array $options = [
