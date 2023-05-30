@@ -209,7 +209,7 @@ ORDER BY {$params['order']}
  * Действие ПОСЛЕ сохранения записи
  * @return string Сообщение об ошибке или пустую строку, если все хорошо
  */
-	public function afterSaveRow(array $action, array &$data, array $old_data): string
+	public function afterSaveRow(string $action, array &$data, array $old_data): string
 	{
 		return '';//override
 	}

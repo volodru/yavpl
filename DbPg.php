@@ -25,6 +25,8 @@ class DbPg extends Db implements iDb
 {
 	public $pg_dbh = 0;
 
+	/** Подключаемся к базе через установленные в конструкторе параметры соединения
+	 */
 	public function connect():void
 	{
 		$connect_string = "host={$this->host_params['host']} port={$this->host_params['port']} user={$this->host_params['user']} password={$this->host_params['passwd']} dbname={$this->host_params['dbname']} connect_timeout=5";
@@ -39,7 +41,8 @@ class DbPg extends Db implements iDb
 		//da(__getBackTrace());
 		$this->is_connected = true;
 	}
-
+/** Отключаемся от базы
+ */
 	public function disconnect():void
 	{
 		if ($this->is_connected)
@@ -51,6 +54,10 @@ class DbPg extends Db implements iDb
 	}
 
 /** возвращает self! чтобы делать $db->exec()->fetchAll();
+ * первый параметр - текст SQL запроса
+ * второй и далее - параметры для подстановки в запрос по числу плейсхолдеров
+ *
+ * первый параметр - обязателен
  */
 	public function exec():Db
 	{
@@ -72,8 +79,11 @@ class DbPg extends Db implements iDb
 			$this->showErrorMessage($err_msg, $notice_msg);//it dies in the end. always.
 		}
 
-//чтобы память не переполнять, $save_executed_sql выключен. для дебагов - включить в прототипе модели проекта class MainModel{}
+//--------------------------------------------------------------------------
+// чтобы память не переполнять, $save_executed_sql выключен. для дебагов - включить в коннекторе к БД - как правило, в Application проекта
 //$this->db->save_executed_sql = true;
+//--------------------------------------------------------------------------
+
 		//da($this->save_executed_sql);da($this->executed_sql_count);da(MAX_REGISTER_EXECUTED_SQL_COUNT);
 		if ($this->save_executed_sql && $this->executed_sql_count < MAX_REGISTER_EXECUTED_SQL_COUNT)
 		{
@@ -212,7 +222,8 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 
 /**
  * Извлечение очередной строки результата в виде структуры
- * typical usage: while ($r = $db->fetchRow()){...}
+ * использование:
+ * while (!empty($row = $db->fetchRow())){...}
  */
 	public function fetchRow(): ?array
 	{
@@ -221,7 +232,8 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 
 /**
  * Извлечение строки в массив
- * typical usage: list($var1, $var2) = $db->fetchRowArray();
+ * использование:
+ * list($var1, $var2) = $db->fetchRowArray();
  */
 	public function fetchRowArray(): ?array
 	{

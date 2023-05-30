@@ -32,22 +32,22 @@ DEFINE('MAX_REGISTER_EXECUTED_SQL_COUNT', 100);
 
 class Db
 {
-	public $executed_sql_count = 0;
-	public $save_executed_sql = false;
-	public $log_path = '/tmp/';
-	public $min_cost_to_save_log = 300;
+	public int $executed_sql_count = 0;
+	public bool $save_executed_sql = false;
+	public string $log_path = '/tmp/';
+	public int $min_cost_to_save_log = 300;
 	public $sth = false;
-	public $rows;//number of rows after executing SELECT (pg_numrows), for upd,del,ins results - see affectedRows()
+	public int $rows;//number of rows after executing SELECT (pg_numrows), for upd,del,ins results - see affectedRows()
 
-	protected $host_params = [];//параметры подключения. устанавляваются в контрукторе, использу.тся в
-	protected $executed_sql_queries_per_session = 0;//счетчик, сколько запросов делать до реконнекта
-	protected $max_executed_sql_queries_per_session = 50000;//Pg memory leaks fighting :)
-	protected $transaction_depth = 0; // begin++, commit--, reconnect when $transaction_depth==0
-	protected $allow_reconnects = true;//disableReconnects() если оно не надо или глючит
-	protected $is_connected = false;//lazy evaluation, коннектимся не в конструкторе, а по мере необходимости.
+	protected array $host_params = [];//параметры подключения. устанавляваются в контрукторе, использу.тся в
+	protected int $executed_sql_queries_per_session = 0;//счетчик, сколько запросов делать до реконнекта
+	protected int $max_executed_sql_queries_per_session = 50000;//Pg memory leaks fighting :)
+	protected int $transaction_depth = 0; // begin++, commit--, reconnect when $transaction_depth==0
+	protected bool $allow_reconnects = true;//disableReconnects() если оно не надо или глючит
+	protected bool $is_connected = false;//lazy evaluation, коннектимся не в конструкторе, а по мере необходимости.
 	//если Db будет синглтон, то все упоминания is_connected можно убрать, но Db не всегда имеет смысл делать синглтоном
 
-	protected $show_error_messages = false; //mean on production. on develop - always show errors.
+	protected bool $show_error_messages = false; //mean on production. on develop - always show errors.
 
 /** передаются параметры подключения к серверу в виде красивого хеша.
  *  чего с ним потом делать решает ->connect() метод для конкретной базы

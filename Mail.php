@@ -9,6 +9,9 @@ namespace YAVPL;
  */
 
 /** CHANGELOG
+ * @DATE: 2023-05-30
+ * добавлены type-hints
+ *
  * 1.07
  * @DATE: 2018-12-11
  * добавлено понятие "адрес техподдержки" - TECH_SUPPORT_EMAIL
@@ -62,20 +65,20 @@ if (!defined('CHARSET_FOR_EMAILS'))
 
 class Mail
 {
-	private $to = [];
-	private $cc = [];
-	private $bcc = [];
-	private $subj;
-	private $content;
-	private $content_type = 'text/plain';// or text/html
-	private $robot_email = ADMIN_EMAIL;
-	private $from_email;
-	private $from_name;
-	private $organization; //you should do define('ORGANIZATION_FIELD_FOR_EMAILS', 'you organization')
-	private $attachments = [];
-	private $charset = CHARSET_FOR_EMAILS;
+	private array $to = [];
+	private array $cc = [];
+	private array $bcc = [];
+	private string $subj;
+	private string $content;
+	private string $content_type = 'text/plain';// or text/html
+	private string $robot_email = ADMIN_EMAIL;
+	private string $from_email;
+	private string $from_name;
+	private string $organization; //you should do define('ORGANIZATION_FIELD_FOR_EMAILS', 'you organization')
+	private array $attachments = [];
+	private string $charset = CHARSET_FOR_EMAILS;
 
-	private $__typeByExt = [
+	private array $__typeByExt = [
 		'doc'	=> 'application/msword',
 		'docx'	=> 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 		'xls'	=> 'application/vnd.ms-excel',
@@ -101,7 +104,7 @@ class Mail
 		'cer'	=> 'application/octet-stream',// public keys
 	];
 
-	public function __construct($to_email = '', $subj = '', $content = '', $from_email = '', $from_name = '')
+	public function __construct(string $to_email = '', string $subj = '', string $content = '', string $from_email = '', string $from_name = '')
 	{
 		if ($to_email != '')
 		{
@@ -112,18 +115,18 @@ class Mail
 			($from_name != '') ? $from_name : 'Administrator');
 		$this->setSubj($subj);
 		$this->setContent($content);
-        $this->uid = strtoupper(md5(uniqid(time())));
-        $this->setOrganization((defined('ORGANIZATION_FIELD_FOR_EMAILS')) ? ORGANIZATION_FIELD_FOR_EMAILS : $_SERVER['SERVER_NAME']);
-        $this->setCharset(CHARSET_FOR_EMAILS);
+		$this->uid = strtoupper(md5(uniqid(time())));
+		$this->setOrganization((defined('ORGANIZATION_FIELD_FOR_EMAILS')) ? ORGANIZATION_FIELD_FOR_EMAILS : $_SERVER['SERVER_NAME']);
+		$this->setCharset(CHARSET_FOR_EMAILS);
 	}
 
-	public function setCharset($charset)
+	public function setCharset(string $charset): Mail
 	{
 		$this->charset = $charset;
 		return $this;
 	}
 
-	public function getTypeByExt($extension)
+	public function getTypeByExt(string $extension): string
 	{
 		if (!isset($this->__typeByExt[$extension]))
 		{
@@ -132,12 +135,12 @@ class Mail
 		return $this->__typeByExt[$extension];
 	}
 
-	public function getSupportedTypes()
+	public function getSupportedTypes(): array
 	{
 		return array_values($this->__typeByExt);
 	}
 
-	public function setContentType($type)
+	public function setContentType(string $type): Mail
 	{
 		if (($type == 'text/html') || ($type == 'text/plain'))
 		{
@@ -146,76 +149,76 @@ class Mail
 		return $this;
 	}
 
-	public function setFrom($email, $name = '')
+	public function setFrom(string $email, string $name = ''): Mail
 	{
 		$this->from_email = $email;
 		$this->from_name = $name;
 		return $this;
 	}
 
-	public function setTo($email, $name = '')
+	public function setTo(string $email, string $name = ''): Mail
 	{
 		$this->to = [[$email, $name]];
 		return $this;
 	}
 
-	public function addTo($email, $name = '')
+	public function addTo(string $email, string $name = ''): Mail
 	{
 		$this->to[] = [$email, $name];
 		return $this;
 	}
 
-	public function setCC($email, $name = '')
+	public function setCC(string $email, string $name = ''): Mail
 	{
 		$this->cc = [[$email, $name]];
 		return $this;
 	}
 
-	public function addCC($email, $name = '')
+	public function addCC(string $email, string $name = ''): Mail
 	{
 		$this->cc[] = [$email, $name];
 		return $this;
 	}
 
-	public function setBCC($email, $name = '')
+	public function setBCC(string $email, string $name = ''): Mail
 	{
 		$this->bcc = [[$email, $name]];
 		return $this;
 	}
 
-	public function addBCC($email, $name = '')
+	public function addBCC(string $email, string $name = ''): Mail
 	{
 		$this->bcc[] = [$email, $name];
 		return $this;
 	}
 
-	public function setSubj($subj)
+	public function setSubj(string $subj): Mail
 	{
 		$this->subj = $subj;
 		return $this;
 	}
 
-	public function setContent($content)
+	public function setContent(string $content): Mail
 	{
 		$this->content = $content;
 		return $this;
 	}
 
-	public function getContent()
+	public function getContent(): string
 	{
 		return $this->content;
 	}
 
-	public function setOrganization($organization)
+	public function setOrganization(string $organization): Mail
 	{
 		$this->organization = $organization;
 		return $this;
 	}
 
-	public function attachData($content, $file_name)
+	public function attachData($content, string $file_name): Mail
 	{
 		$content = chunk_split(base64_encode($content));
-        $point_pos = strrpos($file_name, '.');
+		$point_pos = strrpos($file_name, '.');
 		$this->attachments[] = [
 			'file_name'	=> basename($file_name),
 			'type'		=> $this->getTypeByExt(strtolower(substr(strtolower($file_name), $point_pos + 1, strlen($file_name) - $point_pos))),
@@ -224,14 +227,13 @@ class Mail
 		return $this;
 	}
 
-	public function attachFile($file_path, $file_name)
+	public function attachFile(string $file_path, string $file_name): Mail
 	{
 		$content = fread(fopen($file_path, 'r'), filesize($file_path));
-
-        return $this->attachData($content, $file_name);
+		return $this->attachData($content, $file_name);
 	}
 
-	public function encodeCyr($str)
+	public function encodeCyr(string $str): string
 	{
 		$arr = preg_split('//', $str, -1, PREG_SPLIT_NO_EMPTY);
 		$str = '=?'.$this->charset.'?Q?';//koi8-r
@@ -240,10 +242,10 @@ class Mail
 			$str .= '='.strtoupper(bin2hex($chr));
 		}
 		$str .= '?=';
-        return $str;
+		return $str;
 	}
 
-	private function convertFieldToLine($data)
+	private function convertFieldToLine(array $data): string
 	{
 		$result = [];
 		foreach ($data as $a)
@@ -253,7 +255,7 @@ class Mail
 		return join(';', $result);
 	}
 
-	public function send()
+	public function send(): void
 	{
 		if ($this->from_email == '')
 		{
@@ -338,7 +340,7 @@ Content-ID: <{$attachment['file_name']}>
 			{
 				fwrite($f, $letter);
 				pclose($f);
-				sleep(1);//EXPERIMENTAL - попытка предотвратить блокировку 25 порта а МСК
+				sleep(1);//EXPERIMENTAL - попытка предотвратить блокировку 25 порта в МСК
 				//$st = pclose($f);
 				/*if ($st != 0)
 				 	die(" (Mail status is: $st)");*/

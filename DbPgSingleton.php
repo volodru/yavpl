@@ -20,7 +20,7 @@ class DbPgSingleton //singleton in the global scope
 {
 	protected static $instance;
 
-	public static function getInstance($host_params) {// Возвращает единственный экземпляр класса
+	public static function getInstance(array $host_params) {// Возвращает единственный экземпляр класса
 		if (is_null(self::$instance))
 		{
 			self::$instance = new DbPg($host_params);

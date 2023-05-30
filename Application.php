@@ -389,7 +389,7 @@ class Application
  *
  * @return Model возвращает экземпляр модели или NULL, если нет в списке.
  */
-	public function getBasicModel($name): ?Model
+	public function getBasicModel(string $name): ?Model
 	{
 		$name = strtolower($name);
 		if (in_array($name, $this->basic_models_names))
@@ -442,26 +442,30 @@ Why:
 	}*/
 
 /** Автозагрузчик всего и вся */
-	public static function __autoload($class_name)
+	public static function __autoload(string $class_name): bool
 	{
+		// for DEBUGGING autoloader:
 		//print "<p>Application::__autoload loading: {$class_name}</p>";//для отладки
 		//__printBackTrace();//для отладки
 
 		// свои библиотечные файлы проверяем первыми.
 		// оно меняется раз в несколько лет. пусть лежит в виде массива прямо тут.
-		$file_name = preg_replace("/YAVPL\\\\/", "", $class_name);
-
-		if (in_array($file_name, [
-			'Db', 'DbPg', 'DbPgSingleton', 'DbMy',//СУБД
-			'Mail',//Почта
-			'Model', 'SimpleDictionaryModel', 'SimpleFilesModel', 'BasicUserModel', 'DocumentModel',//модельки
-			'Controller', 'View', 'Helper', //ядро фреймворка
-			'ToolBar', 'Test',//плюшки
-		]))
+		if (preg_match("/^YAVPL\\\\/", $class_name))
 		{
-			//da("Loading YAVPL file: $s");
-			require_once($file_name.'.php');
-			return true;
+			$file_name = preg_replace("/YAVPL\\\\/", "", $class_name);
+			if (in_array($file_name, [
+				'Db', 'DbPg', 'DbPgSingleton', 'DbMy', 'DbTable',//СУБД
+				'Mail',//Почта
+				'Model', 'SimpleDictionaryModel', 'SimpleFilesModel', 'BasicUserModel', 'DocumentModel',//модельки
+				'Controller', 'View', 'Helper', //ядро фреймворка
+				'ToolBar', //тулбар - библиотека
+				'Test',//DEPRECATED
+			]))
+			{
+				//da("Loading YAVPL file: $s");
+				require_once($file_name.'.php');
+				return true;
+			}
 		}
 
 		//da("Classname ".$class_name);//DEBUG

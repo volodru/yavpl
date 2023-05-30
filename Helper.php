@@ -39,7 +39,7 @@ class Helper
 		return $this->__owner;
 	}
 
-	public function __get($name)
+	public function __get(string $name)
 	{
 		if (isset($this->__owner))
 		{
@@ -47,7 +47,7 @@ class Helper
 		}
 	}
 
-	public function __set($name, $value)
+	public function __set(string $name, $value)
 	{
 		if (isset($this->__owner))
 		{
@@ -55,7 +55,7 @@ class Helper
 		}
 	}
 
-	public function __call($method_name, $args)
+	public function __call(string $method_name, array $args)
 	{//можно вызывать хелперы из других хелперов
 		if (isset($this->__owner))
 		{
@@ -75,8 +75,10 @@ class Helper
  * После этого все методы класса могут пользоваться методами помощника как своими собственными.
  * Типичный помощник: helpers/html.php
  * Помощник сам может использовать методы вызвавшего его представления через магию __get()
+ *
+ * возвращает список методов хелпера, который вызывающий класс прицепляет к своему списку методов остальных хелперов
  */
-	public static function registerHelper($helper_class_name, $owner)//class
+	public static function registerHelper(string $helper_class_name, $owner): array
 	{//if register more than one helper with the same method - method of the last helper will be called. I guess. :)
 		$name = '\\Helpers\\'.$helper_class_name;
 		//da("making new Helper class {$name}");

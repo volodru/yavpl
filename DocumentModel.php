@@ -107,9 +107,9 @@ where id = 60
 
 class DocumentModel extends SimpleDictionaryModel
 {
-	protected $document_type_id;//а оно вообще надо тут? пока еще не было больше одного типа документов в одной схеме.
+	protected int $document_type_id;//а оно вообще надо тут? пока еще не было больше одного типа документов в одной схеме.
 
-	public function __construct($scheme, $document_type_id = 0)
+	public function __construct(string $scheme, int $document_type_id = 0)
 	{
 		parent::__construct($scheme.'.documents', 'id', [
 			'document_type_id',
@@ -124,7 +124,7 @@ class DocumentModel extends SimpleDictionaryModel
 
 /** перекрыть, если используется своя модель для полей
  */
-	public function initFieldsModel($scheme, $document_type_id):void
+	public function initFieldsModel(string $scheme, int $document_type_id):void
 	{
 		//в перекрытом методе вызываем свою модель
 		$this->fields_model = new Document_fieldsModel($scheme, $document_type_id);
@@ -134,7 +134,7 @@ class DocumentModel extends SimpleDictionaryModel
 
 /** перекрыть, если используется своя модель для значений полей
  */
-	public function initValuesDictsModel($scheme, $document_type_id):void
+	public function initValuesDictsModel(string $scheme, int $document_type_id):void
 	{
 		//в перекрытом методе вызываем свою модель
 		$this->values_dicts_model = new Document_values_dictsModel($scheme, $document_type_id);
@@ -290,7 +290,7 @@ CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.d
  * если перекрываем метод getRow и не вызываем предка, то значения заполнять именно этой функцией.
  * @param $document_id int ID документа
  */
-	public function getFieldsValues($document_id): array
+	public function getFieldsValues(int $document_id): array
 	{
 		return $this->db->exec("
 SELECT f.*, v.*, f.id AS field_id
@@ -304,7 +304,7 @@ ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
  * например в calcAutomatedFields()
  * @param $document_id int ID документа
  */
-	public function getFieldValue($document_id, $field_id)
+	public function getFieldValue(int $document_id, int $field_id)
 	{
 		return $this->db->exec("
 SELECT f.*, v.*, f.id AS field_id
@@ -314,7 +314,7 @@ WHERE document_id = $1 AND f.id = $2
 ", $document_id, $field_id)->fetchRow();
 	}
 
-	private function getList_action($action): string
+	private function getList_action(string $action): string
 	{//ну не люблю я конструкцию CASE во всех языках :)
 		if ($action == 'more') {return '>';}
 		if ($action == 'less') {return '<';}
@@ -469,7 +469,7 @@ WHERE document_id = $1 AND f.id = $2
 		3	=> $this->claims->documents->generateFieldValue(3, date('d-m-Y')),
 	];
  */
-	public function generateFieldValue($field_id, $value)
+	public function generateFieldValue(int $field_id, $value)
 	{
 		$result = ['id' => $field_id];
 		$field_info = $this->fields_model->getRow($field_id);
@@ -491,7 +491,7 @@ WHERE document_id = $1 AND f.id = $2
 - если все хорошо, то удаляем поле и вставляем его заново с новым значением
 - триггер, обновляющий value в {DOCUMENTS}_fields_values работает только на вставку!
 */
-	public function saveFieldValue($document_id = 0, $field_id = 0, $value = null)
+	public function saveFieldValue(int $document_id = 0, int $field_id = 0, $value = null)
 	{
 		if ($document_id == 0){die('DocumentModel.saveFieldsValue: $document_id == 0');}	// - absolutely
 		if ($field_id == 0){die('DocumentModel.saveFieldsValue: $field_id == 0');}			// - barbaric!
