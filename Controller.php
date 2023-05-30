@@ -426,15 +426,35 @@ class Controller
  */
 	private function checkParamType(string $type, $value, $default_value)
 	{
-		if (in_array($type, ['integer', 'float', 'double']))
+		if (in_array($type, ['integer', 'int', 'bigint', 'int64', 'float', 'double']))
 		{//все числа, особенно из экселя, могут содержать форматирующие пробелы/переносы/неразрывные пробелы
 			$value = preg_replace("/[\s\xC2\xA0]/", '', $value);
 		}
-		if ($type == 'integer')
+		if (in_array($type, ['integer', 'int', 'bigint', 'int64']))
 		{
-			return preg_match("/^\s*(\+|\-)?\d+\s*$/", $value) ? $value : $default_value;
+			$value = preg_match("/^\s*(\+|\-)?\d+\s*$/", $value) ? $value : $default_value;
+			if (in_array($type, ['integer', 'int']))
+			{
+				if (abs($value) > 2147483647)//целое для Постгреса! в PHP 64 бита
+				{
+					die("{$value} - слишком большое значение для целого типа 32 длиной бит.
+Если Вы попали сюда по внутренней ссылке - сообщите об этом администратору проекта.
+Если Вы самостоятельно набрали этот URL, то больше так не делайте.");
+				}
+			}
+			if (in_array($type, ['bigint', 'int64']))
+			{
+				if (abs($value) > 9223372036854775806)//целое 64 бит (bigint, bigserial) для Постгреса
+				{
+					die("{$value} - слишком большое значение для целого типа 64 длиной бит.
+Если Вы попали сюда по внутренней ссылке - сообщите об этом администратору проекта.
+Если Вы самостоятельно набрали этот URL, то больше так не делайте.");
+				}
+			}
+			return $value;
 		}
-		elseif ($type == 'float' || $type == 'double')
+		//elseif ($type == 'float' || $type == 'double')
+		elseif (in_array($type,['float', 'double']))
 		{//а плавающая точка где-то может быть запятой. тут захардкоден американский формат чисел!
 			$value = preg_replace("/\,/", '.', $value);
 			$value = preg_replace("/[^\d\.]/", '', $value);
@@ -452,7 +472,7 @@ class Controller
 		}
 		else
 		{//значит накосячили при вызове getParam
-			die("Unrecognized type cast [{$type}]");
+			die("Неизвестный тип данных [{$type}]");
 		}
 	}
 
@@ -467,13 +487,14 @@ class Controller
 			{
 				$default_value = '';
 			}
-			elseif ($type == 'integer' || $type == 'float' || $type == 'double')
+			//elseif ($type == 'integer' || $type == 'float' || $type == 'double')
+			elseif (in_array($type, ['integer', 'int', 'bigint', 'int64', 'float', 'double']))
 			{
 				$default_value = 0;
 			}
 			else
 			{//значит накосячили при вызове getParam
-				die("Unrecognized type cast \"{$type}\"");
+				die("Неизвестный тип данных [{$type}] на этапе проверки значения по-умолчанию");
 			}
 		}
 		return $default_value;
@@ -504,7 +525,7 @@ class Controller
 		//проверяем дефолтное значение в любом случае, а не только, если до него дошла очередь
 		if (is_array($valid_values) && !in_array($default_value, $valid_values))
 		{//значит накосячили при вызове getParam
-			die("Default value [{$default_value}] is invalid");
+			die("Значение по-умолчанию [{$default_value}] не входит в список разрешенных значений.");
 		}
 
 /*
