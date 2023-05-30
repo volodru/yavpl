@@ -72,6 +72,9 @@ class DbTable extends \YAVPL\Model
  * - после сохранения строки (saveRow) с ключом 0 в этой переменной будет новый id записи*/
 	public int $key_value;
 
+/** Кеш описания сущности */
+	private $EntityTypeInfo;
+
 /** Берем таблицу, ключ и поля
  * @param $table_name string таблица
  * @param $key_field string ключевое поле (как правило "id")
@@ -408,5 +411,28 @@ ORDER BY {$params['order']}
 			return "Что-то не так: affected rows = {$this->affected_rows}";
 		}
 		return '';//все хорошо, а ошибки уходят по early return
+	}
+
+
+/** Поддержка хранилища сущностей в проекте. Отдает описание сущности.
+ */
+	public function getEntityTypeInfo($can_return_cache = true)
+	{
+		if (isset($this->EntityTypeInfo) && $can_return_cache)
+		{
+			return $this->EntityTypeInfo;
+		}
+		else
+		{
+			global $application;
+			return $this->EntityTypeInfo = $application->getEntityTypesInstance()->byTable($this->table_name) ??
+				sendBugReport('getEntityTypeInfo', "Не найден тип сущности по таблице {$this->table_name}", true);
+		}
+	}
+/** Поддержка хранилища сущностей в проекте. Отдает ID  сущности.
+ */
+	public function getEntityTypeId()
+	{
+		return $this->getEntityTypeInfo()['id'];
 	}
 }
