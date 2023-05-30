@@ -83,8 +83,7 @@ class SimpleDictionaryModel extends \YAVPL\Model
 	public array $fields = [];
 /** Последний добавленный ключ
  * - после сохранения строки с ключом 0 в этой переменной будет новый id записи*/
-	public int $key_field_value;
-
+	public int $key_field_value;//OBSOLETE
 	//ВРЕМЕННО!!
 	public int $key_value;//для совместимости контроллеров с DbTable
 
