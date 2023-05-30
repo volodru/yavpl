@@ -85,6 +85,9 @@ class SimpleDictionaryModel extends \YAVPL\Model
  * - после сохранения строки с ключом 0 в этой переменной будет новый id записи*/
 	public int $key_field_value;
 
+	//ВРЕМЕННО!!
+	public int $key_value;//для совместимости контроллеров с DbTable
+
 /** Берем таблицу, ключ и поля
  * @param $table_name string таблица
  * @param $key_field string ключевое поле (как правило "id")
@@ -326,6 +329,7 @@ ORDER BY
 		}
 		$this->affected_rows = $ar;
 		$this->key_field_value = $data[$this->key_field];//new value will be here, in case of "insert"
+		$this->key_value = $this->key_field_value;//для совместимости с DbTable
 		//проверки вставилось/обновилось делаем по $this->affected_rows
 		if ($this->affected_rows == 1)
 		{

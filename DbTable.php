@@ -73,7 +73,7 @@ class DbTable extends \YAVPL\Model
 	public int $key_value;
 
 /** Кеш описания сущности */
-	private $EntityTypeInfo;
+	private $__entityTypeInfo;
 
 /** Берем таблицу, ключ и поля
  * @param $table_name string таблица
@@ -418,14 +418,14 @@ ORDER BY {$params['order']}
  */
 	public function getEntityTypeInfo($can_return_cache = true)
 	{
-		if (isset($this->EntityTypeInfo) && $can_return_cache)
+		if (isset($this->__entityTypeInfo) && $can_return_cache)
 		{
-			return $this->EntityTypeInfo;
+			return $this->__entityTypeInfo;
 		}
 		else
 		{
 			global $application;
-			return $this->EntityTypeInfo = $application->getEntityTypesInstance()->byTable($this->table_name) ??
+			return $this->__entityTypeInfo = $application->getEntityTypesInstance()->byTable($this->table_name) ??
 				sendBugReport('getEntityTypeInfo', "Не найден тип сущности по таблице {$this->table_name}", true);
 		}
 	}
