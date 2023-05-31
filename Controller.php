@@ -451,7 +451,7 @@ class Controller
 Если Вы самостоятельно набрали этот URL, то больше так не делайте.");
 				}
 			}
-			return $value;
+			return intval($value);
 		}
 		//elseif ($type == 'float' || $type == 'double')
 		elseif (in_array($type,['float', 'double']))
@@ -624,8 +624,8 @@ class Controller
 		{
 			return $this->$name;
 		}
-
-		sendBugReport("CONTROLLER: variable {$name} is undefined", $name);
+		//!это всегда ошибка. у контроллера не должно быть необъявленных переменных.
+		sendBugReport("CONTROLLER _get(): variable [{$name}] is undefined", $name);
 		return null;
 	}
 

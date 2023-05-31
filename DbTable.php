@@ -255,12 +255,11 @@ ORDER BY {$params['order']}
 		}
 		$this->affected_rows = $ar;
 		$this->key_value = $data[$this->key_field];//new value will be here, in case of "insert"
+
 		//проверки вставилось/обновилось делаем по $this->affected_rows
 		if ($this->affected_rows == 1)
 		{
 			$message = $this->afterSaveRow($action, $data, $old_data);
-			// наследники могут вернуть NULL, а мы, как старшие, не можем.
-			// у нас ответственность перед контроллером, который проверяет только на пустую строку.
 			if (!empty($message))
 			{
 				return $message;
