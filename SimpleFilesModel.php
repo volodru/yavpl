@@ -123,13 +123,13 @@ class SimpleFilesModel extends SimpleDictionaryModel
 
 		$i_file['error'] ??= 0;//для загрузки через файловую систему
 
-		$key_value = $data[$this->key_field];
-		if ($key_value == 0)
+		$this->key_value = $data[$this->key_field];
+		if ($this->key_value == 0)
 		{
 			$is_new_file = true;
 			$data[$this->key_field] = //для сохранения предком
 				$this->key_field_value = //для контроллеров
-				$key_value = //шорткат для остального кода
+				$this->key_value = //шорткат для остального кода
 					$this->db->nextVal($this->getSeqName());
 		}
 		else
@@ -138,7 +138,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 		}
 
 		$action = ($is_new_file) ? 'insert' : 'update';
-		$old_data = $this->getRow($key_value);
+		$old_data = $this->getRow($this->key_value);
 
 		$message = $this->beforeSaveRow($action, $data, $old_data);
 		if (isset($message) && ($message != ''))
@@ -149,7 +149,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 
 		//da($data);
 
-		$f = $this->getFilePath($key_value, $data);//file name in host OS
+		$f = $this->getFilePath($this->key_value, $data);//file name in host OS
 
 		$data['file_name'] = $i_file['name'];
 		$matches = [];
