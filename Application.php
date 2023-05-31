@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace YAVPL;
 /**
  * @NAME: Application
@@ -457,7 +458,7 @@ Why:
 				'Db', 'DbPg', 'DbPgSingleton', 'DbMy', 'DbTable',//СУБД
 				'Mail',//Почта
 				'Model', 'SimpleDictionaryModel', 'SimpleFilesModel', 'BasicUserModel', 'DocumentModel',//модельки
-				'Controller', 'View', 'Helper', //ядро фреймворка
+				'Controller', 'ControllerAPI', 'View', 'Helper', //ядро фреймворка
 				'ToolBar', //тулбар - библиотека
 				'Test',//DEPRECATED
 			]))
