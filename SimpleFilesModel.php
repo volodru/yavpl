@@ -32,10 +32,10 @@ namespace YAVPL;
  * и интерпретируются этим классом как свои.
  *
  */
-class SimpleFilesModel extends SimpleDictionaryModel
+class SimpleFilesModel extends DbTable
 {
-	public function __construct($table_name, $key_field, $fields, $storage_path,
-		$allowed_extensions = [], $max_file_size = 0)
+	public function __construct(string $table_name, string $key_field, array $fields, string $storage_path,
+		array $allowed_extensions = [], int $max_file_size = 0)
 	{
 		foreach (['file_name', 'file_ext', 'file_size'] as $f)
 		{
@@ -57,7 +57,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
  * если оно надо и не было передано, то кому-то придется делать getRow($key_value).
  * по-умолчанию оно в общем-то и не надо.
  */
-	public function getStoragePath($key_value, $data = false)
+	public function getStoragePath(int $key_value, array $data = []): string
 	{//перекрыть этот метод, если надо иметь путь к файлу исходя из каких-то данных в $data - когда путь формируется со всякими суффиксами-префиксами
 		return $this->storage_path;
 	}
@@ -66,14 +66,14 @@ class SimpleFilesModel extends SimpleDictionaryModel
  * если надо сложное хранилище - перекрыть и делать там что угодно.
  *
  */
-	public function getFilePath($key_value, $data = false)
+	public function getFilePath(int $key_value, array $data = []): string
 	{
 		return $this->getStoragePath($key_value, $data).'/'.$key_value;
 	}
 
 /** просто шорткат, в общем-то
  */
-	public function getFileSize($key_value)
+	public function getFileSize(int $key_value): int
 	{
 		return filesize($this->getFilePath($key_value));
 	}
@@ -81,7 +81,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 /** когда удаляем файл с инфой из базы, то СНАЧАЛА удаляем его с диска.
  * из базы оно точно удалится, а вот накосячив с правами к папкам, можно файл и не удалить
  */
-	public function beforeDeleteRow($key_value)
+	public function beforeDeleteRow(int $key_value): string
 	{
 		$f = $this->getFilePath($key_value);
 
@@ -99,7 +99,7 @@ class SimpleFilesModel extends SimpleDictionaryModel
 	}
 /** для сложных наследников, у которых список расширений хранится в СУБД - перекрыть и отдавать из базы
  */
-	public function getAllowedExtensions($data = [])
+	public function getAllowedExtensions(array $data = [])
 	{//наследники могут перекрыть это. например в MPFL
 		return $this->allowed_extensions;
 	}
@@ -117,9 +117,9 @@ class SimpleFilesModel extends SimpleDictionaryModel
 * Возвращает true|false, а для подробностей смотреть $this->log,
 * т.к. там может быть набор ошибок, которые надо исправлять оптом.
 */
-	public function saveFile(&$data, $i_file)
+	public function saveFile(array &$data, array $i_file): string
 	{
-		$this->log = [];//очищаем лог загрузки именно этого файла (важно для нескольких последовательных вызовов)
+		//$this->log = [];//очищаем лог загрузки именно этого файла (важно для нескольких последовательных вызовов)
 
 		$i_file['error'] ??= 0;//для загрузки через файловую систему
 
@@ -141,10 +141,10 @@ class SimpleFilesModel extends SimpleDictionaryModel
 		$old_data = $this->getRow($this->key_value);
 
 		$message = $this->beforeSaveRow($action, $data, $old_data);
-		if (isset($message) && ($message != ''))
+		if ($message != '')
 		{
-			$this->log[] = $message;
-			return false;
+			//$this->log[] = $message;
+			return $message;
 		}
 
 		//da($data);
@@ -159,69 +159,54 @@ class SimpleFilesModel extends SimpleDictionaryModel
 			$allowed_extensions = $this->getAllowedExtensions($data);//если там запрос к СУБД - не вызываем его 2 раза
 			if (!in_array($data['file_ext'], $allowed_extensions))
 			{
-				$this->log[] = "Расширение файла {$data['file_ext']} не входит в список разрешенных: [".join(', ', $allowed_extensions)."]";
+				return "Расширение файла {$data['file_ext']} не входит в список разрешенных: [".join(', ', $allowed_extensions)."]";
 			}
 		}
 		else
 		{
-			$this->log[] = "Не удалось распознать расширение файла";
-		}
-		//нашли ошибку тут - дальше не идём.
-		if (count($this->log) > 0)
-		{
-			return false;//stage check point
+			return "Не удалось распознать расширение файла";
 		}
 
 		if ($i_file['error'] == UPLOAD_ERR_INI_SIZE)//1
 		{//хотя оно просто валится и надо читать логи апача
-			$this->log[] = "Размер файла превышает параметр upload_max_filesize в php.ini. Обратитесь к администратору или используйте файл меньшего размера.";
+			return "Размер файла превышает параметр upload_max_filesize в php.ini. Обратитесь к администратору или используйте файл меньшего размера.";
 		}
 		elseif ($i_file['error'] == UPLOAD_ERR_FORM_SIZE)//2
 		{
-			$this->log[] = "Размер загружаемого файла превысил значение MAX_FILE_SIZE, указанное в HTML-форме. Обратитесь к администратору или используйте файл меньшего размера.";
+			return "Размер загружаемого файла превысил значение MAX_FILE_SIZE, указанное в HTML-форме. Обратитесь к администратору или используйте файл меньшего размера.";
 		}
 		elseif ($i_file['error'] == UPLOAD_ERR_PARTIAL)//3
 		{
-			$this->log[] = "Загружаемый файл был получен только частично. Обратитесь к администратору или загрузите файл еще раз.";
+			return "Загружаемый файл был получен только частично. Обратитесь к администратору или загрузите файл еще раз.";
 		}
 		elseif ($i_file['error'] == UPLOAD_ERR_NO_FILE)//4
 		{
-			$this->log[] = "Ошибка: может быть Вы не ввели имя файла?";
+			return "Ошибка: может быть Вы не ввели имя файла?";
 		}
 		elseif ($i_file['error'] == UPLOAD_ERR_NO_TMP_DIR)//6
 		{
-			$this->log[] = "Отсутствует временная папка. Обратитесь к администратору.";
+			return "Отсутствует временная папка. Обратитесь к администратору.";
 		}
 		elseif ($i_file['error'] == UPLOAD_ERR_CANT_WRITE)//7
 		{
-			$this->log[] = "Не удалось записать файл на диск. Обратитесь к администратору.";
+			return "Не удалось записать файл на диск. Обратитесь к администратору.";
 		}
 		elseif ($i_file['error'] == UPLOAD_ERR_EXTENSION)//8
 		{
-			$this->log[] = "PHP-расширение остановило загрузку файла. PHP не предоставляет способа определить, какое расширение остановило загрузку файла. Обратитесь к администратору.";
+			return "PHP-расширение остановило загрузку файла. PHP не предоставляет способа определить, какое расширение остановило загрузку файла. Обратитесь к администратору.";
 		}
 		elseif ($i_file['error'] > 0)
 		{
-			$this->log[] = "Неопределенная ошибка номер [{$i_file['error']}]";
+			return "Неопределенная ошибка номер [{$i_file['error']}]";
 		}
 		elseif (($this->max_file_size > 0) && ($i_file['size'] > $this->max_file_size))
 		{//наша локальная проверка - max_file_size должно быть меньше, чем в INI файле.
-			$this->log[] = "Размер файла должен быть менее {$this->max_file_size} байт";
-		}
-
-		if (count($this->log) > 0)//есть ошибки - дальше не идем
-		{
-			return false;//stage check point
+			return "Размер файла должен быть менее {$this->max_file_size} байт";
 		}
 
 		if (file_exists($f) && !unlink($f))
 		{
-			$this->log[] = "Невозможно удалить старый файл [{$f}]";
-		}
-
-		if (count($this->log) > 0)//есть ошибки - дальше не идем
-		{
-			return false;//stage check point
+			return "Невозможно удалить старый файл [{$f}]";
 		}
 
 		//локальный файл ВСЕГДА передавать через /tmp/ - ему делается MOVE
@@ -229,13 +214,13 @@ class SimpleFilesModel extends SimpleDictionaryModel
 		{//local source
 			if (!file_exists($i_file['src_file_path']))
 			{
-				$this->log[] = "Исходный файл [{$i_file['src_file_path']}] не найден.";
+				return "Исходный файл [{$i_file['src_file_path']}] не найден.";
 			}
 			else
 			{
 				if (!rename($i_file['src_file_path'], $f))
 				{
-					$this->log[] = "Не удалось переименовать файл [{$i_file['src_file_path']}] в [{$f}].";
+					return "Не удалось переименовать файл [{$i_file['src_file_path']}] в [{$f}].";
 				}
 				//else  - все хорошо
 			}
@@ -244,22 +229,13 @@ class SimpleFilesModel extends SimpleDictionaryModel
 		{//CGI
 			if (!move_uploaded_file($i_file['tmp_name'], $f))
 			{
-				$this->log[] = "Невозможно создать файл ({$i_file['tmp_name']} -> {$f})!";
+				return "Невозможно создать файл ({$i_file['tmp_name']} -> {$f})!";
 			}
 			//else  - все хорошо
 		}
 		if (!file_exists($f))
 		{
-			$this->log[] = "Файл не создался! [{$f}])!";
-		}
-		elseif (filesize($f) == 0)
-		{
-			$this->log[] = "Файл нулевой длины! [{$f}])!";
-		}
-
-		if (count($this->log) > 0)//есть ошибки - дальше не идём
-		{
-			return false;//stage check point
+			return "Целевой файл не создался! [{$f}])!";
 		}
 
 		$data['file_size'] = filesize($f);
@@ -276,17 +252,16 @@ class SimpleFilesModel extends SimpleDictionaryModel
 			$message = $this->afterSaveRow($action, $data, $old_data);
 			if (isset($message) && ($message != ''))
 			{
-				$this->log[] = $message;
-				return false;
+				return $message;
 			}
 			else
 			{
-				return true;//все хорошо
+				return '';//все хорошо
 			}
 		}
 		else
 		{
-			return false;
+			return "Ошибка при сохранении в базу - вместо одной обновлено записей ".$this->affected_rows;
 		}
 	}
 
@@ -306,46 +281,41 @@ class SimpleFilesModel extends SimpleDictionaryModel
 <input type='submit' name='ok' value='Загрузить' />
 
  */
-	public function saveFiles(&$data, $i_files)
+	public function saveFiles(array &$data, array $i_files): bool
 	{
-		//каждая сохранялка отдельного файла ($this->saveFile(&$data, $i_file)) чистит лог. поэтому тут набираем общий лог и его уже отдаем
-		$this->log = $this->log ?? [];
-		$overall_log = [];
+		$this->log = [];
 
-		$result = true;
 		//da($i_files['name']);
 		if (count($i_files['name']) == 0)
 		{
-			return $result;//все хорошо, если файлов вообще не выбрали
+			return true;//все хорошо, если файлов вообще не выбрали
 		}
 		$data['ids'] = [];
 		$i = -1;
+		$result = true;
 		foreach ($i_files['name'] as $file_name)
 		{
 			$i++;
 			if ($file_name == '') {continue;}
-			#$overall_log[] = "Обрабатываем файл: $file_name";
 			$file_info = [];
 			foreach (['name', 'type', 'error', 'size', 'tmp_name'] as $f)
 			{
 				$file_info[$f] = $i_files[$f][$i];
 			}
 			$data['id'] = 0;
-			if ($this->saveFile($data, $file_info))
+			$msg = $this->saveFile($data, $file_info);//она дополняет массив $data
+			if ($msg == '')
 			{
 				$data['files_list'][$data['id']] = $data;
-				$overall_log[] = "Файл {$file_name} успешно загружен.";
+				$this->log[] = "Файл {$file_name} успешно загружен.";
 			}
 			else
 			{
+				$this->log[] = "При загрузке файла {$file_name} произошла ошибка:";
+				$this->log[] = $msg;
 				$result = false;
-				$overall_log[] = "При загрузке файла {$file_name} произошла ошибка:";
-				$overall_log = array_merge($overall_log, $this->log);
 			}
 		}
-
-		//da($overall_log);
-		$this->log = $overall_log;
 		return $result;
 	}
 }
