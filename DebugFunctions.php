@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * @NAME: Debug function
  * @AUTHOR: Vladimir Nikiforov aka Volod (volod@volod.ru)

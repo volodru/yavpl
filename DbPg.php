@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace YAVPL;
 
 /**
@@ -23,10 +24,11 @@ namespace YAVPL;
 
 class DbPg extends Db implements iDb
 {
-	public $pg_dbh = 0;
+	public $pg_dbh;
 
-	/** Подключаемся к базе через установленные в конструкторе параметры соединения
-	 */
+/** Подключаемся к базе через установленные в конструкторе параметры соединения
+ * @return void
+ */
 	public function connect():void
 	{
 		$connect_string = "host={$this->host_params['host']} port={$this->host_params['port']} user={$this->host_params['user']} password={$this->host_params['passwd']} dbname={$this->host_params['dbname']} connect_timeout=5";
@@ -37,11 +39,12 @@ class DbPg extends Db implements iDb
 		{
 			@pg_query($this->pg_dbh, $this->host_params['exec_after_connect']);
 		}
-		//da(pg_get_pid ($this->pg_dbh));
-		//da(__getBackTrace());
+		//da(pg_get_pid ($this->pg_dbh));da(__getBackTrace());
 		$this->is_connected = true;
 	}
+
 /** Отключаемся от базы
+ * @return void
  */
 	public function disconnect():void
 	{
@@ -58,6 +61,7 @@ class DbPg extends Db implements iDb
  * второй и далее - параметры для подстановки в запрос по числу плейсхолдеров
  *
  * первый параметр - обязателен
+ * @return Db
  */
 	public function exec():Db
 	{
@@ -172,10 +176,15 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 			$this->connect();
 		}
 		list($i) = pg_fetch_array(pg_query($this->pg_dbh, "SELECT nextval('{$sequence_name}')"), 0, PGSQL_NUM);
-		return $i;
+		return intval($i);
 	}
 
-/** Все результаты в таблицу, массив структур
+/** Все результаты в таблицу, массив структур.
+ * Если передать индексы, то будет сделан ассоциативный массив
+ * Индексы передавать через запятую, например fetchAll('brand_id,article')
+ *
+ * @var string $hash_index - индекс для ассоциативного массива (поля через запятую), либо '' для линейного массива
+ * @return array результирующий массив структур - линейный или ассоциативный.
  *
  */
 	public function fetchAll(string $hash_index = ''): array
@@ -285,10 +294,18 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 	}
 
 /**
- * Массовая загружелка через команду COPY
+ * Массовая загружалка через команду COPY.
+ * Можно либо собрать всё в память и выгрузить одной командой COPY
+ * + работает если сервера разные или даже с доступом по интернету
+ * - двукратный расход памяти под буфер
+ * Либо сразу писать COPY на каждую строку входных данных
+ * - на удаленном сервере будет тормозить
+ * - нет перерасхода памяти.
+ *
  * @param $table_name string таблица со схемой,
  * @param $fields_list array массив полей,
  * @param $data array массив массивов.
+ *
  * осмысленные проверки надо делать на стороне вызывающей стороны!
  * тут заменяются \t на \T в строках и null элементы на \N
  */
@@ -296,7 +313,7 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 	{
 		if ((count($fields_list) == 0) ||
 			(count($data) == 0) ||
-		 	(trim($table_name) == ''))
+			(trim($table_name) == ''))
 		{
 			return;
 		}

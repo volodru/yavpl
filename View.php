@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace YAVPL;
 
 /**
@@ -35,9 +36,11 @@ namespace YAVPL;
 
 class View
 {
-	public $controller;
+/** Ссылка на класс-контроллер. Устанавливаеся после отработки конструктора.
+ */
+	public Controller $controller;
 
-	private $__header_tags = [
+	private array $__header_tags = [
 "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />",
 "<meta http-equiv='Content-Language' content='ru' />",
 "<meta name='MS.LOCALE' content='RU' />",
@@ -45,19 +48,22 @@ class View
 "<link rel='shortcut icon' href='/favicon.ico' type='image/x-icon' />",
 	];
 
-	private $__doctype_declaration = "<!DOCTYPE html>";
-	private $__html_tag_attributes = "xmlns='http://www.w3.org/1999/xhtml' xml:lang='ru' lang='ru' dir='ltr'";
+	private string $__doctype_declaration = "<!DOCTYPE html>";
+	private string $__html_tag_attributes = "xmlns='http://www.w3.org/1999/xhtml' xml:lang='ru' lang='ru' dir='ltr'";
 
-	private $__methods = [];
-	private $breadcrumbs = [];
+	private array $__methods = [];
+	private array $breadcrumbs = [];
 
+/**
+ *  Берем контроллер из глобальной пременной $application, т.к. в наследниках нужна магия _get и данные контроллера сразу в конструкторе
+ */
 	public function __construct()
 	{
+		/* получаем контроллер именно тут т.е. в конструкторе через глобальную переменную,
+		 * т.к. в конструкторах контроллеров вьшек иногда надо уже знать переменные из контроллера и __get должен работать.
+		 * например, в JS коде, где надо упоминать переменные из контроллера*/
 		global $application;
-		if (isset($application) && isset($application->controller))
-		{
-			$this->controller = $application->controller;
-		}
+		$this->controller = $application->controller;
 	}
 
 /**
@@ -65,7 +71,7 @@ class View
  * После регистрации помощника, все его методы доступны в представлении как свои собственные.
  * Используется магия __call()
  */
-	public function __call($method_name, $args)
+	public function __call(string $method_name, array $args)//: mixed
 	{
 		if (isset($this->__methods[$method_name]))
 		{
@@ -106,11 +112,11 @@ class View
 /**
  * Если нет поля, то берем его из своего контроллера
  */
-	public function __get($name)
+	public function __get(string $name)
 	{
 		if (!isset($this->controller))
 		{
-			die("View::__get -> Controller was not initialized.");
+			sendBugReport("View::__get -> Controller was not initialized.", '', true);
 		}
 		if (isset($this->controller->$name))
 		{
@@ -125,8 +131,12 @@ class View
 /**
  * Если нет поля, то берем его из своего контроллера
  */
-	public function __isset($name)
+	public function __isset(string $name)
 	{
+		if (!isset($this->controller))
+		{
+			sendBugReport("View::__isset -> Controller was not initialized.", '', true);
+		}
 		return isset($this->controller->$name);
 	}
 

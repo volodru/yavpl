@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace YAVPL;
 /**
  * @NAME: Mail
@@ -115,7 +116,7 @@ class Mail
 			($from_name != '') ? $from_name : 'Administrator');
 		$this->setSubj($subj);
 		$this->setContent($content);
-		$this->uid = strtoupper(md5(uniqid(time())));
+		$this->uid = strtoupper(md5(uniqid('time'.time())));//uniqid требует строку
 		$this->setOrganization((defined('ORGANIZATION_FIELD_FOR_EMAILS')) ? ORGANIZATION_FIELD_FOR_EMAILS : $_SERVER['SERVER_NAME']);
 		$this->setCharset(CHARSET_FOR_EMAILS);
 	}

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 namespace YAVPL;
 
 /**
@@ -100,16 +101,6 @@ class Model
 		$this->db->exec("SELECT set_var('description', '{$description}')");
 	}
 
-	/*
-	protected function connectToMainDB()
-	{
-
-		global $application;
-		return $this->db = $application->getMainDBConnector();
-
-		//return null; //override
-	}*/
-
 /** Поле __sub_models - READ ONLY
  */
 	public function getSubModelList(): array
@@ -173,7 +164,7 @@ class Model
  * После регистрации помощника, все его методы доступны в представлении как свои собственные.
  * Используется магия __call()
  */
-	public function __call($method_name, $args)//: mixed
+	public function __call(string $method_name, array $args)//: mixed
 	{
 		if (isset($this->__methods[$method_name]))
 		{
@@ -188,28 +179,38 @@ class Model
 		}
 	}
 
-	public function registerHelper($helper_class_name): Model
+/** Регистрируем помощник.
+ * см. Helper::registerHelper
+ * @var string $helper_class_name - название класса-хелпера
+ * @return Model
+ */
+	public function registerHelper(string $helper_class_name): Model
 	{
 		$this->__methods = array_merge($this->__methods, Helper::registerHelper($helper_class_name, $this));
 		return $this;
 	}
 
-	public function getLog($delimeter = CRLF): string
+/** Вовращает лог в виде строки через разделитель
+ * @var string $delimeter
+ * @return string
+ */
+	public function getLog(string $delimeter = CRLF): string
 	{
 		return join($delimeter, $this->log);
 	}
 
 /** Возвращает лог в виде массива строк
  * шаблон паблик Морозов :(
+ * @return array
  */
 	public function getRawLog(): array
 	{
 		return $this->log;
 	}
 
-/** Очищает лог до []
+/** Очищает накопленный лог до []
+ * @return void
  */
-
 	public function clearLog(): void
 	{
 		$this->log = [];
