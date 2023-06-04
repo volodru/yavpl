@@ -459,7 +459,8 @@ Why:
 			if (in_array($file_name, [
 				'Db', 'DbPg', 'DbPgSingleton', 'DbMy', 'DbTable',//СУБД
 				'Mail',//Почта
-				'Model', 'SimpleDictionaryModel', 'SimpleFilesModel', 'BasicUserModel', 'DocumentModel',//модельки
+				'SimpleDictionaryModel', //DEPRECATED
+				'Model', 'SimpleFilesModel', 'BasicUserModel', 'DocumentModel',//модельки
 				'Controller', 'ControllerAPI', 'View', 'Helper', //ядро фреймворка
 				'ToolBar', //тулбар - библиотека
 				'Test',//DEPRECATED

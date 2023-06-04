@@ -55,7 +55,7 @@ if (!defined('COOKIE_DOMAIN'))
 	die($msg);
 }
 
-class BasicUserModel extends SimpleDictionaryModel
+class BasicUserModel extends DbTable
 {
 	// нужен для реализации шаблона Singleton
 	private static $current_instance;
