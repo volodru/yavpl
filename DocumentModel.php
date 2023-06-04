@@ -105,7 +105,7 @@ set
 where id = 60
 */
 
-class DocumentModel extends SimpleDictionaryModel
+class DocumentModel extends DbTable
 {
 	protected int $document_type_id;//а оно вообще надо тут? пока еще не было больше одного типа документов в одной схеме.
 
@@ -276,7 +276,7 @@ CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.d
 ";
 	}
 
-	public function getEmptyRow()
+	public function getEmptyRow(): array
 	{
 		return [
 			'id'				=> 0,
@@ -326,10 +326,10 @@ WHERE document_id = $1 AND f.id = $2
 /** фильтруемый список документов
  * 'without_fields' => true, - не грузить атрибуты. по умолчанию они грузятся. если надо быстро получить ID документов, то поля грузить не надо.
  */
-	public function getList($params = [])
+	public function getList(array $params = []): array
 	{
-		$params['from'] = $params['from'] ?? "{$this->table_name} AS d";
-		$params['where'] = $params['where'] ?? [];
+		$params['from'] ??= "FROM {$this->table_name} AS d";
+		$params['where'] ??= [];
 
 //эти поля будут прицеплены через
 //LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v ON (v.document_id = d.id AND v.field_id = FIELD_ID
@@ -445,10 +445,12 @@ WHERE document_id = $1 AND f.id = $2
 //в селектах/сортировке/фильтрах появляются таблицы v{$field_id}
 		foreach (array_unique($params['fields_to_join']) as $field_id)
 		{
-			$params['from'] .= "\nLEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id} ON (v{$field_id}.document_id = d.id AND v{$field_id}.field_id = {$field_id})";
+			$params['from'] .= "
+LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
+	ON (v{$field_id}.document_id = d.id AND v{$field_id}.field_id = {$field_id})";
 		}
 //по-умолчанию отдаем только атрибуты документа
-		$params['select'] = isset($params['select']) ? $params['select'] : "d.*";
+		$params['select'] ??= "SELECT d.*";
 
 		$list = parent::getList($params);
 		//$this->db->print_r();die();
@@ -575,11 +577,11 @@ WHERE document_id = $1 AND f.id = $2
 			$matches = [];
 			if (!preg_match("/(\d{1,2})[\.\-](\d{1,2})[\.\-](\d{4})/", $value, $matches))
 			{
-				return "{$field_info['title']} - [{$value}]: Ожидается формат даты ДД-ММ-ГГГГ";
+				return "Поле {$field_info['title']} имеет значение [{$value}]: Ожидается формат даты ДД-ММ-ГГГГ";
 			}
 			if (!checkdate($matches[2],$matches[1],$matches[3]))
 			{
-				return "{$field_info['title']} - [{$value}]: Неверная дата. Формат даты ДД-ММ-ГГГГ";
+				return "Поле {$field_info['title']} имеет значение [{$value}]: Неверная дата. Формат даты ДД-ММ-ГГГГ";
 			}
 			$value = $matches[1].'-'.$matches[2].'-'.$matches[3];
 			$hr_value = $matches[1].'-'.$matches[2].'-'.$matches[3];
@@ -608,17 +610,17 @@ WHERE document_id = $1 AND field_id = $2 AND {$db_field} = $3", $document_id, $f
 		return $result;
 	}
 
-	public function getRow($key_value)
+	public function getRow(int $key_value): ?array
 	{
 		$row = parent::getRow($key_value);
-		if ($row !== false)
+		if (!empty($row))
 		{
 			$row['fields'] = $this->getFieldsValues($row['id']);
 		}
 		return $row;
 	}
 
-	public function saveRow($data)
+	public function saveRow(array $data): string
 	{
 		$msg = "DocumentModel::saveRow() is disabled, Use DocumentModel::createRow() and DocumentModel::updateField() instead!";
 		sendBugReport($msg);
@@ -641,17 +643,22 @@ WHERE document_id = $1 AND field_id = $2 AND {$db_field} = $3", $document_id, $f
 		return ($ar == 1) ? '' : "Произошла ошибка при сохранении документа [#{$this->document_id}]: количество измененных записей = {$ar}";
 	}
 
-	/** В наследниках проходим по всем автоматизированным полям и вычисляем/сохраняем.
-	 * Ошибку в виде строки выводим при любом сохранении любого поля (первого попавшегося) - все должно работать без ошибок!
-	 * @param $document_id int ID документа
-	 */
-	public function calcAutomatedFields($document_id = 0): string
+/** В наследниках проходим по всем автоматизированным полям и вычисляем/сохраняем.
+ * Ошибку в виде строки выводим при любом сохранении любого поля (первого попавшегося) - все должно работать без ошибок!
+ * @param $document_id int ID документа
+ * @param $fields_ids - если задан, о проходим только по указанным автоматизированным полям. иначе по всем автоматизированным
+ * @return string сообщение об ошибке или пустая строка если все хорошо
+ */
+	public function calcAutomatedFields(int $document_id = 0, array $fields_ids = []): string
 	{
 		if ($document_id == 0){die('Lost $document_id in calcAutomatedFields($document_id = 0)');}
 
 		/* ШАБЛОН для наследников
 		foreach (array_keys($this->fields_model->getList(['automated' => 1])) as $field_id)
 		{
+			//если передан список полей для автообновления - используем строго его. иначе - по всем полям.
+			if (count($fields_ids) > 0 && !in_array($field_id, $fields_ids)){continue;}
+
 
 			if (in_array($field_id, [71]))
 			{//
@@ -680,7 +687,7 @@ WHERE document_id = $1 AND field_id = $2 AND {$db_field} = $3", $document_id, $f
 /**
  * Поля документа.
  */
-class Document_fieldsModel extends SimpleDictionaryModel
+class Document_fieldsModel extends DbTable
 {
 	/** Приватный локальный кеш данных
 	 */
@@ -723,7 +730,7 @@ class Document_fieldsModel extends SimpleDictionaryModel
 		'B'	=> 'int_value', // integer
 	];
 
-	public function __construct($scheme, $document_type_id = 0)
+	public function __construct(string $scheme, int $document_type_id = 0)
 	{
 		parent::__construct($scheme.'.documents_fields', 'id', [
 			'title', 'value_type', 'measure', 'sort_order', 'description', 'automated',
@@ -738,7 +745,7 @@ class Document_fieldsModel extends SimpleDictionaryModel
  * 	'id'	=> ID_значения
  * 	'value'	=> значение в виде текста
  */
-	public function getValues($field_info)
+	public function getValues(array $field_info): array
 	{
 		if ($field_info['value_type'] == 'K')
 		{
@@ -768,7 +775,7 @@ ORDER BY {$field_info['x_table_order']}")->fetchAll('id');
 
 /** Надо инициализировать запись для интерфейсов редактирования полей документов
  */
-	public function getEmptyRow()
+	public function getEmptyRow(): array
 	{
 		return [
 			'id'				=> 0,
@@ -784,7 +791,7 @@ ORDER BY {$field_info['x_table_order']}")->fetchAll('id');
 /** Надо для интерфейсов редактирования полей документов.
  * Релизовано кеширование с хранение в массиве этого же класса ($data_cash)
  */
-	public function getRow($key_value)
+	public function getRow(int $key_value): ?array
 	{
 		if ($key_value == 0)
 		{
@@ -805,7 +812,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		}
 	}
 
-	public function getList($params = [])
+	public function getList(array $params = []): array
 	{
 		if (!isset($params['order']) || $params['order'] == '')
 		{
@@ -832,6 +839,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		}
 
 		$list = parent::getList($params);
+
 //если надо для списков значений словарей делать нулевое/невыбранное значение - текст делаем тут
 		if (isset($params['add_default_value']))
 		{
@@ -859,7 +867,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
  * Для фильтров списков документом по юзеру, например. Чтобы не все юзеры, а только те, кто упоминался в авторах документов.
  * Работает, очевидно, долго и когда-нибудь работать перестанет :)
  */
-	public function getDistinctValues($key_value)
+	public function getDistinctValues(int $key_value): array
 	{
 		return array_keys($this->db->exec("SELECT DISTINCT(value) AS value FROM {$this->scheme}.documents_fields_values WHERE field_id = $1",
 			$key_value)->fetchAll('value'));
@@ -867,7 +875,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 
 /** Для интерфейсов редактирования полей документов
  */
-	public function saveRow($data)
+	public function saveRow(array $data): string
 	{
 		if (!isset($data['id']) || intval($data['id']) == 0)
 		{//запрет создания полей
@@ -903,7 +911,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 /** иногда триггеры работают неправильно или мы меняем тип поля на словарный.
  * тогда надо вызвать этот метод для глобального апдейта
  */
-	public function updateDictValues()
+	public function updateDictValues(): void
 	{
 		$this->db->exec("
 UPDATE {$this->scheme}.documents_fields_values
@@ -926,7 +934,7 @@ WHERE field_id = $1", $field_info['id']);
 
 /** Нельзя удалять поля с имеющимися значениями
  */
-	public function canDeleteRow($key_value)
+	public function canDeleteRow(int $key_value): string
 	{
 		if ($this->db->exec("
 SELECT f.id
@@ -943,9 +951,9 @@ WHERE v.field_id = {$key_value} LIMIT 1")->rows > 0)
 /** Словарики для простых словарных полей
  * ID значений уникальны в рамках схемы
  */
-class Document_values_dictsModel extends SimpleDictionaryModel
+class Document_values_dictsModel extends DbTable
 {
-	public function __construct($scheme)
+	public function __construct(string $scheme)
 	{
 		parent::__construct($scheme.'.documents_values_dicts', 'id', [
 			'field_id', 'value',
@@ -953,7 +961,7 @@ class Document_values_dictsModel extends SimpleDictionaryModel
 		$this->scheme = $scheme;
 	}
 
-	public function getList($params = [])
+	public function getList(array $params = []): array
 	{
 		if (!isset($params['order']) || $params['order'] == '')
 		{
@@ -970,7 +978,7 @@ class Document_values_dictsModel extends SimpleDictionaryModel
 		return parent::getList($params);
 	}
 
-	public function canDeleteRow($key_value)
+	public function canDeleteRow(int $key_value): string
 	{
 		if ($this->db->exec("
 SELECT f.id
@@ -983,7 +991,7 @@ WHERE f.value_type='K' AND v.int_value = {$key_value} LIMIT 1")->rows > 0)
 		return '';
 	}
 
-	public function getMetaData()
+	public function getMetaData(): array
 	{
 		return [
 			'pk'	=> $this->key_field,
