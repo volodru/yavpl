@@ -282,7 +282,7 @@ ORDER BY {$params['order']}
  * Штука редкая - пусть наследники этим занимаются.
  * @return string Сообщение об ошибке или пустую строку, если все хорошо
  */
-	public function checkFieldValue(string $action, string$field_name, array &$data): string
+	public function checkFieldValue(string $action, string $field_name, array &$data): string
 	{
 		return '';//override - не забыть вызвать родительский beforeSaveRow в beforeSaveRow!
 	}
@@ -422,7 +422,7 @@ ORDER BY {$params['order']}
 
 /** Поддержка хранилища сущностей в проекте. Отдает описание сущности.
  */
-	public function getEntityTypeInfo($can_return_cache = true)
+	public function getEntityTypeInfo(bool $can_return_cache = true): array
 	{
 		if (isset($this->__entityTypeInfo) && $can_return_cache)
 		{
@@ -437,7 +437,7 @@ ORDER BY {$params['order']}
 	}
 /** Поддержка хранилища сущностей в проекте. Отдает ID  сущности.
  */
-	public function getEntityTypeId()
+	public function getEntityTypeId(): int
 	{
 		return $this->getEntityTypeInfo()['id'];
 	}
