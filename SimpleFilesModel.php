@@ -120,12 +120,15 @@ class SimpleFilesModel extends DbTable
 
 		$i_file['error'] ??= 0;//для загрузки через файловую систему
 
-		$this->key_value = $data[$this->key_field];
+		$this->key_value = $data[$this->key_field] ?? 0;
+
+		$old_data = $this->getRow($this->key_value);
+
 		if ($this->key_value == 0)
 		{
+
 			$is_new_file = true;
 			$data[$this->key_field] = //для сохранения предком
-				$this->key_field_value = //для контроллеров
 				$this->key_value = //шорткат для остального кода
 					$this->db->nextVal($this->getSeqName());
 		}
@@ -135,7 +138,6 @@ class SimpleFilesModel extends DbTable
 		}
 
 		$action = ($is_new_file) ? 'insert' : 'update';
-		$old_data = $this->getRow($this->key_value);
 
 		$message = $this->beforeSaveRow($action, $data, $old_data);
 		if ($message != '')
