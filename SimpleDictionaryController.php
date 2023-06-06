@@ -72,7 +72,7 @@ trait SimpleDictionaryController
 		//da($new_info);
 
 		$this->message = $model_instance->saveRow($new_info);
-		$this->id = $model_instance->key_field_value;
+		$this->id = $model_instance->key_value;
 
 		if ($this->message == '')
 		{
