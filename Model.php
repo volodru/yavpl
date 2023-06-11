@@ -79,6 +79,7 @@ class CompetitorsModel extends Model
  }
  **/
 
+#[\AllowDynamicProperties]
 class Model
 {
 	protected $__sub_models = [];

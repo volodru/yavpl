@@ -108,6 +108,7 @@ namespace YAVPL;
  * 4. При необходимости делаем $this->redirect();
  */
 
+#[\AllowDynamicProperties]
 class Controller
 {
 	//!!!
@@ -430,14 +431,14 @@ class Controller
 	{
 		if (in_array($type, ['integer', 'int', 'bigint', 'int64', 'float', 'double']))
 		{//все числа, особенно из экселя, могут содержать форматирующие пробелы/переносы/неразрывные пробелы
-			$value = preg_replace("/[\s\xC2\xA0]/", '', $value);
+			$value = preg_replace("/[\s\xC2\xA0]/", '', strval($value));
 		}
 		if (in_array($type, ['integer', 'int', 'bigint', 'int64']))
 		{
-			$value = preg_match("/^\s*(\+|\-)?\d+\s*$/", $value) ? $value : $default_value;
+			$value = preg_match("/^\s*(\+|\-)?\d+\s*$/", strval($value)) ? $value : $default_value;
 			if (in_array($type, ['integer', 'int']))
 			{
-				if (abs($value) > 2147483647)//целое для Постгреса! в PHP 64 бита
+				if (abs(intval($value)) > 2147483647)//целое для Постгреса! в PHP 64 бита
 				{
 					die("{$value} - слишком большое значение для целого типа 32 длиной бит.
 Если Вы попали сюда по внутренней ссылке - сообщите об этом администратору проекта.

@@ -68,13 +68,13 @@ class DbPg extends Db implements iDb
 		parent::exec(func_get_args());//там всякие подготовки безотносительно к Постгресу
 
 //---- СОБСТВЕННО ОБРАЩЕНИЕ К СУБД --
-		$this->sth = (count($this->params) > 0) ?
-			@pg_query_params($this->pg_dbh, $this->query, $this->params) : @pg_query($this->pg_dbh, $this->query);
+		$this->sth = (count($this->query_params) > 0) ?
+			@pg_query_params($this->pg_dbh, $this->query, $this->query_params) : @pg_query($this->pg_dbh, $this->query);
 //-----------------------------------
 		if ($this->sth)
 		{
 			$this->row = 0;
-			$this->rows = pg_numrows($this->sth);
+			$this->rows = pg_num_rows($this->sth);
 		}
 		else
 		{
@@ -95,8 +95,8 @@ class DbPg extends Db implements iDb
 			$query = preg_replace("/^(\s+)/m",'', $this->query);
 			if ((preg_match("/^\s*(SELECT)/sim", $query)) && (!preg_match("/^\s*BEGIN/sim", $query)))
 			{//logging -------------------------------
-				$sth = (count($this->params) > 0) ?
-					pg_query_params($this->pg_dbh, "EXPLAIN {$query} ", $this->params) :
+				$sth = (count($this->query_params) > 0) ?
+					pg_query_params($this->pg_dbh, "EXPLAIN {$query} ", $this->query_params) :
 					pg_query($this->pg_dbh, "EXPLAIN {$query} ");
 
 				$rows = pg_numrows($sth);
@@ -146,8 +146,8 @@ class DbPg extends Db implements iDb
 ref: ".urldecode(isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER']:'')."
 agent: {$_SERVER['HTTP_USER_AGENT']}
 {$query}
-".((count($this->params) > 0) ? "
-PARAMS: ".print_r($this->params, true) : '').$explain);
+".((count($this->query_params) > 0) ? "
+PARAMS: ".print_r($this->query_params, true) : '').$explain);
 						fclose($f);
 					}
 				}
@@ -160,7 +160,7 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 			global $application;
 			$application->executed_sql[] = $query.
 				"\nQuery returs {$this->rows} row(s)".
-				((count($this->params) > 0)?"\nPARAMS: ".print_r($this->params, true):'').
+				((count($this->query_params) > 0)?"\nPARAMS: ".print_r($this->query_params, true):'').
 				(($explain != '') ? "\n-----------\n{$explain}-----------" : '');
 		}
 		return $this;
@@ -270,8 +270,8 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 		if ((preg_match("/^\s*(SELECT)/sim", $this->query))
 			&& (! preg_match("/^\s*BEGIN/sim", $this->query)))
 		{
-			$sth = (count($this->params) > 0) ?
-			pg_query_params($this->pg_dbh, "EXPLAIN {$this->query} ", $this->params) :
+			$sth = (count($this->query_params) > 0) ?
+			pg_query_params($this->pg_dbh, "EXPLAIN {$this->query} ", $this->query_params) :
 			pg_query($this->pg_dbh, "EXPLAIN {$this->query} ");
 			$rows = pg_numrows($sth);
 			$explain = '';
@@ -285,9 +285,9 @@ PARAMS: ".print_r($this->params, true) : '').$explain);
 		print_r($this->query);
 		print "\n-------------------------\n";
 		print_r($explain);
-		if (count($this->params) > 0)
+		if (count($this->query_params) > 0)
 		{
-			print "\n-------------------------\nPARAMS: ".var_export($this->params, true);
+			print "\n-------------------------\nPARAMS: ".var_export($this->query_params, true);
 		}
 		print "</xmp>";
 		return $this;

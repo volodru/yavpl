@@ -64,6 +64,7 @@ if (!defined('CHARSET_FOR_EMAILS'))
 	define('CHARSET_FOR_EMAILS', 'utf-8');
 }
 
+#[\AllowDynamicProperties]
 class Mail
 {
 	private array $to = [];
@@ -78,6 +79,7 @@ class Mail
 	private string $organization; //you should do define('ORGANIZATION_FIELD_FOR_EMAILS', 'you organization')
 	private array $attachments = [];
 	private string $charset = CHARSET_FOR_EMAILS;
+	private string $uid;
 
 	private array $__typeByExt = [
 		'doc'	=> 'application/msword',

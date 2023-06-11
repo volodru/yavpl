@@ -31,6 +31,7 @@ if (!defined('REMOTE_ADDR'))
 
 DEFINE('MAX_REGISTER_EXECUTED_SQL_COUNT', 100);
 
+#[\AllowDynamicProperties]
 class Db
 {
 	public int $executed_sql_count = 0;
@@ -117,18 +118,18 @@ class Db
 			return $this;
 		}
 
-		$this->params = [];//если параметров не было вообще, то будет пустой массив
+		$this->query_params = [];//если параметров не было вообще, то будет пустой массив
 		if (isset($args[0]))
 		{
 			if (is_array($args[0]))
 			{
-				$this->params = $args[0];//передали массив - хорошо
+				$this->query_params = $args[0];//передали массив - хорошо
 			}
 			else
 			{//передали много аргументов - собираем из них тот же массив
 				foreach ($args as $arg)
 				{
-					$this->params[] = $arg;
+					$this->query_params[] = $arg;
 				}
 			}
 		}
@@ -193,7 +194,7 @@ class Db
 		<br />REFERER: ".urldecode($_SERVER['HTTP_REFERER'] ?? '')."
 		<br />QUERY ON HOST {$this->host_params['host']}:{$this->host_params['port']} TO DB [{$this->host_params['dbname']}] AS USER [{$this->host_params['user']}]:
 		<br /><xmp>QUERY: ".htmlspecialchars($this->query)."</xmp>
-		<br /><xmp>PARAMS: ".print_r($this->params, true)."</xmp>
+		<br /><xmp>PARAMS: ".print_r($this->query_params, true)."</xmp>
 		<br />PostgresQL's response:
 		<div style='color: #F00; padding: 5px;'>{$err_msg}</div>
 		<div style='color: #0FF; padding: 5px;'>{$notice_msg}</div>
