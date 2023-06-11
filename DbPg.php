@@ -25,6 +25,7 @@ namespace YAVPL;
 class DbPg extends Db implements iDb
 {
 	public $pg_dbh;
+	private $row = 0;
 
 /** Подключаемся к базе через установленные в конструкторе параметры соединения
  * @return void
