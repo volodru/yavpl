@@ -18,6 +18,7 @@ namespace YAVPL;
  * Код выведен из Controller и View
  */
 
+#[\AllowDynamicProperties]
 class ToolBar
 {
 	private $__elements = [];

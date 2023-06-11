@@ -27,6 +27,7 @@ namespace YAVPL;
  * добавлен заголовок с версией, описанием и проч. к этому файлу
  */
 
+#[\AllowDynamicProperties]
 class Helper
 {
 	protected $__owner;
