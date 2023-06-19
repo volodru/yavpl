@@ -374,7 +374,7 @@ WHERE document_id = $1 AND f.id = $2
 				}
 				else
 				{
-					$params['order'] = $params['order'].' '.$params['order_direction'];
+					$params['order'] = $params['order_default_field'].' '.$params['order_direction'];
 				}
 			}
 		}
