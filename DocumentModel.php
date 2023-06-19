@@ -356,18 +356,25 @@ WHERE document_id = $1 AND f.id = $2
 			}
 			else
 			{// - $params['order'] ID поля для сортировки
-				if ($params['order'] == 0)
+				if (is_numeric($params['order']))
 				{
-					$params['order'] = $params['order_default_field'].' '.$params['order_direction'];
+					if ($params['order'] == 0)
+					{
+						$params['order'] = $params['order_default_field'].' '.$params['order_direction'];
+					}
+					else
+					{// ожидается в $params['order'] ID поля для сортировки
+						$params['fields_to_join'][] = $params['order']; //добавляем его к прицепляемым (left outer join ) полям
+						$field_info = $this->fields_model->getRow($params['order']);
+						$field_name = $this->fields_model->sort_field_names[$field_info['value_type']];
+						//так будет работать всё, кроме словарных полей
+						$params['order'] = "v{$params['order']}.{$field_name} {$params['order_direction']} NULLS LAST, ".
+							$params['order_default_field'].' '.$params['order_default_direction'];
+					}
 				}
 				else
-				{// ожидается в $params['order'] ID поля для сортировки
-					$params['fields_to_join'][] = $params['order']; //добавляем его к прицепляемым (left outer join ) полям
-					$field_info = $this->fields_model->getRow($params['order']);
-					$field_name = $this->fields_model->sort_field_names[$field_info['value_type']];
-					//так будет работать всё, кроме словарных полей
-					$params['order'] = "v{$params['order']}.{$field_name} {$params['order_direction']} NULLS LAST, ".
-						$params['order_default_field'].' '.$params['order_default_direction'];
+				{
+					$params['order'] = $params['order'].' '.$params['order_direction'];
 				}
 			}
 		}
