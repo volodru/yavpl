@@ -79,7 +79,7 @@ function sendBugReport($subject = 'Bug report', $message = 'Common bug', $is_fat
 	}
 
 	(new \YAVPL\Mail(ADMIN_EMAIL, "[{$server_name}] {$subject}", "{$message}
-".($_SERVER['SCRIPT_URI']??'').($_SERVER['QUERY_STRING'] ?? '')."
+".($_SERVER['SCRIPT_URI']??'').'?'.($_SERVER['QUERY_STRING'] ?? '')."
 ____________________________________________________
 TRACE\n".__getBacktrace()."
 --------------------------
