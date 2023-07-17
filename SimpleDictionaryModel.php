@@ -256,7 +256,7 @@ ORDER BY
 
 		$this->last_query = [
 			'query'		=> $this->db->query,
-			'params'	=> $this->db->params,
+			'params'	=> $this->db->query_params,
 		];
 		return $this->db->fetchAll($index);
 	}
