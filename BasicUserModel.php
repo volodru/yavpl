@@ -218,30 +218,30 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
  */
 	public function continueCurrentSession()
 	{
-		daf(__METHOD__);
+		//daf(__METHOD__);
 
 		if (!isset($_SESSION)){ session_start();}
 		$this->id = 0;//аноним
 
-		daf('session');daf($_SESSION);daf('cookies');daf($_COOKIE);
+		//daf('session');daf($_SESSION);daf('cookies');daf($_COOKIE);
 		if (isset($_SESSION['log_id']) && intval($_SESSION['log_id']) > 0)
 		{
 			$this->id = $_SESSION['log_id'];
-			daf('continue old session with user id = '.$this->id);
+			//daf('continue old session with user id = '.$this->id);
 			$this->loadCurrentData();
 		}
 		elseif (isset($_COOKIE[$this->options['autologin_cookie_name']]))
 		{
-			daf('continue on cookies');
+			//daf('continue on cookies');
 			$id = $this->getIdByUniqueField($this->options['autologin_field_name'], $_COOKIE[$this->options['autologin_cookie_name']]);
-			if ($id !== false)
+			if (isset($id))
 			{
-				daf('found id '.$id. ' by cookie '.$_COOKIE[$this->options['autologin_cookie_name']]);
+				//daf('found id '.$id. ' by cookie '.$_COOKIE[$this->options['autologin_cookie_name']]);
 				if (!isset($_SESSION)){ session_start();}
 				$this->id = $_SESSION['log_id'] = $id;
 				session_write_close();//to avoid locking
 				$this->loadCurrentData();
-				daf('got user id from cookies '.$this->id);
+				//daf('got user id from cookies '.$this->id);
 				$this->notifyOnContinueCurrentSession();
 			}
 			else
@@ -253,8 +253,8 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
 		{
 			$this->destroyCurrentSession();
 		}
-		daf('user data after attempts to get user ID');
-		daf($this->data);
+		//daf('user data after attempts to get user ID');
+		//daf($this->data);
 
 		$this->setAutologin();//just extend cookie's time
 
