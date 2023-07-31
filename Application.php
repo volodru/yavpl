@@ -105,8 +105,6 @@ require_once('DebugFunctions.php');
 //регистрируем автозагрузчик для классов библиотеки
 spl_autoload_register('\YAVPL\Application::__autoload');
 
-
-
 /** Свой обработчик ошибок. Ошибки надо исправлять. Непроверенный индекс в массиве или неинициализированная переменная - это ошибки!
  */
 function __my_shutdown_handler()
@@ -290,6 +288,7 @@ class Application
 	public function loadController(): bool
 	{//работает для форматов в виде модуль/класс/метод или класс/метод (для простых проектов)
 	// для сложных структур - это надо всё будет переопределить, например для проект/раздел/модуль/класс/метод.
+
 		$this->__controller_fq_class_name = $fq_class_name = CONTROLLERS_BASE_PATH.'\\'.(($this->module_name != '') ? $this->module_name."\\" : '').$this->class_name;
 		if (class_exists($fq_class_name))//тут запускается автозагружалка
 		{
@@ -353,6 +352,7 @@ class Application
 			$this->fileNotFound();
 			return;//а чё ещё делать, если контроллер не нашелся. пусть программист сам ищет контроллер.
 		}
+
 
 //эти методы там просто устанавливают протектед поля
 		$this->controller->setModuleName($this->module_name);

@@ -31,10 +31,11 @@ class ControllerAPI extends Controller
 {
 /** Переменная, в которую набирается результат работы.
  * Она будет выведена в конце в виде JSON*/
-	public $result = [];
+	public array $result = [];
 
 	public function __destruct()
 	{
+		//da($this->result);
 		$this->result['status'] ??= 'OK';//состояние по бизнес логике
 		$this->result['http_response_code'] ??= 200;//состояние по HTTP протоколу
 
@@ -50,9 +51,12 @@ class ControllerAPI extends Controller
  */
 	public function error($message, $status = 'ERROR', $http_response_code = 200)
 	{
+
 		$this->result['message'] = $message;
 		$this->result['status'] = $status;
 		$this->result['http_response_code'] = $http_response_code;
+		//exit();
+		self::__destruct();
 		exit();
 	}
 
