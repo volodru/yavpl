@@ -32,16 +32,29 @@ class ControllerAPI extends Controller
 /** Переменная, в которую набирается результат работы.
  * Она будет выведена в конце в виде JSON*/
 	public array $result = [];
+	public bool $result_has_been_sent = false;
 
 	public function __destruct()
 	{
+		//da(__METHOD__);
 		//da($this->result);
-		$this->result['status'] ??= 'OK';//состояние по бизнес логике
-		$this->result['http_response_code'] ??= 200;//состояние по HTTP протоколу
+/* костыль.
+ * если в методе error не вызывать принудетельно деструктор, то он ИНОГДА не вызывается.
+ * если его вызывать принудительно - то будет дубль сообщений
+ *
+ * поэтому тут делаем проверку на дубли.
+ * */
+		if (!$this->result_has_been_sent)
+		{
+			$this->result['status'] ??= 'OK';//состояние по бизнес логике
+			$this->result['http_response_code'] ??= 200;//состояние по HTTP протоколу
 
-		header("Content-type: application/json");
-		http_response_code($this->result['http_response_code']);
-		print json_encode($this->result);
+			header("Content-type: application/json");
+			http_response_code($this->result['http_response_code']);
+			print json_encode($this->result);
+
+			$this->result_has_been_sent = true;
+		}
 		parent::__destruct();
 	}
 
@@ -51,7 +64,7 @@ class ControllerAPI extends Controller
  */
 	public function error($message, $status = 'ERROR', $http_response_code = 200)
 	{
-
+		//da(__METHOD__);
 		$this->result['message'] = $message;
 		$this->result['status'] = $status;
 		$this->result['http_response_code'] = $http_response_code;

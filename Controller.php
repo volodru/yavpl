@@ -205,6 +205,7 @@ class Controller
  */
 	public function __destruct()
 	{
+		//da(__METHOD__);
 	}
 
 /**
