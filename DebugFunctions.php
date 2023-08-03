@@ -16,13 +16,15 @@ declare(strict_types=1);
  */
 function da($v)
 {
+	require_once('sage.phar');
 	if (APPLICATION_RUNNING_MODE == 'cli')
 	{
 		print var_export($v, true)."\n";
 	}
 	else
 	{
-		print "<xmp>".var_export($v, true)."</xmp>";
+		//print "<xmp>".var_export($v, true)."</xmp>";
+		sage($v);
 	}
 }
 
