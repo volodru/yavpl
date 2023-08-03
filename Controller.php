@@ -465,7 +465,7 @@ class Controller
 		elseif (in_array($type,['float', 'double']))
 		{//а плавающая точка где-то может быть запятой. тут захардкоден американский формат чисел!
 			$value = preg_replace("/\,/", '.', $value);
-			$value = preg_replace("/[^\d\.]/", '', $value);
+			$value = preg_replace("/[^\-\d\.]/", '', $value);
 
 			return (is_numeric($value)) ? $value : $default_value;
 		}
