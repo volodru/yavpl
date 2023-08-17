@@ -23,8 +23,8 @@ function da($v)
 	}
 	else
 	{
-		//print "<xmp>".var_export($v, true)."</xmp>";
-		sage($v);
+		print "<xmp>".var_export($v, true)."</xmp>";
+		//sage($v);
 	}
 }
 

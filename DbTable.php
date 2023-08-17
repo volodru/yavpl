@@ -246,7 +246,12 @@ ORDER BY {$params['order']}
 
 		if ($action == 'insert')
 		{
-			$data[$this->key_field] = $this->db->nextVal($this->getSeqName());
+//на случай если наследники при инсерте сами используют свои сиквенсы или другие источники первичного ключа
+//и этот ключ уже был получен в $this->beforeSaveRow(...)
+			if ($data[$this->key_field] == 0)//если наследники так ничего и ничего не выдали
+			{
+				$data[$this->key_field] = $this->db->nextVal($this->getSeqName());
+			}
 			$ar = $this->db->insert($this->table_name, $this->key_field, $this->fields, $data)->affectedRows();
 		}
 		else
