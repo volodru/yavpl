@@ -175,7 +175,7 @@ class SimpleFilesModel extends DbTable
 			$data['file_ext'] = strtolower($matches[2]);
 
 			$allowed_extensions = $this->getAllowedExtensions($data);//если там запрос к СУБД - не вызываем его 2 раза
-
+			da($allowed_extensions);
 			if (count($allowed_extensions) == 0)
 			{//если явно ничего не разрешено, то проверяем на запрещенные и разрешаем всё остальное
 				$denied_extensions = $this->getDeniedExtensions($data);
