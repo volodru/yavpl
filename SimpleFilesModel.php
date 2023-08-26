@@ -126,7 +126,6 @@ class SimpleFilesModel extends DbTable
 
 		if ($this->key_value == 0)
 		{
-
 			$is_new_file = true;
 			$data[$this->key_field] = //для сохранения предком
 				$this->key_value = //шорткат для остального кода

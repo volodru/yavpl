@@ -188,18 +188,17 @@ class Db
 		ob_end_clean();
 
 		$debug_info = "
-		<h3>Critical error</h3>{$current_time}
-		<br />URL {$url} (URI ".($_SERVER['REQUEST_URI'] ?? '').")
-		<br />AGENT: ".($_SERVER['HTTP_USER_AGENT'] ?? '')."
-		<br />REFERER: ".urldecode($_SERVER['HTTP_REFERER'] ?? '')."
-		<br />QUERY ON HOST {$this->host_params['host']}:{$this->host_params['port']} TO DB [{$this->host_params['dbname']}] AS USER [{$this->host_params['user']}]:
-		<br /><xmp>QUERY: ".htmlspecialchars($this->query)."</xmp>
-		<br /><xmp>PARAMS: ".print_r($this->query_params, true)."</xmp>
-		<br />PostgresQL's response:
-		<div style='color: #F00; padding: 5px;'>{$err_msg}</div>
-		<div style='color: #0FF; padding: 5px;'>{$notice_msg}</div>
-		<div style='color: #00F; padding: 5px;'><pre>{$backtrace}</pre></div>
-";//<div><xmp>SERVER: ".print_r($_SERVER, true)."</xmp></div>
+<h3>Critical error</h3>{$current_time}
+<br />URL {$url} (URI ".($_SERVER['REQUEST_URI'] ?? '').")
+<br />AGENT: ".($_SERVER['HTTP_USER_AGENT'] ?? '')."
+<br />REFERER: ".urldecode($_SERVER['HTTP_REFERER'] ?? '')."
+<br />QUERY ON HOST {$this->host_params['host']}:{$this->host_params['port']} TO DB [{$this->host_params['dbname']}] AS USER [{$this->host_params['user']}]:
+<br /><xmp>QUERY: ".htmlspecialchars($this->query)."</xmp>
+<br /><xmp>PARAMS: ".print_r($this->query_params, true)."</xmp>
+<br />PostgresQL's response:
+<div style='color: #F00; padding: 5px;'>{$err_msg}</div>
+<div style='color: #0FF; padding: 5px;'>{$notice_msg}</div>
+<div style='color: #00F; padding: 5px;'><pre>{$backtrace}</pre></div>";//<div><xmp>SERVER: ".print_r($_SERVER, true)."</xmp></div>
 		if (isset($_SESSION))
 		{
 			$debug_info .= "<div><xmp>SESSION: ".print_r($_SESSION, true)."</xmp></div>";

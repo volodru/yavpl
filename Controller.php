@@ -434,6 +434,11 @@ class Controller
  */
 	private function checkParamType(string $type, $value, $default_value)
 	{
+		//TODO - надо что-то сделать с массивами
+		if (is_array($value))
+		{
+			return $value;
+		}
 		if (in_array($type, ['integer', 'int', 'bigint', 'int64', 'float', 'double']))
 		{//все числа, особенно из экселя, могут содержать форматирующие пробелы/переносы/неразрывные пробелы
 			$value = preg_replace("/[\s\xC2\xA0]/", '', strval($value));
