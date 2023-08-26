@@ -34,8 +34,22 @@ namespace YAVPL;
  */
 class SimpleFilesModel extends DbTable
 {
-	public function __construct(string $table_name, string $key_field, array $fields, string $storage_path,
-		array $allowed_extensions = [], int $max_file_size = 0)
+/** По-умолчанию запрещенные расширения.
+ * Используется как шаблон для getDeniedExtensions.
+ * Для своих нужд нужно либо использовать getAllowedExtensions, либо таки перекрывать getDeniedExtensions.
+ * Если getAllowedExtensions отдает непустой массив, то getDeniedExtensions не используется.
+ */
+	public array $denied_extensions = [
+		'bat', 'bin', 'cmd', 'com', 'cpl', 'exe', 'gadget', 'inf1', 'ins', 'inx', 'isu', 'job', 'jse',
+		'lnk', 'msc', 'msi', 'msp', 'mst', 'paf', 'pif', 'ps1', 'reg', 'rgs', 'scr', 'sct',
+		'shb', 'shs', 'u3p', 'vb', 'vbe', 'vbs', 'vbscript', 'ws', 'wsf', 'wsh',
+	];
+
+/** Если больше нуля, то перед сохранением будет дополнительная проверка на размер
+ */
+	public int $max_file_size = 0;
+
+	public function __construct(string $table_name, string $key_field, array $fields, string $storage_path)
 	{
 		foreach (['file_name', 'file_ext', 'file_size'] as $f)
 		{
@@ -46,11 +60,6 @@ class SimpleFilesModel extends DbTable
 		}
 		parent::__construct($table_name, $key_field, $fields);
 		$this->storage_path = $storage_path;// путь (HOME_DIR.'/catalog/complains') к папке с файлами или подпапками с файлам
-		$this->allowed_extensions = $allowed_extensions;//массив расширений без точек и маленькими буквами ('xls', 'xlsx', 'doc', 'docx', 'pdf',])
-		$this->max_file_size = $max_file_size; //ограничение на размер - должно быть меньше, чем в php.ini, иначе будет ошибка в логах апача
-
-		//для одаренных наследников. проходим и делаем lowercase на всякий случай
-		array_walk($this->allowed_extensions, function(&$value, $key){$value = strtolower($value);});
 	}
 
 /** $data может содержать доп поля для правильного формирования пути.
@@ -94,11 +103,21 @@ class SimpleFilesModel extends DbTable
 		}
 		return '';
 	}
+
+/** для сложных наследников, у которых список расширений хранится в СУБД - перекрыть и отдавать из базы
+ * если явно указан список разрешенных расширений, то игнорим список запрещений.
+ * если список разрешений пуст, то проверяем список запрещенных расширений.
+ */
+	public function getAllowedExtensions(array $data = []): array
+	{//наследники могут перекрыть это. например в MPFL
+		return [];
+	}
+
 /** для сложных наследников, у которых список расширений хранится в СУБД - перекрыть и отдавать из базы
  */
-	public function getAllowedExtensions(array $data = [])
+	public function getDeniedExtensions(array $data = [])
 	{//наследники могут перекрыть это. например в MPFL
-		return $this->allowed_extensions;
+		return $this->denied_extensions;
 	}
 
 /**
@@ -154,10 +173,23 @@ class SimpleFilesModel extends DbTable
 		if (preg_match("/^(.+)\.(.+?)$/", $data['file_name'], $matches))
 		{
 			$data['file_ext'] = strtolower($matches[2]);
+
 			$allowed_extensions = $this->getAllowedExtensions($data);//если там запрос к СУБД - не вызываем его 2 раза
-			if (!in_array($data['file_ext'], $allowed_extensions))
-			{
-				return "Расширение файла {$data['file_ext']} не входит в список разрешенных: [".join(', ', $allowed_extensions)."]";
+
+			if (count($allowed_extensions) == 0)
+			{//если явно ничего не разрешено, то проверяем на запрещенные и разрешаем всё остальное
+				$denied_extensions = $this->getDeniedExtensions($data);
+				if (count($denied_extensions) > 0 && in_array($data['file_ext'], $denied_extensions))
+				{
+					return "Расширение файла {$data['file_ext']} входит в список запрещенных: [".join(', ', $denied_extensions)."]";
+				}
+			}
+			else
+			{//если есть список разрешений - используем только его
+				if (!in_array($data['file_ext'], $allowed_extensions))
+				{
+					return "Расширение файла {$data['file_ext']} не входит в список разрешенных: [".join(', ', $allowed_extensions)."]";
+				}
 			}
 		}
 		else
