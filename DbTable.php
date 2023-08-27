@@ -132,6 +132,16 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
  *
  * Наследники могут добавлять в селект всё, что угодно и join-нить как угодно с чем угодно.
  * Для оригинальной записи всегда останется getRawRow($key_value)
+ *
+ * Для наследников, добавляющих функционал стоит использовать шаблон:
+ *
+ 	$row = parent::getRow($key_value);
+	if (!empty($row))
+	{
+		$row['какое-то новое поле'] = какие-то манипуляции дял его получения;
+	}//else так отдаем пустой массив/null и т.д., чтобы пользователь мог понять, что по ID ничего не нашлось
+	return $row;
+ *
  * @param $key_value int - значение ключевого поля
  * @return array всю строку по ключу, но наследники могут делать join и отдавать еще что-нибудь из прицепленных таблиц
  */
@@ -436,7 +446,10 @@ ORDER BY {$params['order']}
 		else
 		{
 			global $application;
-			return $this->__entityTypeInfo = $application->getEntityTypesInstance()->byTable($this->table_name) ??
+			$et_id = $application->getEntityTypesInstance()->byTable($this->table_name);
+			return ($et_id > 0) ?
+				$application->getEntityTypesInstance()->getRow($et_id)
+				:
 				sendBugReport('getEntityTypeInfo', "Не найден тип сущности по таблице {$this->table_name}", true);
 		}
 	}

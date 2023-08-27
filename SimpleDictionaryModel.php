@@ -499,7 +499,10 @@ ORDER BY
 	public function getEntityTypeInfo()
 	{
 		global $application;
-		return $application->getEntityTypesInstance()->byTable($this->table_name) ??
+		$et_id = $application->getEntityTypesInstance()->byTable($this->table_name);
+		return ($et_id > 0) ?
+			$application->getEntityTypesInstance()->getRow($et_id)
+			:
 			sendBugReport('getEntityTypeInfo', "Не найден тип сущности по таблице {$this->table_name}", true);
 	}
 
