@@ -345,9 +345,42 @@ ORDER BY {$params['order']}
  * возвращает "" или NULL если можно удалить запись или сообщение о том, почему нельзя ее удалять.
  * deleteRow() проверяет наличие пустой строки в качестве сообщения.
  * @return string Сообщение о причине невозможности удаления или пустую строку, если все можно удалять
+ *
+ * в наследниках можно проверять строкой ПОСЛЕ своих проверок с более осмысленными сообщениями:
+if (($msg = parent::canDeleteRow($key_value)) != ''){return $msg;}
  */
 	public function canDeleteRow(int $key_value): string
 	{
+		list($schema, $table) = explode('.',$this->table_name);
+/* "лишние" поля тут не трогаем, пусть будут для отладки. */
+		$f_keys = $this->db->exec("
+SELECT
+	tc.*,
+	tc.table_schema,
+	tc.constraint_name, tc.table_name, kcu.column_name,
+	ccu.table_schema AS foreign_table_schema,
+	ccu.table_name AS foreign_table_name,
+	ccu.column_name AS foreign_column_name
+FROM information_schema.table_constraints AS tc
+JOIN information_schema.key_column_usage AS kcu USING (constraint_schema, constraint_name)
+JOIN information_schema.constraint_column_usage AS ccu USING (constraint_schema, constraint_name)
+WHERE
+	constraint_type = 'FOREIGN KEY' AND
+	ccu.constraint_schema = '{$schema}' AND
+	ccu.table_name = '{$table}'
+")->fetchAll('column_name');
+
+		foreach ($f_keys as $f_key_info)
+		{
+			if ($this->db->exec("
+SELECT {$f_key_info['column_name']}
+FROM {$f_key_info['table_schema']}.{$f_key_info['table_name']}
+WHERE {$f_key_info['column_name']} = $1", $key_value)->rows > 0)
+			{
+				return "Невозможно удалить запись ID={$key_value} в таблице {$this->table_name}.
+У таблицы {$f_key_info['table_schema']}.{$f_key_info['table_name']} есть записи ссылающиеся на запись ID={$key_value} в таблице {$this->table_name}.";
+			}
+		}
 		return '';
 	}
 
