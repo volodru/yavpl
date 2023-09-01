@@ -348,11 +348,16 @@ ORDER BY {$params['order']}
  *
  * в наследниках можно проверять строкой ПОСЛЕ своих проверок с более осмысленными сообщениями:
 if (($msg = parent::canDeleteRow($key_value)) != ''){return $msg;}
+
+@TODO - проверить, как оно работает с констрейнтами CASCADE
  */
 	public function canDeleteRow(int $key_value): string
 	{
 		list($schema, $table) = explode('.',$this->table_name);
-/* "лишние" поля тут не трогаем, пусть будут для отладки. */
+/* "лишние" поля тут не трогаем, пусть будут для отладки.
+ *
+ * список других таблиц ссылающихся на нашу как на foreign_table
+ * */
 		$f_keys = $this->db->exec("
 SELECT
 	tc.*,
@@ -366,12 +371,14 @@ JOIN information_schema.key_column_usage AS kcu USING (constraint_schema, constr
 JOIN information_schema.constraint_column_usage AS ccu USING (constraint_schema, constraint_name)
 WHERE
 	constraint_type = 'FOREIGN KEY' AND
-	ccu.constraint_schema = '{$schema}' AND
+	ccu.table_schema = '{$schema}' AND
 	ccu.table_name = '{$table}'
-")->fetchAll('column_name');
+")->fetchAll();
 
+		//da($f_keys);die;
 		foreach ($f_keys as $f_key_info)
 		{
+			//da($f_key_info);
 			if ($this->db->exec("
 SELECT {$f_key_info['column_name']}
 FROM {$f_key_info['table_schema']}.{$f_key_info['table_name']}
