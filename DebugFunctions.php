@@ -36,6 +36,7 @@ function daf($v)
 	{
 		$l = fopen('/tmp/'.($_SERVER['SERVER_NAME']??'SERVER').'__'.date('Y_m_d__H_i_s').'.log', 'a+');
 		fwrite($l, var_export($v, true)."\n");
+		//fwrite($l, $v); //FOR DEBUG BINARIES
 		fclose($l);
 	}
 }
