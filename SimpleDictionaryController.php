@@ -28,6 +28,9 @@ interface iSimpleDictionaryController
 
 trait SimpleDictionaryController
 {
+
+/** фактическая сортировка через meta_data sort_field
+ */
 	public function getListParams()
 	{
 		return [];
