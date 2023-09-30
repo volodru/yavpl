@@ -262,7 +262,20 @@ ORDER BY {$params['order']}
 			{
 				$data[$this->key_field] = $this->db->nextVal($this->getSeqName());
 			}
-			$ar = $this->db->insert($this->table_name, $this->key_field, $this->fields, $data)->affectedRows();
+//костыль!
+//если наследники сами нашли ID, например по UNIQ индексу и выдали сюда существущий ID, то
+//делаем апдейт.
+//некостыльный вариант - наследники меняют $action в beforeSaveRow, но надо всем наследникам во всех проектах проставить &$action
+//таки пока отложим (2023-09-30).
+			if (empty($this->getRawRow($data[$this->key_field])))
+			{
+				$ar = $this->db->insert($this->table_name, $this->key_field, $this->fields, $data)->affectedRows();
+			}
+			else
+			{
+				$ar = $this->db->update($this->table_name, $this->key_field, $this->fields, $data)->affectedRows();
+			}
+			//end костыль
 		}
 		else
 		{
