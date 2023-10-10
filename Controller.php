@@ -165,6 +165,50 @@ class Controller
  */
 	private array $__methods = [];//for Helper
 
+	//https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+	public $mime_types_per_extension = [
+		'.7z'	=> 'application/x-7z-compressed',
+		'.csv'	=> 'text/csv',
+		'.doc'	=> 'application/msword',
+		'.docx'	=> 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+		'.docm'	=> 'application/vnd.ms-word.document.macroEnabled.12',
+		'.dot'	=> 'application/msword',
+		'.dotx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
+		'.dotm'	=> 'application/vnd.ms-word.template.macroEnabled.12',
+		'.jpg'	=> 'image/jpeg',
+		'.jpeg'	=> 'image/jpeg',
+		'.mdb'	=> 'application/vnd.ms-access',
+		'.mp3'	=> 'audio/mpeg',
+		'.mp4'	=> 'video/mp4',
+		'.oga'	=> 'audio/ogg',
+		'.ogg'	=> 'audio/ogg',
+		'.pdf'	=> 'application/pdf',
+		'.png'	=> 'image/png',
+		'.pot'	=> 'application/vnd.ms-powerpoint',
+		'.potm'	=> 'application/vnd.ms-powerpoint.template.macroEnabled.12',
+		'.potx'	=> 'application/vnd.openxmlformats-officedocument.presentationml.template',
+		'.ppa'	=> 'application/vnd.ms-powerpoint',
+		'.pps'	=> 'application/vnd.ms-powerpoint',
+		'.ppsx'	=> 'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
+		'.ppt'	=> 'application/vnd.ms-powerpoint',
+		'.pptm'	=> 'application/vnd.ms-powerpoint.presentation.macroEnabled.12',
+		'.pptx'	=> 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+		'.ppam'	=> 'application/vnd.ms-powerpoint.addin.macroEnabled.12',
+		'.ppsm'	=> 'application/vnd.ms-powerpoint.slideshow.macroEnabled.12',
+		'.rtf'	=> 'application/rtf',
+		'.xla'	=> 'application/vnd.ms-excel',
+		'.xlam'	=> 'application/vnd.ms-excel.addin.macroEnabled.12',
+		'.xls'	=> 'application/vnd.ms-excel',
+		'.xlsb'	=> 'application/vnd.ms-excel.sheet.binary.macroEnabled.12',
+		'.xlsm'	=> 'application/vnd.ms-excel.sheet.macroEnabled.12',
+		'.xlsx'	=> 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+		'.xlt'	=> 'application/vnd.ms-excel',
+		'.xltm'	=> 'application/vnd.ms-excel.template.macroEnabled.12',
+		'.xltx'	=> 'application/vnd.openxmlformats-officedocument.spreadsheetml.template',
+		'.webm'	=> 'video/webm',
+		'.webp'	=> 'image/webp',
+	];
+
 /** Самый главный контструктор всея контроллеров.
  *
  * Для UI|API режимов тут ничего не делаем.
@@ -312,7 +356,58 @@ class Controller
 	}
 
 /**
+ * @param $filename string - имя файла с расширением 2-4 символа
+ * @param $params array - доп параметры:
+ * content_type - тип контента, по умолчанию application/octet-stream
+ * content_disposition - attachment - сохранить как файл, inline - открыть сразу в браузере. по умолчанию attachment
+ */
+	protected function __sendStreamToClient(string $file_name, array $params = []): void
+	{
+		$content_type = $params['content_type'] ?? 'application/octet-stream';
+
+		// **content_disposition: attachment - сохранить как файл, inline - открыть сразу в браузере
+		$content_disposition = $params['content_disposition'] ?? 'attachment';
+		if ($content_type == 'application/octet-stream')//абстрактный бинарник
+		{//пытаемся по расширению файла угадать наиболее правильный mime-type
+			$matches = [];
+			if (preg_match("/(\.\w{2,4})$/i", $file_name, $matches))
+			{
+				$file_extension = strtolower($matches[1]);
+				if (isset($this->mime_types_per_extension[$file_extension]))
+				{
+					$content_type = $this->mime_types_per_extension[$file_extension];
+				}
+			}
+		}
+
+		header("HTTP/1.0 200 Ok");//всегда.
+		header("Pragma: private");////по материалам http://www.jspwiki.org/wiki/BugSSLAndIENoCacheBug
+		header("Cache-Control: private, must-revalidate");//специально для эксплорера!
+		header("Content-type: {$content_type}");
+		header("Content-Transfer-Encoding: binary");
+		header("Content-Disposition: {$content_disposition}; filename*=UTF-8''".rawurlencode($file_name));
+
+		$this->disableRender();
+	}
+
+/** Отдать файл клиенту
+ * @param $file_name string имя файла для клиента
+ * @param $file_path string путь к файлу в файловой системе
+ * @param $params array см. параметры для __sendStreamToClient
+ */
+	protected function __sendFileToClient(string $file_name, string $file_path, array $params = []): void
+	{
+		header("Content-Length: ".filesize($file_path));
+		$this->__sendStreamToClient($file_name, $params);
+		readfile($file_path);
+	}
+
+/**
  * Перед отдачей бинарника вызвать этот метод. Экономит 1 строчку :)
+ *
+ * TODO подумать на тему удалить этот метод, т.к. есть __sendStreamToClient и функция exit();
+ * во всяком случае указывать content_type прямо в вызове isBINARY - странно.
+ * на 2023-10-10 актуально только для выдачи сгенерированных картинок
  */
 	public function isBINARY(string $content_type = ''): Controller
 	{

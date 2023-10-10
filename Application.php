@@ -147,13 +147,16 @@ function __my_exception_handler($exception)
 	sendBugReport('Uncaught exception', $message);
 	if (APPLICATION_ENV != 'production')
 	{
-		print '<h1>Uncaught exception</h1>';
-		print "<h2>{$message}</h2>";
-		print "<div>BACKTRACE\n<xmp>".__getBacktrace()."</xmp></div>";
+		$user_message = "<h1>Uncaught exception</h1><h2>{$message}</h2><div>BACKTRACE\n<xmp>".__getBacktrace()."</xmp></div>";
 	}
 	else
 	{
-		print '<h1>Uncaught exception. eMail to the system administrator already has been sent.</h1>';
+		$user_message = '<h1>Uncaught exception. eMail to the system administrator already has been sent.</h1>';
+	}
+
+	if (1|| APPLICATION_RUNNING_MODE == 'ui')
+	{
+		print $user_message;
 	}
 }
 set_exception_handler('\\YAVPL\\__my_exception_handler');
@@ -430,6 +433,9 @@ class Application
 		unset($this->controller);
 	}
 
+/** Имитация глобальной переменной - коннектора к основной СУБД
+ * в приложении наследнике перекрыть этот метод и в нем подключиться к базе и отдать коннектор типа \YAVPL\Db
+ */
 	public function getMainDBConnector(): \YAVPL\Db
 	{
 		die('У класса приложения должна быть реализована функция getMainDBConnector()');

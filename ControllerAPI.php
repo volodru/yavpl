@@ -25,6 +25,8 @@ namespace YAVPL;
  * http response status отдается http_response_code
  * бизнес-логика не должна отдавать, что-то кроме http_response_code==200.
  * кроме случая - неправильный URL и контроллер действительно не найден, тогда 404. ну, или метод не найден.
+ *
+ * @TODO сделать возврат фатальных ошибок try-catch-default и ошибок СУБД через JSON  и http статус 500
  */
 
 class ControllerAPI extends Controller
@@ -33,16 +35,33 @@ class ControllerAPI extends Controller
  * Она будет выведена в конце в виде JSON*/
 	public array $result = [];
 
+	protected $__result_content_type = 'json';
+
 /** костыль для более-менее безопасных вызовов done()
  * т.к. он вызывается либо в error() либо в $application->run();
  */
 	private bool $result_has_been_sent = false;
+
+/** для отдачи бинарников вызываем
+ * $this->isBINARY
+ * и данные кладем в $this->result['data']
+ */
+	public function isBINARY(string $content_type = ''): Controller
+	{
+		$this->__result_content_type = 'binary';
+		return parent::isBINARY($content_type);
+	}
 
 /** Окончание работы контроллера.
  * К этому времени должна быть заполнена структура с выдачей $this->result[]
  *
  * Метод формирует http заголовки и отдает $this->result в виде JSON как оно есть.
  * Навязываются поля $this->result['status'] и $this->result['http_response_code'], от них отказаться нельзя, но можно перекрыть
+ *
+ * Для отдачи бинарника
+	$this->__result_content_type = 'binary';
+	$this->result['file_name'] = 'имф файла'.
+	$this->result['data'] = бинарные данные файла
  */
 	public function done(): void
 	{
@@ -57,9 +76,24 @@ class ControllerAPI extends Controller
 			$this->result['status'] ??= 'OK';//состояние по бизнес логике
 			$this->result['http_response_code'] ??= 200;//состояние по HTTP протоколу
 
+			/*
 			header("Content-type: application/json");
 			http_response_code($this->result['http_response_code']);
 			print json_encode($this->result);
+			*/
+
+			http_response_code($this->result['http_response_code']);
+
+			if ($this->__result_content_type == 'json')
+			{
+				header("Content-type: application/json");
+				print json_encode($this->result);
+			}
+			else//ВСЁ остальное отдаём как бинарник
+			{
+				$this->__sendStreamToClient($this->result['file_name'] ?? 'Undefined_Result_File_Name__', $this->result);
+				print $this->result['data'];
+			}
 
 			$this->result_has_been_sent = true;
 		}
@@ -70,6 +104,8 @@ class ControllerAPI extends Controller
  * Если что-то пошло не так - вызываем $this->error('что-то не так') и ВСЁ.
  * Метод сам даже делает exit() - что в общем-то антипаттерн "early return". но так удобнее.
  * error() это всегда фаталити.
+ *
+ * Ошибки, как правило именно с т.з. бизнеса, поэтому http код скорее всего будет 200
  */
 	public function error(string $message, string $status = 'ERROR', int $http_response_code = 200): void
 	{
@@ -79,6 +115,7 @@ class ControllerAPI extends Controller
 		$this->result['http_response_code'] = $http_response_code;
 
 //в норме done() вызывает application в конце работы приложения
+//здесь вызываем его руками и заканчиваем работу
 		$this->done();
 		exit();
 	}
