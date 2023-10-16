@@ -345,7 +345,7 @@ class Application
 		}
 		else
 		{//WEB And API
-			$this->__request_uri = trim(preg_replace("/(.+?)\?.*/", "$1", $_SERVER['REQUEST_URI']), '/');
+			$this->__request_uri = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
 		}
 //разобираем URI
 		$this->parseURI();//устанавливаем переменные module_name, class_name, method_name
