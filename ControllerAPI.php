@@ -83,10 +83,14 @@ class ControllerAPI extends Controller
 				header("Content-type: application/json");
 				print json_encode($this->result);
 			}
-			else//ВСЁ остальное отдаём как бинарник
+			else
 			{
-				$this->__sendStreamToClient($this->result['file_name'] ?? 'Undefined_Result_File_Name__', $this->result);
-				print $this->result['data'];
+/**ВСЁ остальное отдаём как бинарник сразу из контроллера, как-то так:
+		$this->isBINARY();// делаем $this->__result_content_type=binary
+		(new \Models\Excel())
+			->setFilledData($result)
+			->output("Articles_Without_400_".date('Y-m-d'));
+*/
 			}
 
 			$this->result_has_been_sent = true;
