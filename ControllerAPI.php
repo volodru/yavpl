@@ -76,12 +76,6 @@ class ControllerAPI extends Controller
 			$this->result['status'] ??= 'OK';//состояние по бизнес логике
 			$this->result['http_response_code'] ??= 200;//состояние по HTTP протоколу
 
-			/*
-			header("Content-type: application/json");
-			http_response_code($this->result['http_response_code']);
-			print json_encode($this->result);
-			*/
-
 			http_response_code($this->result['http_response_code']);
 
 			if ($this->__result_content_type == 'json')
