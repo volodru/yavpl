@@ -698,11 +698,11 @@ class Document_fieldsModel extends DbTable
 {
 	/** Приватный локальный кеш данных
 	 */
-	private $data_cash = [];
+	private array $data_cash = [];
 
 	/** Типы данных полей - названия для юзеров
 	 */
-	public $value_types = [
+	public array $value_types = [
 		'A'	=> 'Строковый', // alphabet
 		'I'	=> 'Целый', // integer
 		'F'	=> 'Вещественный', // float
@@ -714,7 +714,7 @@ class Document_fieldsModel extends DbTable
 
 	/** Типы данных полей - названия поля в базе
 	 */
-	public $value_field_names = [
+	public array $value_field_names = [
 		'A'	=> 'text_value', // alphabet
 		'I'	=> 'int_value', // integer
 		'F'	=> 'float_value', // float
@@ -724,10 +724,8 @@ class Document_fieldsModel extends DbTable
 		'B'	=> 'int_value', // integer
 	];
 
-	/** Типы данных полей - названия полей, по которым надо их сортировать
-	 */
-
-	public $sort_field_names = [
+	/** Типы данных полей - названия полей, по которым надо их сортировать	 */
+	public array $sort_field_names = [
 		'A'	=> 'text_value', // alphabet
 		'I'	=> 'int_value', // integer
 		'F'	=> 'float_value', // float
@@ -737,11 +735,24 @@ class Document_fieldsModel extends DbTable
 		'B'	=> 'int_value', // integer
 	];
 
+	/** Типы данных полей - ширина и высота по умолчанию
+	 * [width, height]*/
+	public array $value_type_sizes = [
+		'A'	=> [25, 1],
+		'I'	=> [25, 1],
+		'F'	=> [25, 1],
+		'D'	=> [10, 1],
+		'K'	=> [25, 1],
+		'X'	=> [25, 1],
+		'B'	=> [1, 1],//не имеет смысла, т.к. это радио кнопки
+	];
+
 	public function __construct(string $scheme, int $document_type_id = 0)
 	{
 		parent::__construct($scheme.'.documents_fields', 'id', [
 			'title', 'value_type', 'measure', 'sort_order', 'description', 'automated',
 			'x_value_field_name', 'x_table_name', 'x_table_order', 'x_list_url',
+			'width', 'height',
 		]);
 		$this->scheme = $scheme;
 		$this->document_type_id = $document_type_id;
@@ -792,6 +803,8 @@ ORDER BY {$field_info['x_table_order']}")->fetchAll('id');
 			'value_type'		=> 'I',
 			'sort_order'		=> 0,
 			'automated'			=> 0,
+			'width'				=> 0,
+			'height'			=> 0,
 		];
 	}
 
@@ -881,39 +894,78 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 	}
 
 /** Для интерфейсов редактирования полей документов
+
+ALTER TABLE IF EXISTS shipments.documents_fields ADD COLUMN width integer DEFAULT 0;
+ALTER TABLE IF EXISTS shipments.documents_fields ADD COLUMN height integer DEFAULT 0;
+
+update shipments.documents_fields set width = 0, height = 0;
+
+update shipments.documents_fields set width=20 where id in (41,42,43,44,45,46);
+
+ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN width SET NOT NULL;
+ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NULL;
  */
+	public function beforeSaveRow(string $action, array &$data, array $old_data): string
+	{
+		$data['sort_order'] ??= 0;
+		$data['automated'] ??= 0;
+
+		if (($data['height'] ?? 0) <= 0)
+		{
+			$data['height'] = 0;
+		}
+
+		if (($data['width'] ?? 0) <= 0)
+		{
+			$data['width'] = 0;
+		}
+
+		if ($action == 'insert')
+		{
+			if ($data['value_type'] == 'X')
+			{
+				return 'Только разработчик может создавать поля типа Внешний словарь, т.к. для этого требуется модификация исходного кода.';
+			}
+		}
+
+		if ($action == 'update')
+		{
+			$data['value_type'] = $old_data['value_type'];//тип не меняем из интерфейса.
+
+			if ($data['value_type'] == 'X')
+			{//эти атрибуты не меняем из интерфейса.
+				foreach (['x_value_field_name', 'x_table_name', 'x_table_order', 'x_list_url',] as $f)
+				{
+					$data[$f] = $old_data[$f];
+				}
+			}
+		}
+
+		if (trim($data['title'] ?? '') == '')
+		{
+			return "Название поля не может быть пустым";
+		}
+
+		return '';
+	}
+
+	/*
 	public function saveRow(array $data): string
 	{
 		if (!isset($data['id']) || intval($data['id']) == 0)
 		{//запрет создания полей
 			return "Потерян ID поля.";
 		}
-		$data['sort_order'] = $data['sort_order'] ?? 0;
-		$data['automated'] = $data['automated'] ?? 0;
 
 		$old_data = $this->getRow($data['id']);
 
-		$data['value_type'] = $old_data['value_type'];//тип не меняем из интерфейса.
-
-		if ($data['value_type'] == 'X')
-		{//эти атрибуты не меняем из интерфейса.
-			foreach (['x_value_field_name', 'x_table_name', 'x_table_order', 'x_list_url',] as $f)
-			{
-				$data[$f] = $old_data[$f];
-			}
-		}
-
-		if (trim($data['title']) == '')
-		{
-			return "Название поля не может быть пустым";
-		}
 		$ar = $this->db->update($this->table_name, $this->key_field, $this->fields, $data)->affectedRows();
 		if ($ar != 1)
 		{
 			return "Ошибка при сохранении атрибутов поля. Возможно, поле с ID={$data['id']} не существует";
 		}
 		return '';
-	}
+	}*/
 
 /** иногда триггеры работают неправильно или мы меняем тип поля на словарный.
  * тогда надо вызвать этот метод для глобального апдейта
