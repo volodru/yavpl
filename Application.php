@@ -284,16 +284,11 @@ class Application
 
 /** Загрузчик Контроллера
  *
- * Формируем имя класса контроллера из разобранных module и class names
- *
- * Используется константа CONTROLLERS_BASE_PATH - controllers|api|cli в зависимости от типа вызова
  *
  * */
 	public function loadController(): bool
-	{//работает для форматов в виде модуль/класс/метод или класс/метод (для простых проектов)
-	// для сложных структур - это надо всё будет переопределить, например для проект/раздел/модуль/класс/метод.
-
-		$this->__controller_fq_class_name = $fq_class_name = CONTROLLERS_BASE_PATH.'\\'.(($this->module_name != '') ? $this->module_name."\\" : '').$this->class_name;
+	{
+		$fq_class_name = $this->__controller_fq_class_name;
 		if (class_exists($fq_class_name))//тут запускается автозагружалка
 		{
 			$this->controller = new $fq_class_name();//делаем экземпляр класса
@@ -326,14 +321,38 @@ class Application
 	}
 
 /** Разборщик URI - если проект не ложится в схему Модуль->Класс->Метод перекрываем этот метод и пишем в module_name, например, пустую строку.
-*/
+ *
+ * Формируем имя класса контроллера из разобранных module и class names
+ *
+ * Используется константа CONTROLLERS_BASE_PATH - controllers|api|cli в зависимости от типа вызова
+ *
+ *
+/module1/sub_module2/class/method1
+/module1/sub_module2/class
+/module1/class/method1
+/class/method1
+/class
+/
+ *
+ *
+/module1/sub_module/sub_sub_module/class/method1
+/module1/sub_module/sub_sub_module/class --  index method
+/module1/sub_module/sub_sub_module -- index class + index method
+/module1/sub_module/class -- index method
+/module1/sub_module -- index class + index method
+/module1/class/method1
+/class/method1
+/class -- index method
+/
+ * */
 	public function parseURI(): void
 	{
-//берем все, что до знака вопроса, убираем последний и первый слэш и разрываем через слэш
 		$uri = explode('/', $this->__request_uri);
 		$this->module_name = ($uri[0] != '') ? $uri[0] : $this->default_module_name;
 		$this->class_name = (count($uri) > 1) ? $uri[1] : $this->default_class_name;
 		$this->method_name = (count($uri) > 2) ? $uri[2] : $this->default_method_name;
+
+		$this->__controller_fq_class_name = CONTROLLERS_BASE_PATH.'\\'.(($this->module_name != '') ? $this->module_name."\\" : '').$this->class_name;
 	}
 
 /** Главный метод приложения */
@@ -347,7 +366,7 @@ class Application
 		{//WEB And API
 			$this->__request_uri = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
 		}
-//разобираем URI
+//разбираем URI
 		$this->parseURI();//устанавливаем переменные module_name, class_name, method_name
 
 //создали экземпляр контроллера - вызвали конструктор класса контроллера
@@ -356,7 +375,6 @@ class Application
 			$this->fileNotFound();
 			return;//а чё ещё делать, если контроллер не нашелся. пусть программист сам ищет контроллер.
 		}
-
 
 //эти методы там просто устанавливают протектед поля
 		$this->controller->setModuleName($this->module_name);
@@ -378,12 +396,6 @@ class Application
 		{//если в проекте предусмотрены просто шаблоны (views) без контроллеров, то ничего не делаем, иначе там можно вывести ошибку.
 			$this->controller->defaultMethod($this->method_name);//иначе вызываем дефолтный метод
 		}
-
-		/*
-		if (APPLICATION_RUNNING_MODE == 'api' || APPLICATION_RUNNING_MODE == 'cli')
-		{
-			return;//хватит для API и CLI
-		}*/
 
 //для WEB режима идем дальше
 //загрузили файл и создали представление - вызвали его конструктор
