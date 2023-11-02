@@ -280,7 +280,7 @@ class Application
 	protected string $__request_uri;
 
 	/** Полное название класса, каким мы пытались его создать по заданному URI */
-	private string $__controller_fq_class_name;
+	protected string $__controller_fq_class_name;
 
 /** Загрузчик Контроллера
  *

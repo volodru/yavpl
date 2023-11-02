@@ -319,7 +319,7 @@ class Controller
 
 	Можно перекрыть этот метод в контроллере и организовать собственный маршрутизатор в пределах класса.
  * */
-	public function defaultMethod(string $method_name)
+	public function defaultMethod(string $method_name):void
 	{
 	}
 
