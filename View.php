@@ -73,7 +73,7 @@ class View
  * После регистрации помощника, все его методы доступны в представлении как свои собственные.
  * Используется магия __call()
  */
-	public function __call(string $method_name, array $args)//: mixed
+	public function __call(string $method_name, array $args): mixed
 	{
 		if (isset($this->__methods[$method_name]))
 		{
@@ -114,7 +114,7 @@ class View
 /**
  * Если нет поля, то берем его из своего контроллера
  */
-	public function __get(string $name)
+	public function __get(string $name): mixed
 	{
 		if (!isset($this->controller))
 		{
@@ -133,7 +133,7 @@ class View
 /**
  * Если нет поля, то берем его из своего контроллера
  */
-	public function __isset(string $name)
+	public function __isset(string $name): bool
 	{
 		if (!isset($this->controller))
 		{
