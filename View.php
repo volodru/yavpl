@@ -105,7 +105,7 @@ class View
  * Помощник сам может использовать методы вызвавшего его представления через магию __get()
  *
  */
-	public function registerHelper($helper_class_name)//class
+	public function registerHelper(string $helper_class_name): View//class
 	{
 		$this->__methods = array_merge($this->__methods, \YAVPL\Helper::registerHelper($helper_class_name, $this));
 		return $this;
@@ -162,7 +162,7 @@ class View
 /**
  * Используется в методе render()
  */
-	public function getHeaderTags()
+	public function getHeaderTags(): array
 	{
 		return array_merge(
 			["<title>".($this->controller->getTitle())."</title>"],
@@ -174,7 +174,7 @@ class View
  * то можно установить с нуля все тэги в заголовке документа.
  * Рекомендуется делать это только в конструкторе defaultView всего проекта.
  */
-	public function setHeaderTags($tags)
+	public function setHeaderTags(array $tags): View
 	{
 		$this->__header_tags = $tags;
 		return $this;
@@ -184,7 +184,7 @@ class View
  * Добавить тэг к заголовку документа
  * Делать ПОСЛЕ setHeaderTags, т.к. тот игнорирует все выставленное до него.
  */
-	public function addHeaderTag($tag)
+	public function addHeaderTag(string $tag): View
 	{
 		$this->__header_tags[] = $tag;
 		return $this;
@@ -194,7 +194,7 @@ class View
  * Возвращает <!DOCTYPE... секцию документа
  * Используется в методе render()
  */
-	public function getDoctypeDeclaration()
+	public function getDoctypeDeclaration(): string
 	{
 		return $this->__doctype_declaration;
 	}
@@ -203,7 +203,7 @@ class View
  * Если не устраивает дефолтное значение, то в defaultView проекта
  * можно сделать установку любого <!DOCTYPE...>
  */
-	public function setDoctypeDeclaration($doctype)
+	public function setDoctypeDeclaration(string $doctype): View
 	{
 		$this->__doctype_declaration = $doctype;
 		return $this;
@@ -213,7 +213,7 @@ class View
  * Возвращает атрибуты тэга html.
  * Используется в методе render()
  */
-	public function getHtmlTagAttributes()
+	public function getHtmlTagAttributes(): string
 	{
 		return $this->__html_tag_attributes;
 	}
@@ -221,7 +221,7 @@ class View
 /**
  * Устанавливает атрибуты тэга html.
  */
-	public function setHtmlTagAttributes($attr)
+	public function setHtmlTagAttributes(string $attr): View
 	{
 		$this->__html_tag_attributes = $attr;
 		return $this;
@@ -230,7 +230,7 @@ class View
 /**
  * Добавляет JS файл в заголовок документа
  */
-	public function addJS($filename, $options = '')
+	public function addJS(string $filename, string $options = ''): View
 	{
 		if ($filename != '')
 		{
@@ -242,7 +242,7 @@ class View
 /**
  * Добавляет CSS файл в заголовок документа
  */
-	public function addCSS($filename)
+	public function addCSS(string $filename): View
 	{
 		if ($filename != '')
 		{
@@ -254,7 +254,7 @@ class View
 /**
  * Добавляет живой CSS код в заголовок документа
  */
-	public function CSS($css)
+	public function CSS(string $css): View
 	{
 		$css = trim($css);
 		if ($css != '')
@@ -267,7 +267,7 @@ class View
 /**
  * Добавляет живой JS код в заголовок документа
  */
-	public function JS($js)
+	public function JS(string $js): View
 	{
 		$js = trim($js);
 		if ($js != '')
@@ -299,7 +299,7 @@ class View
  * Метод должен быть перекрыт в defaultView проекта.
  * Метод должен отрисовать содержимое тэга body документа.
  */
-	public function body($method_name)
+	public function body(string $method): void
 	{
 		die("Redeclare method 'body' in descendant view!");
 	}
@@ -311,7 +311,7 @@ class View
  * Особо одаренные наследники могут перекрыть весь render(), чтобы
  * вывести данные в pdf, rtf, xls и т.п.
  */
-	public function render($method_name)
+	public function render(string $method_name): void
 	{
 		print $this->getDoctypeDeclaration().
 "<html ".$this->getHtmlTagAttributes().">
@@ -328,7 +328,7 @@ class View
  * это только для ui режима!
  * для режима API используется свой механизм прямо в контроллере.
  */
-	public function default_JSON_Method()
+	public function default_JSON_Method(): void
 	{
 		if (isset($this->controller->result))//как правило это структура типа хеш
 		{
