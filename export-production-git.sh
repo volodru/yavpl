@@ -17,6 +17,6 @@ git push
 for server in srv2.adrussia.ru
 do
   echo ----EXPORTING TO SERVER $server
-  #ssh svn@$server "cd $project && git pull && git checkout-index -a -f --prefix=/www/src/$project/"
+  ssh svn@$server "cd $project && git pull && git checkout-index -a -f --prefix=/www/src/$project/"
 done
 
