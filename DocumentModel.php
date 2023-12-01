@@ -471,6 +471,7 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 		}
 		return $list;
 	}
+
 /** если надо сделать поля по умолчанию для методов типа ->edit() для новой записи/документа
  * то можно сгенерировать правильную структуру поля этим методом
  * $this->document_info['fields'] = [

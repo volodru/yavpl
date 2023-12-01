@@ -464,6 +464,7 @@ class Controller
  */
 	public function sendEventStreamMessage($id, $data)
 	{
+		//https://www.php.net/manual/en/function.cli-set-process-title.php
 		print "id: {$id}" . PHP_EOL . "data: " . json_encode($data) . PHP_EOL . PHP_EOL;
 		ob_flush();
 		flush();
