@@ -559,8 +559,8 @@ CREATE TABLE public.user_activity_logs
 	{
 		if (is_null(self::$current_instance))
 		{
-/*@TODO: убрать эту порнуху. */
-			self::$current_instance = new \Models\User();//this is a porn (UserModel extends this class in real project)
+			$class_name = get_called_class();
+			self::$current_instance = new $class_name();
 			self::$current_instance->continueCurrentSession();
 		}
 		return self::$current_instance;
