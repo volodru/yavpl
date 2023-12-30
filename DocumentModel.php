@@ -64,24 +64,9 @@ documents_fields - список полей для каждого типа док
 documents_fields_values - значения полей для документа
 documents_values_dicts - словарь для словарных полей
 
-document_type_id - тип документа. по-умолчанию = 0, если надо в схеме реализовать несколько
-разных документов и соединить их в иерархию через parent_id, то вот тут то и надо использовать
-разные document_type_id для разных типов в рамках одной таблицы.
 
-Типы документов и их проверки пока только хардкодить, т.к. по дефолту их может и не быть, т.е. будет всего один тип с id=0 и
-ради него не стоит каждый раз городить таблицу вида document_types с одной строкой только для того,
-чтобы сделать 2 констрэйнта с documents и documents_fields.
-Целостность проверяем в коде модели, т.е. при модификации списка полей и модификации documents.document_type_id)
-смотреть во внутреннюю таблицу типов документов на предмет соответствия.
-Вариант отдать редактирование типов документов юзеру не рассматривается даже в перспективе.
 
-Поля для документов сгруппированы по типу документа, т.е. в таблице documents_fields есть ссылка на тип документа.
-
-Каждый документ имеет родителя по ссылке в parent_id в таблице documents.
-Т.е. в рамках проекта можно констрэйнтами связать дерево документов в единое целое.
-Для констрэйнта надо в пустой таблице с документами создать пустой документ с ID=0 (как бы root :) )
-
-Документы наследуются от SimpleDictionary, но их поведение более сложное, поэтому parent::saveRow() запрещен.
+Документы наследуются от DBTable, но их поведение более сложное, поэтому parent::saveRow() запрещен.
 Для создания нового документа надо применять метод creatRow().
 Модификация документа допустима через изменение атрибутов и поштучный вызов updateField().
 
@@ -107,37 +92,33 @@ where id = 60
 
 class DocumentModel extends DbTable
 {
-	protected int $document_type_id;//а оно вообще надо тут? пока еще не было больше одного типа документов в одной схеме.
+	//DELETE protected int $document_type_id;//а оно вообще надо тут? пока еще не было больше одного типа документов в одной схеме.
 
-	public function __construct(string $scheme, int $document_type_id = 0)
+	public function __construct(string $scheme)
 	{
-		parent::__construct($scheme.'.documents', 'id', [
-			'document_type_id',
-			'parent_id',
-		]);
+		parent::__construct($scheme.'.documents', 'id', []);
 		$this->scheme = $scheme;
-		$this->document_type_id = $document_type_id;
 
-		$this->initFieldsModel($scheme, $document_type_id);
-		$this->initValuesDictsModel($scheme, $document_type_id);
+		$this->initFieldsModel($scheme);
+		$this->initValuesDictsModel($scheme);
 	}
 
 /** перекрыть, если используется своя модель для полей
  */
-	public function initFieldsModel(string $scheme, int $document_type_id):void
+	public function initFieldsModel(string $scheme):void
 	{
 		//в перекрытом методе вызываем свою модель
-		$this->fields_model = new Document_fieldsModel($scheme, $document_type_id);
+		$this->fields_model = new Document_fieldsModel($scheme);
 		//не забыть прицепить ее вот таким образом к документам!
 		$this->fields_model->__parent = $this;
 	}
 
 /** перекрыть, если используется своя модель для значений полей
  */
-	public function initValuesDictsModel(string $scheme, int $document_type_id):void
+	public function initValuesDictsModel(string $scheme):void
 	{
 		//в перекрытом методе вызываем свою модель
-		$this->values_dicts_model = new Document_values_dictsModel($scheme, $document_type_id);
+		$this->values_dicts_model = new Document_values_dictsModel($scheme);
 		//не забыть прицепить ее вот таким образом к документам!
 		$this->values_dicts_model->__parent = $this;
 	}
@@ -160,24 +141,17 @@ DROP TABLE {$this->scheme}.documents;
 CREATE TABLE {$this->scheme}.documents
 (
 	id serial NOT NULL,
-	document_type_id integer NOT NULL DEFAULT 0,
-	parent_id integer NOT NULL DEFAULT 0,
-	CONSTRAINT documents_pkey PRIMARY KEY (id),
-	CONSTRAINT documents_parent_id_fkey FOREIGN KEY (parent_id)
-		REFERENCES {$this->scheme}.documents (id) MATCH SIMPLE
-		ON UPDATE CASCADE ON DELETE CASCADE
+	CONSTRAINT documents_pkey PRIMARY KEY (id)
 )
 WITH (
 	OIDS=FALSE
 );
 ALTER TABLE {$this->scheme}.documents
 	OWNER TO postgres;
-INSERT INTO {$this->scheme}.documents (id, document_type_id, parent_id) VALUES (0, 0, 0);
 
 CREATE TABLE {$this->scheme}.documents_fields
 (
 	id serial NOT NULL,
-	document_type_id integer NOT NULL DEFAULT 0,
 	title character varying, -- заголовок поля для форм и таблиц
 	value_type character(1), -- тип значения
 	description text, -- комментарий к полю
@@ -221,7 +195,6 @@ ALTER TABLE {$this->scheme}.documents_fields_values
 CREATE TABLE {$this->scheme}.documents_values_dicts
 (
 	id serial NOT NULL,
-	document_type_id integer NOT NULL DEFAULT 0,
 	field_id integer NOT NULL,
 	value text,
 	CONSTRAINT documents_values_dicts_pkey PRIMARY KEY (id),
@@ -280,8 +253,6 @@ CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.d
 	{
 		return [
 			'id'				=> 0,
-			'document_type_id'	=> $this->document_type_id,
-			'parent_id'			=> 0,
 		];
 	}
 
@@ -379,14 +350,15 @@ WHERE document_id = $1 AND f.id = $2
 			}
 		}
 
-//чтобы не было в выдаче рутового документа
+//?? чтобы не было в выдаче рутового документа
 		$params['where'][] = "d.id > 0";
 
+		/*
 		$f = 'parent_id';
 		if (isset($params[$f]) && $params[$f] > 0)
 		{
 			$params['where'][] = "{$f} = {$params[$f]}";
-		}
+		}*/
 
 		//da('FILTER');		da($params['filter']);
 
@@ -640,12 +612,6 @@ WHERE document_id = $1 AND field_id = $2 AND {$db_field} = $3", $document_id, $f
  */
 	public function createRow(array $data):string
 	{
-		if (!isset($this->document_type_id))
-		{
-			return "Не задан тип документа";
-		}
-		$data['parent_id'] ??= 0;
-		$data['document_type_id'] = $this->document_type_id;
 		$this->document_id = $data['id'] = $this->db->nextVal($this->getSeqName());
 		$ar = $this->db->insert($this->table_name, $this->key_field, $this->fields, $data)->affectedRows();
 		return ($ar == 1) ? '' : "Произошла ошибка при сохранении документа [#{$this->document_id}]: количество измененных записей = {$ar}";
@@ -748,7 +714,7 @@ class Document_fieldsModel extends DbTable
 		'B'	=> [1, 1],//не имеет смысла, т.к. это радио кнопки
 	];
 
-	public function __construct(string $scheme, int $document_type_id = 0)
+	public function __construct(string $scheme)
 	{
 		parent::__construct($scheme.'.documents_fields', 'id', [
 			'title', 'value_type', 'measure', 'sort_order', 'description', 'automated',
@@ -756,7 +722,6 @@ class Document_fieldsModel extends DbTable
 			'width', 'height',
 		]);
 		$this->scheme = $scheme;
-		$this->document_type_id = $document_type_id;
 	}
 
 /** Отдает массив значений для словарных полей в виде хеша
@@ -842,7 +807,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		$params['pkey'] = 'id';
 		$params['where'] ??= [];
 
-		$params['where'][] = "document_type_id = {$this->document_type_id}";
+		//DELETE $params['where'][] = "document_type_id = {$this->document_type_id}";
 
 		foreach (['automated'] as $f)
 		{
@@ -911,14 +876,12 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 		$data['sort_order'] ??= 0;
 		$data['automated'] ??= 0;
 
-		if (($data['height'] ?? 0) <= 0)
+		foreach (['height', 'width'] as $f)
 		{
-			$data['height'] = 0;
-		}
-
-		if (($data['width'] ?? 0) <= 0)
-		{
-			$data['width'] = 0;
+			if (($data[$f] ?? 0) <= 0)
+			{
+				$data[$f] = 0;
+			}
 		}
 
 		if ($action == 'insert')
