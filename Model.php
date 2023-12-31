@@ -27,38 +27,32 @@ namespace YAVPL;
 /*
  * Модель.
  *
- * Каждая модель (напрямую или через базовую модель проекта MainModel) в проекте является наследником
- * данного класса Model.
+ * Каждая модель (напрямую или через базовую модель проекта \Models\Main) в проекте является наследником
+ * данного класса \YAVPL\Model.
  *
  * Все модели проекта называются
- * 		class {NAME}Model extends Model
+ * 		class {NAME} extends \YAVPL\Model
  * Все модели лежат в папке /models
  * Все субмодели проекта называются
- * 		class {MAIN_MODEL_NAME}_{SUBMODEL_NAME}Model extends Model
+ * 		namespace Models\{MAIN_MODEL_NAME};
+ * 		class {SUBMODEL_NAME} extends (\Models\Main или \YAVPL\Model)
  * Все субмодели лежат в папке /models/{MAIN_MODEL_NAME}/, причем имя папки строго lowcase!
  * Пример:
  * 	папка models:
- * 		файл adplus.php - главная модель AdplusModel
+ * 		файл adplus.php - главная модель \Models\Adplus
  * 	папка models/adplus
- * 		файл prizes.php - субмодель Adplus_PrizesModel
- *
- * В проекте рекомендуется создать модель MainModel extends Model
- * и в ее конструкторе создавать соединение с базой, в ней делать
- * методы для логгирования, обработки ошибок и т.п., т.к. эти методы
- * всегда специфичны для проекта. Все остальные модели проекта
- * наследовать от MainModel.
- *
+ * 		файл prizes.php - субмодель \Models\Adplus\Prizes
  *
  * Концепция подмоделей (или субмоделей)
  * ::::::::::::::::::::
  * В конструкторе главной модели заполнить массив имен используемых подмоделей
- * $this->__sub_models = array('brands', 'articles', ....);
+ * $this->__sub_models = ['brands', 'articles', ......];
  *
  * В главной модели становится доступной конструкция
  * $this->brands, $this->articles и т.д.
  * Конструктор подмодели вызывается при первом упоминании имени через __get(), т.е. при первом упоминании
  * подмодели загружается файл с исходником (из подкаталога strtolower{Mainmodel})
- * и делается new Model\Mainmodel\Submodel().
+ * и делается new Models\MainModel\Submodel().
  *
  * Фактически, при этом конструктор подмодели исключается из процесса, т.к.
  * в него невозможно передать параметры и ХЗ когда он вообще запустится.
@@ -68,13 +62,13 @@ namespace YAVPL;
  *
 
 EXAMPLE:
-class CompetitorsModel extends Model
+class Competitors extends Model
 {
 	function __construct()
 	{
 		parent::__construct();
 		//автозагрузка
-		$this->__sub_models = array('brands');
+		$this->__sub_models = ['brands'];
 	 }
  }
  **/
