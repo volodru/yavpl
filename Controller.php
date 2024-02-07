@@ -334,8 +334,8 @@ class Controller
 
 /**
  * Для проектов с ACL.
- * По-умолчанию тут имя класса.
- * Если надо иметь ACL сюда пишем вменяемое имя роли для всего класса контроллера (или дефолтного контроллера раздела)
+ * По-умолчанию тут имя класса (__controller_fq_class_name).
+ * Если надо иметь ACL, сюда пишем вменяемое имя роли для всего класса контроллера (или дефолтного контроллера раздела)
  */
 	protected function getResourceId()
 	{
@@ -546,7 +546,7 @@ class Controller
 			{
 				if (abs(intval($value)) > 2147483647)//целое для Постгреса! в PHP 64 бита
 				{
-					die("{$value} - слишком большое значение для целого типа 32 длиной бит.
+					die("{$value} - слишком большое значение для целого типа длиной 32 бита.
 Если Вы попали сюда по внутренней ссылке - сообщите об этом администратору проекта.
 Если Вы самостоятельно набрали этот URL, то больше так не делайте.");
 				}
@@ -555,14 +555,13 @@ class Controller
 			{
 				if (abs(intval($value)) > 9223372036854775806)//целое 64 бит (bigint, bigserial) для Постгреса
 				{
-					die("{$value} - слишком большое значение для целого типа 64 длиной бит.
+					die("{$value} - слишком большое значение для целого типа длиной 64 бита.
 Если Вы попали сюда по внутренней ссылке - сообщите об этом администратору проекта.
 Если Вы самостоятельно набрали этот URL, то больше так не делайте.");
 				}
 			}
 			return intval($value);
 		}
-		//elseif ($type == 'float' || $type == 'double')
 		elseif (in_array($type,['float', 'double']))
 		{//а плавающая точка где-то может быть запятой. тут захардкоден американский формат чисел!
 			$value = preg_replace("/\,/", '.', $value);
@@ -588,9 +587,9 @@ class Controller
 /**
  * Приватный метод для getParam.
  */
-	private function verifyDefaultValue(string $type, $default_value)
+	private function verifyDefaultValue(string $type, mixed $default_value): mixed
 	{
-		if ($default_value === false)
+		if (!isset($default_value))
 		{//если не передали дефолтное значение, то берем его исходя из типа
 			if ($type == 'string')
 			{
@@ -611,7 +610,8 @@ class Controller
 
 /** Получить параметр извне.
 
-Параметр - это параметр. Код не может действовать различно в засимости от источника данных.
+Параметр - это параметр.
+Концепция: Код не может действовать по-разному в засимости от источника данных.
 
 Приоритет параметров:
 1. установленные через setParam
@@ -624,39 +624,47 @@ class Controller
 - Если передали чушь, то это эквивалентно, что не передали ничего, т.е. отдаем дефолтное значение.
 - Тутошние die() - видит только разработчик, который накосячил с вызовом getParam().
 
+Если имя оканчивается на конструкцию [] (например, person_id[] - имя переменной будет person_id),
+то будет возвращен массив значений. Использовать для блоков чекбоксов.
+
+
 Особо одаренные наследники могут перекрыть/переписать метод getParam и выдавать данные с любым приоритетом.
 Пока (2015-09-29) это еще никому не понадобилось.
  */
-	protected function getParam(string $name, string $type, $default_value = false, $valid_values = false)
+	protected function getParam(string $name, string $type, mixed $default_value = null, array $valid_values = []): mixed
 	{
 		$default_value = $this->verifyDefaultValue($type, $default_value);
 
+		$array_expected = false;
+		if (strpos($name, '[]') == (strlen($name) - 2))
+		{
+			$name = substr($name, 0, strlen($name) - 2);
+			$array_expected = true;
+		}
+
 		//проверяем дефолтное значение в любом случае, а не только, если до него дошла очередь
-		if (is_array($valid_values) && !in_array($default_value, $valid_values))
+		if (is_array($valid_values) && (count($valid_values) > 0) && !in_array($default_value, $valid_values))
 		{//значит накосячили при вызове getParam
 			die("Значение по-умолчанию [{$default_value}] не входит в список разрешенных значений.");
 		}
-
 /*
 	$this->__params_array[$name],//что поставили ручками + автотесты
 	$GLOBALS[$name], //для передачи данных из глобального контекста, например реализаци ЧПУ в Application
 */
 
-/** @TODO: use coalesce in php7
- * ждем coalesce в php7 и уберу этот ужас нах.
- */
-		/*
-		$value = (isset($this->__params_array[$name])) ? $this->__params_array[$name] : (
-			(isset($_GET[$name])) ? $_GET[$name] : (
-				(isset($_POST[$name])) ? $_POST[$name] : (
-					(isset($_COOKIE[$name])) ? $_COOKIE[$name] : (
-						(isset($GLOBALS[$name])) ? $GLOBALS[$name] : $default_value
-					)
-				)
-			)
-		);
-		*/
 		$value = $this->__params_array[$name] ?? $_GET[$name] ?? $_POST[$name] ?? $_COOKIE[$name] ?? $GLOBALS[$name] ?? $default_value;
+		if ($array_expected && !is_array($value))
+		{
+			if (isset($default_value) && $value == $default_value)
+			{
+				$value = [];
+			}
+			else
+			{
+				$value = [$value];
+			}
+		}
+
 
 		if (is_array($value))
 		{
@@ -670,7 +678,7 @@ class Controller
 		{ // проверяем допустимые значения только для скаляров
 			$result = $this->checkParamType($type, $value, $default_value);
 			// если значение неправильное и есть массив правильных значений
-			if (is_array($valid_values) && !(in_array($result, $valid_values)))
+			if (is_array($valid_values) && (count($valid_values) > 0) && !(in_array($result, $valid_values)))
 			{ // тогда возвращаем дефолтное значение
 				$result = $default_value;
 			}
