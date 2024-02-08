@@ -537,7 +537,7 @@ Why:
 				'Mail',//Почта
 				'SimpleDictionaryModel', //DEPRECATED
 				'Model', 'SimpleFilesModel', 'BasicUserModel', 'DocumentModel',//модельки
-				'Controller', 'ControllerAPI', 'View', 'Helper', //ядро фреймворка
+				'Controller', 'ControllerAPI', 'ControllerCLI', 'View', 'Helper', //ядро фреймворка
 				'ToolBar', //тулбар - библиотека
 				'Test',//DEPRECATED
 			]))

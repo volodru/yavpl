@@ -127,7 +127,7 @@ class Controller
 	public $__breadcrumbs_delimiter = " &raquo;&raquo;\n\t";
 	public $__breadcrumbs = [];
 
-/** Текущий залогиненный юзер. рекомендуется синглтон, как правило - наследник или экземпляр UserModel
+/** Текущий залогиненный юзер. рекомендуется синглтон, как правило - наследник или экземпляр UserModel.
  */
 	public $user = null;
 
@@ -217,16 +217,14 @@ class Controller
 
 /** Самый главный контструктор всея контроллеров.
  *
- * Для UI|API режимов тут ничего не делаем.
- *
- * Для консольного режима разбираем командную строку на параметры вида key=value
- * Всё, что не в этом формате - игнорим.
- * Параметры заполняем в глобальный массив через setParam.
  */
 	public function __construct()
 	{
 		/* Заполняем параметры для CLI режима, только в формате key=value */
 		//@TODO сделать вменяемый разбор строковых значений, т.к. вот щас нельзя в значениях иметь знак =
+
+		/* 2024-02-08 перенесено в ControllerCLI
+		 * надо будет удалить отсюда
 		if (APPLICATION_RUNNING_MODE == 'cli')
 		{
 			foreach ($_SERVER['argv'] ?? [] as $param)
@@ -237,11 +235,11 @@ class Controller
 					$this->setParam($a[0], $a[1]);
 				}
 			}
-		}
+		}*/
 	}
 
 /** Что надо сделать ПОСЛЕ конструктора, имея на руках $this->running_method_name
- * Например, глобальный ACL базирующийся на типовых названиях методов (save/delete)
+ * Например, глобальный ACL, базирующийся на типовых названиях методов (save/delete)
  */
 	public function init(): void
 	{
@@ -361,7 +359,7 @@ class Controller
 		return $this;
 	}
 
-/**
+/** Начать отдавать поток данных клиенту.
  * @param $filename string - имя файла с расширением 2-4 символа
  * @param $params array - доп параметры:
  * content_type - тип контента, по умолчанию application/octet-stream
@@ -430,17 +428,16 @@ class Controller
  */
 	public function isAJAX(): Controller
 	{//просто отдаём HTML без обёрток из шапки и подвала сайта
-		$this->disableRender();
+		$this->disableRender();//как рендерить, проверяет View
 		return $this;
 	}
 
 /**
- * Для аджаксных вызовов ожидающих строго JSON формат
- * при этом Application вызовет метод view->default_JSON_Method()
+ * Для аджаксных вызовов ожидающих строго JSON формат.
+ * При этом Application вызовет метод view->default_JSON_Method().
  *
- *
- * по-умолчанию, конечный контроллер заполняет массив $this->result, который просто отдается браузеру через json_encode
- * ну и Content-type тут выставляем, чтобы было красиво.
+ * По-умолчанию, конечный контроллер заполняет массив $this->result, который просто отдается браузеру через json_encode.
+ * Ну и Content-type тут выставляем, чтобы было красиво.
  */
 	public function isJSON(): Controller
 	{
@@ -656,6 +653,8 @@ class Controller
 /*
 	$this->__params_array[$name],//что поставили ручками + автотесты
 	$GLOBALS[$name], //для передачи данных из глобального контекста, например реализаци ЧПУ в Application
+
+(!)	Сессию тут не используем - все желабющие хранить дефолтные значения в сессии перекрывают этот метод.
 */
 
 		$value = $this->__params_array[$name] ?? $_GET[$name] ?? $_POST[$name] ?? $_COOKIE[$name] ?? $GLOBALS[$name] ?? $default_value;
@@ -671,7 +670,6 @@ class Controller
 			}
 		}
 
-
 		if (is_array($value))
 		{
 			$result = [];
@@ -681,7 +679,7 @@ class Controller
 			}
 		}
 		else
-		{ // проверяем допустимые значения только для скаляров
+		{ //проверяем допустимые значения только для скаляров, т.к. для массивов это обычно checkbox-ы, а там трудно накосячить.
 			$result = $this->checkParamType($type, $value, $default_value);
 			// если значение неправильное и есть массив правильных значений
 			if (is_array($valid_values) && (count($valid_values) > 0) && !(in_array($result, $valid_values)))
@@ -728,7 +726,7 @@ class Controller
 	}
 
 /**  Возвращает title Документа.
- * "public Морозов", по сути.
+ * это не "public Морозов", это только чтение.
  */
 	public function getTitle(): string
 	{
@@ -737,7 +735,7 @@ class Controller
 
 /**
  * магия по-умолчанию. на нее ссылается View.
- * тут же можно посылать уведомления о неициализированных переменных.
+ * тут же можно посылать уведомления о неинициализированных переменных.
  */
 	public function __get(string $name)
 	{
@@ -748,7 +746,7 @@ class Controller
 			return $this->$name;
 		}
 		//!это всегда ошибка. у контроллера не должно быть необъявленных переменных.
-		sendBugReport("CONTROLLER _get(): variable [{$name}] is undefined", $name);
+		sendBugReport("CONTROLLER __get(): variable [{$name}] is undefined", $name);
 		return null;
 	}
 
@@ -773,6 +771,8 @@ class Controller
 		}
 	}
 
+/** По сути, это имитация trait-ов другими средствами языка.
+ */
 	public function registerHelper(string $helper_class_name): Controller
 	{
 		$this->__methods = array_merge($this->__methods, Helper::registerHelper($helper_class_name, $this));
