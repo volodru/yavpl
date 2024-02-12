@@ -638,8 +638,10 @@ class Controller
 	{
 		$default_value = $this->verifyDefaultValue($type, $default_value);
 
+		//da("$name, string $type, mixed $default_value");
+
 		$array_expected = false;
-		if (strpos($name, '[]') == (strlen($name) - 2))
+		if ((strpos($name, '[]') > 0) && (strpos($name, '[]') == (strlen($name) - 2)))
 		{
 			$name = substr($name, 0, strlen($name) - 2);
 			$array_expected = true;
@@ -656,7 +658,6 @@ class Controller
 
 (!)	Сессию тут не используем - все желабющие хранить дефолтные значения в сессии перекрывают этот метод.
 */
-
 		$value = $this->__params_array[$name] ?? $_GET[$name] ?? $_POST[$name] ?? $_COOKIE[$name] ?? $GLOBALS[$name] ?? $default_value;
 		if ($array_expected && !is_array($value))
 		{
