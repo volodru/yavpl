@@ -402,7 +402,7 @@ class Application
 		if (APPLICATION_RUNNING_MODE == 'ui')
 		{
 			//если представление вообще загрузилось, то продолжаем.
-			if ($this->loadView())
+			if ($this->loadView())//загрузили сам класс
 			{//вызвали рисовалку представления
 				if ($this->controller->__need_render)
 				{//обычная отрисовка, html, body, блоки и все дела.
