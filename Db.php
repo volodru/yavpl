@@ -294,6 +294,8 @@ INSERT INTO {$table} (".join(', ', $ff).") VALUES (".join(', ', $p).")", $v);//-
 			$v[] = $data[$f] ?? null;
 			$i++;
 		}
+
+		//da("-- ".get_class($this).", method: ".__METHOD__."UPDATE {$table} SET ".join(', ', $s)." WHERE (".join(') AND (', $w).")");		da($v);		die;
 		return $this->exec("-- ".get_class($this).", method: ".__METHOD__."
 UPDATE {$table} SET ".join(', ', $s)." WHERE (".join(') AND (', $w).")", $v);
 	}

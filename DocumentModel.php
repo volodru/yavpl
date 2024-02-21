@@ -708,6 +708,16 @@ class Document_fieldsModel extends DbTable
 		'B'	=> 'int_value', // integer
 	];
 
+	public array $value_type_cgi_types = [
+		'A'	=> 'string', // alphabet
+		'I'	=> 'integer', // integer
+		'F'	=> 'float', // float
+		'D'	=> 'string', // date
+		'K'	=> 'integer', // key values
+		'X'	=> 'integer', // key values
+		'B'	=> 'integer', // integer (0|1), 0 - false, not 0 - true
+	];
+
 	/** Типы данных полей - ширина и высота по умолчанию
 	 * [width, height]*/
 	public array $value_type_sizes = [
@@ -798,6 +808,8 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 				if ($this->data_cash[$key_value] !== false)
 				{
 					$this->data_cash[$key_value]['values'] = $this->getValues($this->data_cash[$key_value]);
+					$this->data_cash[$key_value]['cgi_type'] = $this->value_type_cgi_types[$this->data_cash[$key_value]['value_type']] ??
+						die("Cannot find field type {$this->data_cash[$key_value]['value_type']} in Document_fieldsModel->value_type_cgi_types");
 				}
 			}
 			return $this->data_cash[$key_value];
@@ -838,9 +850,13 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 			$default_value_title = $params['default_value_title'] ?? '-- Выберите --';
 		}
 
-//заполняем значения словарных полей
+
 		foreach ($list as $id => $field_info)
 		{
+			$list[$id]['cgi_type'] = $this->value_type_cgi_types[$field_info['value_type']] ??
+				die("Cannot find field type {$field_info['value_type']} in Document_fieldsModel->value_type_cgi_types");
+
+			//заполняем значения словарных полей
 			if (in_array($field_info['value_type'], ['K', 'X']))
 			{
 				$list[$id]['values'] = $this->getValues($field_info);
@@ -913,7 +929,8 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 
 		if (trim($data['title'] ?? '') == '')
 		{
-			return "Название поля не может быть пустым";
+			//return "Название поля не может быть пустым";
+			$data['title'] = 'Новое поле '.time();
 		}
 
 		return '';
