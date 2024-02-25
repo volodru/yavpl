@@ -232,7 +232,7 @@ class Db
  * @param $fields - остальные поля  - массив или строка через запятую
  * @param $data - hash с данными вида ключ (поле) -- значение
  */
-	public function insert(string $table, $keys, $fields, array $data):Db
+	public function insert(string $table, array|string $keys, array|string $fields, array $data):Db
 	{
 		if (!is_array($keys))
 		{

@@ -83,7 +83,6 @@ class Model
 
 	protected $log = [];
 
-
 	public 	function __construct()
 	{
 	}

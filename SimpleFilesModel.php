@@ -130,8 +130,7 @@ class SimpleFilesModel extends DbTable
 *
 * Для обновления только полей нужно пользоваться saveRow().
 *
-* Возвращает true|false, а для подробностей смотреть $this->log,
-* т.к. там может быть набор ошибок, которые надо исправлять оптом.
+* Возвращает ошибку или пустую строку, когда все хорошо.
 */
 	public function saveFile(array &$data, array $i_file): string
 	{
@@ -307,11 +306,12 @@ class SimpleFilesModel extends DbTable
  * вернуться к редактированию и вернуться к списку сущностей и туда же вывести лог загрузки.
  *
 <form method='post' action='/сохранить' enctype='multipart/form-data'>
-<h2>Выберите несколько изображений из вашего компьютера и нажмите Загрузить</h2>
+<h2>Выберите несколько файлов из вашего компьютера и нажмите Загрузить</h2>
 <input name='upload[]' type='file' multiple='multiple' />
 <input type='submit' name='ok' value='Загрузить' />
 
  */
+
 	public function saveFiles(array &$data, array $i_files): bool
 	{
 		$this->log = [];

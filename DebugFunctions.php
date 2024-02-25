@@ -86,15 +86,15 @@ function sendBugReport($subject = 'Bug report', $message = 'Common bug', $is_fat
 ____________________________________________________
 TRACE\n".__getBacktrace()."
 --------------------------
-SERVER\n" . print_r($_SERVER ?? [], true) ."
+SERVER\n".print_r($_SERVER ?? [], true)."
 --------------------------
-GET\n" . print_r($_GET, true) ."
+GET\n".print_r($_GET, true)."
 --------------------------
-POST\n" . print_r($_POST, true) ."
+POST\n".print_r($_POST, true)."
 --------------------------
-COOKIE\n" . print_r($_COOKIE, true) ."
+COOKIE\n".print_r($_COOKIE, true)."
 --------------------------
-SESSION\n" . print_r($_SESSION ?? [], true)))->send();
+SESSION\n".print_r($_SESSION ?? [], true)))->send();
 	if ($is_fatal)
 	{
 		print $subject.CRLF.$message;
@@ -116,6 +116,6 @@ function sendNotification($subject = 'Notification', $message = 'Message')
 
 	(new \YAVPL\Mail(ADMIN_EMAIL, "[{$server_name}] {$subject}", "{$message}
 ____________________________________________________
-SESSION\n" . print_r($_SESSION, true)))->send();
+SESSION\n".print_r($_SESSION, true)))->send();
 }
 

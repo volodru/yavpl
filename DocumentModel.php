@@ -61,7 +61,7 @@ namespace YAVPL;
 4. для каждого проекта таблица с документами и полями может быть своя (в своей схеме)
 
 Модель толстая и, в отличии от предка, манипулирует сразу несколькими таблицами, потому в этом файле
-сразу 3 класса и все наследники от simpleDictionary.
+сразу 3 класса и все наследники от DbTable.
 
 Таблицы с документами, полями, значениями полей, прицепленными файлами, словарями полей и т.п.
 имеют фиксированные названия в пределах схемы проекта:
@@ -98,7 +98,14 @@ where id = 60
 
 class DocumentModel extends DbTable
 {
-	//DELETE protected int $document_type_id;//а оно вообще надо тут? пока еще не было больше одного типа документов в одной схеме.
+	public $list_actions = [
+		'more'		=> '>',
+		'less'		=> '<',
+		'eq'		=> '=',
+		'ne'		=> '!=',
+		'is_null'	=> 'is_null',
+		'substr'	=> 'substr',
+	];
 
 	public function __construct(string $scheme)
 	{
@@ -291,15 +298,6 @@ WHERE document_id = $1 AND f.id = $2
 ", $document_id, $field_id)->fetchRow();
 	}
 
-	private function getList_action(string $action): string
-	{//ну не люблю я конструкцию CASE во всех языках :)
-		if ($action == 'more') {return '>';}
-		if ($action == 'less') {return '<';}
-		if ($action == 'eq') {return '=';}
-		if ($action == 'ne') {return '!=';}
-		if ($action == 'is_null') {return 'is_null';}
-	}
-
 /** фильтруемый список документов
  * 'without_fields' => true, - не грузить атрибуты. по умолчанию они грузятся. если надо быстро получить ID документов, то поля грузить не надо.
  */
@@ -382,7 +380,7 @@ WHERE document_id = $1 AND f.id = $2
 				if (is_string($value) && $value == ''){continue;}
 				if (is_numeric($value) && $value == 0) {continue;}
 
-				$action = $this->getList_action($params['filter_actions'][$field_id] ?? 'eq');
+				$action = $this->list_actions[$params['filter_actions'][$field_id] ?? 'eq'];
 				//da("$field_id $action");
 
 				$field_info = $this->fields_model->getRow($field_id);
@@ -393,8 +391,8 @@ WHERE document_id = $1 AND f.id = $2
 				else
 				{
 					if (($field_info['value_type'] == 'K')|| ($field_info['value_type'] == 'X'))
-					{//		TO_DO - сделать сравнение по значению для больше-меньше и по ключу - когда равно
-						if (($action == '=')||($action == '!='))
+					{//сравнение по значению для больше-меньше и по ключу - когда равно / не равно
+						if (($action == '=') || ($action == '!='))
 						{
 							$params['where'][] = "v{$field_id}.int_value {$action} {$value}";
 						}
@@ -418,7 +416,14 @@ WHERE document_id = $1 AND f.id = $2
 					}
 					else
 					{
-						$params['where'][] = "v{$field_id}.value {$action} '{$value}'";
+						if ($action == 'substr')
+						{
+							$params['where'][] = "v{$field_id}.value ILIKE '%{$value}%'";
+						}
+						else
+						{
+							$params['where'][] = "v{$field_id}.value {$action} '{$value}'";
+						}
 					}
 				}
 				$params['fields_to_join'][] = $field_id;
@@ -773,7 +778,8 @@ ORDER BY {$field_info['x_table_order']}")->fetchAll('id');
 		}
 	}
 
-/** Надо инициализировать запись для интерфейсов редактирования полей документов
+/** Инициализирует пустую запись.
+ * Для форм редактирования полей документов.
  */
 	public function getEmptyRow(): array
 	{
@@ -809,7 +815,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 				{
 					$this->data_cash[$key_value]['values'] = $this->getValues($this->data_cash[$key_value]);
 					$this->data_cash[$key_value]['cgi_type'] = $this->value_type_cgi_types[$this->data_cash[$key_value]['value_type']] ??
-						die("Cannot find field type {$this->data_cash[$key_value]['value_type']} in Document_fieldsModel->value_type_cgi_types");
+						die("Cannot find field type {$this->data_cash[$key_value]['value_type']} in Fields->value_type_cgi_types");
 				}
 			}
 			return $this->data_cash[$key_value];
@@ -854,7 +860,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		foreach ($list as $id => $field_info)
 		{
 			$list[$id]['cgi_type'] = $this->value_type_cgi_types[$field_info['value_type']] ??
-				die("Cannot find field type {$field_info['value_type']} in Document_fieldsModel->value_type_cgi_types");
+				die("Cannot find field type {$field_info['value_type']} in Fields->value_type_cgi_types");
 
 			//заполняем значения словарных полей
 			if (in_array($field_info['value_type'], ['K', 'X']))
@@ -936,24 +942,6 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 		return '';
 	}
 
-	/*
-	public function saveRow(array $data): string
-	{
-		if (!isset($data['id']) || intval($data['id']) == 0)
-		{//запрет создания полей
-			return "Потерян ID поля.";
-		}
-
-		$old_data = $this->getRow($data['id']);
-
-		$ar = $this->db->update($this->table_name, $this->key_field, $this->fields, $data)->affectedRows();
-		if ($ar != 1)
-		{
-			return "Ошибка при сохранении атрибутов поля. Возможно, поле с ID={$data['id']} не существует";
-		}
-		return '';
-	}*/
-
 /** иногда триггеры работают неправильно или мы меняем тип поля на словарный.
  * тогда надо вызвать этот метод для глобального апдейта
  */
@@ -988,7 +976,7 @@ FROM {$this->scheme}.documents_fields_values AS v
 JOIN {$this->scheme}.documents_fields AS f ON (f.id = v.field_id)
 WHERE v.field_id = {$key_value} LIMIT 1")->rows > 0)
 		{
-			return "На удаляемое поле [{$key_value}] ссылаются какие-то документы. Нужно их ВСЕХ отредактировать перед удалением значения.";
+			return "На удаляемое поле [{$key_value}] ссылаются какие-то документы. Нужно их ВСЕ отредактировать перед удалением значения.";
 		}
 		return '';
 	}
@@ -1032,7 +1020,7 @@ FROM {$this->scheme}.documents_fields_values AS v
 JOIN {$this->scheme}.documents_fields AS f ON (f.id = v.field_id)
 WHERE f.value_type='K' AND v.int_value = {$key_value} LIMIT 1")->rows > 0)
 		{
-			return "На удаляемое значение [{$key_value}] ссылаются какие-то документы. Нужно их ВСЕХ отредактировать перед удалением значения.";
+			return "На удаляемое значение [{$key_value}] ссылаются какие-то документы. Нужно их ВСЕ отредактировать перед удалением значения.";
 		}
 		return '';
 	}
