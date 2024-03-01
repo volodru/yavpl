@@ -579,6 +579,12 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 			$db_field = 'date_value';
 			$result = '';
 		}
+		if ($field_info['value_type'] == 'Z')//files
+		{
+			$value = $hr_value = 1;
+			$db_field = 'int_value';
+			$result = '';
+		}
 
 		if ($result == '')
 		{
@@ -725,7 +731,7 @@ class Document_fieldsModel extends DbTable
 		'K'	=> 'integer', // key values
 		'X'	=> 'integer', // key values
 		'B'	=> 'integer', // integer (0|1), 0 - false, not 0 - true
-		'Z'	=> 'string',//заглушка, файлы работаю не через поля CGI
+		'Z'	=> 'integer',//заглушка, файлы работаю не через поля CGI
 	];
 
 	/** Типы данных полей - ширина и высота по умолчанию
@@ -738,7 +744,7 @@ class Document_fieldsModel extends DbTable
 		'K'	=> [25, 1],
 		'X'	=> [25, 1],
 		'B'	=> [1, 1],//не имеет смысла, т.к. это радио кнопки
-		'Z'	=> [25, 5],	// block with files
+		'Z'	=> [1, 1],	//рисуется в отдельной форме
 	];
 
 	public function __construct(string $scheme)
