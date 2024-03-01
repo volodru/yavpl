@@ -688,6 +688,8 @@ class Document_fieldsModel extends DbTable
 		'K'	=> 'Словарный', // key values
 		'X'	=> 'Внешний словарь', // key values
 		'B'	=> 'Логический', // integer (0|1), 0 - false, not 0 - true
+		//'T'	=> 'Таблица',
+		'Z'	=> 'Файлы',
 	];
 
 	/** Типы данных полей - названия поля в базе
@@ -700,6 +702,7 @@ class Document_fieldsModel extends DbTable
 		'K'	=> 'int_value', // key values
 		'X'	=> 'int_value', // key values
 		'B'	=> 'int_value', // integer
+		'Z'	=> 'int_value', // files has no values here
 	];
 
 	/** Типы данных полей - названия полей, по которым надо их сортировать	 */
@@ -711,6 +714,7 @@ class Document_fieldsModel extends DbTable
 		'K'	=> 'value', // key values
 		'X'	=> 'value', // key values
 		'B'	=> 'int_value', // integer
+		'Z'	=> 'int_value',	// files has no values here
 	];
 
 	public array $value_type_cgi_types = [
@@ -721,6 +725,7 @@ class Document_fieldsModel extends DbTable
 		'K'	=> 'integer', // key values
 		'X'	=> 'integer', // key values
 		'B'	=> 'integer', // integer (0|1), 0 - false, not 0 - true
+		'Z'	=> 'string',//заглушка, файлы работаю не через поля CGI
 	];
 
 	/** Типы данных полей - ширина и высота по умолчанию
@@ -733,6 +738,7 @@ class Document_fieldsModel extends DbTable
 		'K'	=> [25, 1],
 		'X'	=> [25, 1],
 		'B'	=> [1, 1],//не имеет смысла, т.к. это радио кнопки
+		'Z'	=> [25, 5],	// block with files
 	];
 
 	public function __construct(string $scheme)
@@ -762,7 +768,7 @@ class Document_fieldsModel extends DbTable
 		{
 			foreach (['x_value_field_name', 'x_table_name', 'x_table_order'] as $f)
 			{
-				if (!isset($field_info[$f]))
+				if (empty($field_info[$f]))
 				{
 					die("Для поля #{$field_info['id']} {$field_info['title']} типа Внешний словарь не задано поле [{$f}]");
 				}
@@ -918,6 +924,12 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 			{
 				return 'Только разработчик может создавать поля типа Внешний словарь, т.к. для этого требуется модификация исходного кода.';
 			}
+
+			/*
+			if ($data['value_type'] == 'Z')
+			{
+				return 'Только разработчик может создавать поля этого типа.';
+			}*/
 		}
 
 		if ($action == 'update')
