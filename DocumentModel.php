@@ -595,7 +595,9 @@ SELECT document_id
 FROM {$this->scheme}.documents_fields_values
 WHERE document_id = $1 AND field_id = $2 AND {$db_field} = $3", $document_id, $field_id, $value)->rows == 0)
 			{//нет такого значения - удаляем старое и добавляем новое
-				$insert_clause = "INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, {$db_field}, value) VALUES ($1,$2,$3,$4)";
+				$insert_clause = "
+INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, {$db_field}, value) VALUES ($1,$2,$3,$4)
+ON CONFLICT ON CONSTRAINT documents_fields_values_pkey DO NOTHING";
 				$this->db->exec("BEGIN");
 				$this->db->exec($delete_clause, $document_id, $field_id);
 				$this->db->exec($insert_clause, $document_id, $field_id, $value, $hr_value);
