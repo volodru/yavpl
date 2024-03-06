@@ -484,7 +484,7 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 - если все хорошо, то удаляем поле и вставляем его заново с новым значением
 - триггер, обновляющий value в {DOCUMENTS}_fields_values работает только на вставку!
 */
-	public function saveFieldValue(int $document_id = 0, int $field_id = 0, $value = null)
+	public function saveFieldValue(int $document_id = 0, int $field_id = 0, $value = null): string
 	{
 		if ($document_id == 0){die('DocumentModel.saveFieldsValue: $document_id == 0');}	// - absolutely
 		if ($field_id == 0){die('DocumentModel.saveFieldsValue: $field_id == 0');}			// - barbaric!
@@ -492,7 +492,9 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 		$field_info = $this->fields_model->getRow($field_id);
 		//da($value);da($field_info);die;
 		if ($field_info == false){die("DocumentModel.saveFieldsValue: UNKNOWN field_id = {$field_id}");}
+
 		$delete_clause = "DELETE FROM {$this->scheme}.documents_fields_values WHERE document_id = $1 AND field_id = $2";
+
 		//установка value -> null - удаляет значение поля
 		if (!isset($value) || trim($value) == '' ||
 			((in_array($field_info['value_type'], ['K', 'X'])) && ($value == 0)))
@@ -500,6 +502,7 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 			$this->db->exec($delete_clause, $document_id, $field_id);
 			return '';
 		}
+
 		//далее value уже точно не null
 		$value = $hr_value = trim($value);
 		$result = "Field [{$field_info['title']}] with value [{$value}]: Unknown value_type [{$field_info['value_type']}]";//ошибка по-умолчанию
