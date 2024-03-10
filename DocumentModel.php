@@ -479,7 +479,7 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
  * если на выходе пустая строка - все хорошо, иначе там описание ошибки.
  *
  * логика:
-- если value равно null - просто удаляем старое значение и выходим
+- если value равно (null||''||0 для словарей) - просто удаляем старое значение и выходим
 - если поле неправильное, то выводим ошибку и выходим
 - если все хорошо, то удаляем поле и вставляем его заново с новым значением
 - триггер, обновляющий value в {DOCUMENTS}_fields_values работает только на вставку!
@@ -495,38 +495,44 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 
 		$delete_clause = "DELETE FROM {$this->scheme}.documents_fields_values WHERE document_id = $1 AND field_id = $2";
 
-		//установка value -> null - удаляет значение поля
-		if (!isset($value) || trim($value) == '' ||
-			((in_array($field_info['value_type'], ['K', 'X'])) && ($value == 0)))
+		//если $value равно NULL или пустой строке, то оно удаляется.
+		//если оно равно 0, то это вполне себе целое, вещественное или булево значение, которое хранится.
+		//но если оно равно 0 для словаря - то удаляем.
+		//далее value уже точно не null
+		$value = $hr_value = trim($value ?? '');
+
+		//установка value -> '' - удаляет значение поля
+		if (($value == '') ||
+			(in_array($field_info['value_type'], ['K', 'X']) && ($value == 0))
+			)
 		{
 			$this->db->exec($delete_clause, $document_id, $field_id);
 			return '';
 		}
 
-		//далее value уже точно не null
-		$value = $hr_value = trim($value);
-		$result = "Field [{$field_info['title']}] with value [{$value}]: Unknown value_type [{$field_info['value_type']}]";//ошибка по-умолчанию
+
 		$insert_clause = '';
 		if ($field_info['value_type'] == 'A')//string
 		{
+			/* мы ее уже удалили и сделали return выше
 			if ($value == '')
 			{
 				return "{$field_info['title']} - [{$value}]: Ожидается непустая строка";
-			}
-			$db_field = 'text_value';
-			$result = '';
+			}*/
+			//$db_field = 'text_value';
+			//$result = '';
 		}
-		if ($field_info['value_type'] == 'I')//integer
+		elseif ($field_info['value_type'] == 'I')//integer
 		{
 			$value = preg_replace("/\D/", '', $value);
 			if ($value == '')
 			{
 				return "{$field_info['title']} - [{$value}]: Ожидается целое число";
 			}
-			$db_field = 'int_value';
-			$result = '';
+			//$db_field = 'int_value';
+			//$result = '';
 		}
-		if ($field_info['value_type'] == 'B')// boolean
+		elseif ($field_info['value_type'] == 'B')// boolean
 		{
 			$value = preg_replace("/\D/", '', $value);
 			if ($value == '')
@@ -535,10 +541,10 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 			}
 			$value = ($value != 0) ? 1 : 0;//всё, кроме нуля - ДА
 			$hr_value = ($value != 0) ? 'да' : 'нет';
-			$db_field = 'int_value';
-			$result = '';
+			//$db_field = 'int_value';
+			//$result = '';
 		}
-		if ($field_info['value_type'] == 'F')//float
+		elseif ($field_info['value_type'] == 'F')//float
 		{
 			$value = preg_replace("/\,/", '.', $value);
 			$value = preg_replace("/\s+/", '', $value);
@@ -547,10 +553,10 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 				return "{$field_info['title']} - [{$value}]: Ожидается вещественное число";
 			}
 			$hr_value = $value;
-			$db_field = 'float_value';
-			$result = '';
+			//$db_field = 'float_value';
+			//$result = '';
 		}
-		if (in_array($field_info['value_type'], ['K', 'X']))//dictionary
+		elseif (in_array($field_info['value_type'], ['K', 'X']))//dictionary
 		{
 			$value = preg_replace("/\D/", '', $value);
 			if ($value == '')
@@ -562,10 +568,10 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 				return "Значение {$value} не найдено в словаре для поля {$field_info['title']}";
 			}
 			$hr_value = $field_info['values'][$value]['value'];
-			$db_field = 'int_value';
-			$result = '';
+			//$db_field = 'int_value';
+			//$result = '';
 		}
-		if ($field_info['value_type'] == 'D')//date
+		elseif ($field_info['value_type'] == 'D')//date
 		{
 			$value = trim($value);
 			$matches = [];
@@ -573,43 +579,61 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 			{
 				return "Поле {$field_info['title']} имеет значение [{$value}]: Ожидается формат даты ДД-ММ-ГГГГ";
 			}
-			if (!checkdate($matches[2],$matches[1],$matches[3]))
+			if (!checkdate($matches[2], $matches[1], $matches[3]))
 			{
 				return "Поле {$field_info['title']} имеет значение [{$value}]: Неверная дата. Формат даты ДД-ММ-ГГГГ";
 			}
 			$value = $matches[1].'-'.$matches[2].'-'.$matches[3];
 			$hr_value = $matches[1].'-'.$matches[2].'-'.$matches[3];
-			$db_field = 'date_value';
-			$result = '';
+			//$db_field = 'date_value';
+			//$result = '';
 		}
-		if ($field_info['value_type'] == 'Z')//files
+		elseif ($field_info['value_type'] == 'Z')//files
 		{
-			$value = $hr_value = 1;
-			$db_field = 'int_value';
-			$result = '';
+			$value = $hr_value = 1;//это псевдо поле, оно просто должно быть непустым
+			//$db_field = 'int_value';
+			//$result = '';
+		}
+		elseif ($field_info['value_type'] == 'T')//table in JSON
+		{
+			/* не может быть тут пустой строки.
+			if ($value == '')
+			{
+				return "{$field_info['title']} - [{$value}]: Ожидается непустая строка";
+			}*/
+			//$db_field = 'text_value';
+			//$result = '';
+		}
+		else
+		{
+			return "Field [{$field_info['title']}] with value [{$value}]: Unknown value_type [{$field_info['value_type']}]";//ошибка по-умолчанию
 		}
 
-		if ($result == '')
-		{
-			//da("$document_id, $field_id, $value, $hr_value");die;
-			//проверяем - есть ли такой значение
-			if ($this->db->exec("
+		//тут все хорошо, все проверки сделали early return до этого места
+
+		//da("$document_id, $field_id, $value, $hr_value");die;
+		//проверяем - есть ли такой значение
+
+
+		$db_field = $this->fields_model->value_field_names[$field_info['value_type']];
+
+		if ($this->db->exec("
 SELECT document_id
 FROM {$this->scheme}.documents_fields_values
 WHERE document_id = $1 AND field_id = $2 AND {$db_field} = $3", $document_id, $field_id, $value)->rows == 0)
-			{//нет такого значения - удаляем старое и добавляем новое
-				$insert_clause = "
+		{//нет такого значения - удаляем старое и добавляем новое
+			$insert_clause = "
 INSERT INTO {$this->scheme}.documents_fields_values (document_id, field_id, {$db_field}, value) VALUES ($1,$2,$3,$4)
 ON CONFLICT ON CONSTRAINT documents_fields_values_pkey DO NOTHING";
-				$this->db->exec("BEGIN");
-				$this->db->exec($delete_clause, $document_id, $field_id);
-				$this->db->exec($insert_clause, $document_id, $field_id, $value, $hr_value);
-				$this->db->exec("COMMIT");
-			}
-			//наша задача, чтобы поле БЫЛО и было с определенным значением
-			//и если оно там уже есть, то ничего не делаем
+			//собственно изменение в базе
+			$this->db->exec("BEGIN");
+			$this->db->exec($delete_clause, $document_id, $field_id);
+			$this->db->exec($insert_clause, $document_id, $field_id, $value, $hr_value);
+			$this->db->exec("COMMIT");
 		}
-		return $result;
+		//наша задача, чтобы поле БЫЛО и было с определенным значением
+		//и если оно там уже есть, то ничего не делаем
+		return '';
 	}
 
 	public function getRow(int $key_value): ?array
@@ -699,7 +723,7 @@ class Document_fieldsModel extends DbTable
 		'K'	=> 'Словарный', // key values
 		'X'	=> 'Внешний словарь', // key values
 		'B'	=> 'Логический', // integer (0|1), 0 - false, not 0 - true
-		//'T'	=> 'Таблица',
+		'T'	=> 'Таблица',
 		'Z'	=> 'Файлы',
 	];
 
@@ -713,6 +737,7 @@ class Document_fieldsModel extends DbTable
 		'K'	=> 'int_value', // key values
 		'X'	=> 'int_value', // key values
 		'B'	=> 'int_value', // integer
+		'T'	=> 'text_value', // JSON
 		'Z'	=> 'int_value', // files has no values here
 	];
 
@@ -725,6 +750,7 @@ class Document_fieldsModel extends DbTable
 		'K'	=> 'value', // key values
 		'X'	=> 'value', // key values
 		'B'	=> 'int_value', // integer
+		'T'	=> 'int_value',	//
 		'Z'	=> 'int_value',	// files has no values here
 	];
 
@@ -736,11 +762,12 @@ class Document_fieldsModel extends DbTable
 		'K'	=> 'integer', // key values
 		'X'	=> 'integer', // key values
 		'B'	=> 'integer', // integer (0|1), 0 - false, not 0 - true
+		'T'	=> 'string', // заглушка, таблицы сохраняются отдельно
 		'Z'	=> 'integer',//заглушка, файлы работаю не через поля CGI
 	];
 
-	/** Типы данных полей - ширина и высота по умолчанию
-	 * [width, height]*/
+/** Типы данных полей - ширина и высота по умолчанию, в "em"
+ * [width, height]*/
 	public array $value_type_sizes = [
 		'A'	=> [25, 1],
 		'I'	=> [25, 1],
@@ -749,6 +776,7 @@ class Document_fieldsModel extends DbTable
 		'K'	=> [25, 1],
 		'X'	=> [25, 1],
 		'B'	=> [1, 1],//не имеет смысла, т.к. это радио кнопки
+		'T'	=> [25, 5],	//рисуется в блоке с полями, редактируется отдельно
 		'Z'	=> [1, 1],	//рисуется в отдельной форме
 	];
 
