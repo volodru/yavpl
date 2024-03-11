@@ -723,7 +723,7 @@ class Document_fieldsModel extends DbTable
 		'K'	=> 'Словарный', // key values
 		'X'	=> 'Внешний словарь', // key values
 		'B'	=> 'Логический', // integer (0|1), 0 - false, not 0 - true
-		'T'	=> 'Таблица',
+		'T'	=> 'Таблица',//описание структуры в x_description, данные в json_value
 		'Z'	=> 'Файлы',
 	];
 
@@ -737,7 +737,7 @@ class Document_fieldsModel extends DbTable
 		'K'	=> 'int_value', // key values
 		'X'	=> 'int_value', // key values
 		'B'	=> 'int_value', // integer
-		'T'	=> 'text_value', // JSON
+		'T'	=> 'json_value', // JSON
 		'Z'	=> 'int_value', // files has no values here
 	];
 
@@ -750,7 +750,7 @@ class Document_fieldsModel extends DbTable
 		'K'	=> 'value', // key values
 		'X'	=> 'value', // key values
 		'B'	=> 'int_value', // integer
-		'T'	=> 'int_value',	//
+		'T'	=> 'int_value',	// заглушка, по таблицам сортировать нельзя
 		'Z'	=> 'int_value',	// files has no values here
 	];
 
@@ -763,7 +763,7 @@ class Document_fieldsModel extends DbTable
 		'X'	=> 'integer', // key values
 		'B'	=> 'integer', // integer (0|1), 0 - false, not 0 - true
 		'T'	=> 'string', // заглушка, таблицы сохраняются отдельно
-		'Z'	=> 'integer',//заглушка, файлы работаю не через поля CGI
+		'Z'	=> 'integer',//заглушка, файлы работают не через поля CGI
 	];
 
 /** Типы данных полей - ширина и высота по умолчанию, в "em"
@@ -828,17 +828,13 @@ ORDER BY {$field_info['x_table_order']}")->fetchAll('id');
  */
 	public function getEmptyRow(): array
 	{
-		return [
-			'id'				=> 0,
-			'title'				=> '',
-			'measure'			=> '',
-			'description'		=> '',
-			'value_type'		=> 'I',
-			'sort_order'		=> 0,
-			'automated'			=> 0,
-			'width'				=> 0,
-			'height'			=> 0,
-		];
+		$row = parent::getEmptyRow();
+		$row['value_type'] = 'I';
+		$row['sort_order'] = 0;
+		$row['automated'] = 0;
+		$row['width'] = 0;
+		$row['height'] = 0;
+		return $row;
 	}
 
 /** Надо для интерфейсов редактирования полей документов.
@@ -986,7 +982,6 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 
 		if (trim($data['title'] ?? '') == '')
 		{
-			//return "Название поля не может быть пустым";
 			$data['title'] = 'Новое поле '.time();
 		}
 
