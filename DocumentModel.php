@@ -784,7 +784,7 @@ class Document_fieldsModel extends DbTable
 	{
 		parent::__construct($scheme.'.documents_fields', 'id', [
 			'title', 'value_type', 'measure', 'sort_order', 'description', 'automated',
-			'x_value_field_name', 'x_table_name', 'x_table_order', 'x_list_url',
+			'x_value_field_name', 'x_table_name', 'x_table_order', 'x_list_url', 'x_description',
 			'width', 'height',
 		]);
 		$this->scheme = $scheme;
