@@ -590,7 +590,7 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 		}
 		elseif ($field_info['value_type'] == 'Z')//files
 		{
-			$value = $hr_value = 1;//это псевдо поле, оно просто должно быть непустым
+			$hr_value = $value;//количество файлов
 			//$db_field = 'int_value';
 			//$result = '';
 		}
