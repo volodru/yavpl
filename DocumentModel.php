@@ -723,7 +723,7 @@ class Document_fieldsModel extends DbTable
 		'K'	=> 'Словарный', // key values
 		'X'	=> 'Внешний словарь', // key values
 		'B'	=> 'Логический', // integer (0|1), 0 - false, not 0 - true
-		'T'	=> 'Таблица',//описание структуры в x_description, данные в json_value
+		'T'	=> 'Таблица',//описание структуры в x_description, данные в отдельной таблице
 		'Z'	=> 'Файлы',
 	];
 
@@ -737,7 +737,7 @@ class Document_fieldsModel extends DbTable
 		'K'	=> 'int_value', // key values
 		'X'	=> 'int_value', // key values
 		'B'	=> 'int_value', // integer
-		'T'	=> 'json_value', // JSON
+		'T'	=> 'int_value', // заглушка
 		'Z'	=> 'int_value', // files has no values here
 	];
 
@@ -852,7 +852,7 @@ ORDER BY {$field_info['x_table_order']}")->fetchAll('id');
 			{
 				$this->data_cash[$key_value] = $this->db->exec("
 SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->fetchRow();
-				if ($this->data_cash[$key_value] !== false)
+				if (!empty($this->data_cash[$key_value]))
 				{
 					$this->data_cash[$key_value]['values'] = $this->getValues($this->data_cash[$key_value]);
 					$this->data_cash[$key_value]['cgi_type'] = $this->value_type_cgi_types[$this->data_cash[$key_value]['value_type']] ??
@@ -960,11 +960,11 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 				return 'Только разработчик может создавать поля типа Внешний словарь, т.к. для этого требуется модификация исходного кода.';
 			}
 
-			/*
-			if ($data['value_type'] == 'Z')
+
+			if ($data['value_type'] == 'T')
 			{
 				return 'Только разработчик может создавать поля этого типа.';
-			}*/
+			}
 		}
 
 		if ($action == 'update')
@@ -978,6 +978,18 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 					$data[$f] = $old_data[$f];
 				}
 			}
+		}
+
+		$f = 'x_description';
+		$data[$f] = trim($data[$f] ?? '', " \r\n\t");
+		if ($data[$f] == '')
+		{
+			$data[$f] = json_encode([]);
+		}
+		json_decode($data[$f]);
+		if (json_last_error() !== JSON_ERROR_NONE)
+		{
+			return "Ошибка формата JSON в поле {$f}.";
 		}
 
 		if (trim($data['title'] ?? '') == '')
