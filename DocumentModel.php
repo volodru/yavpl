@@ -512,15 +512,14 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 
 
 		$insert_clause = '';
-		if ($field_info['value_type'] == 'A')//string
+		if (in_array($field_info['value_type'], ['A', 'M']))//string
 		{
+			//теоретически тут хранятся совсем произвольные данные, хотя мы уже раньше сделалии trim
 			/* мы ее уже удалили и сделали return выше
 			if ($value == '')
 			{
 				return "{$field_info['title']} - [{$value}]: Ожидается непустая строка";
 			}*/
-			//$db_field = 'text_value';
-			//$result = '';
 		}
 		elseif ($field_info['value_type'] == 'I')//integer
 		{
@@ -529,8 +528,6 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 			{
 				return "{$field_info['title']} - [{$value}]: Ожидается целое число";
 			}
-			//$db_field = 'int_value';
-			//$result = '';
 		}
 		elseif ($field_info['value_type'] == 'B')// boolean
 		{
@@ -541,8 +538,6 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 			}
 			$value = ($value != 0) ? 1 : 0;//всё, кроме нуля - ДА
 			$hr_value = ($value != 0) ? 'да' : 'нет';
-			//$db_field = 'int_value';
-			//$result = '';
 		}
 		elseif ($field_info['value_type'] == 'F')//float
 		{
@@ -553,8 +548,6 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 				return "{$field_info['title']} - [{$value}]: Ожидается вещественное число";
 			}
 			$hr_value = $value;
-			//$db_field = 'float_value';
-			//$result = '';
 		}
 		elseif (in_array($field_info['value_type'], ['K', 'X']))//dictionary
 		{
@@ -568,8 +561,6 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 				return "Значение {$value} не найдено в словаре для поля {$field_info['title']}";
 			}
 			$hr_value = $field_info['values'][$value]['value'];
-			//$db_field = 'int_value';
-			//$result = '';
 		}
 		elseif ($field_info['value_type'] == 'D')//date
 		{
@@ -585,14 +576,10 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 			}
 			$value = $matches[1].'-'.$matches[2].'-'.$matches[3];
 			$hr_value = $matches[1].'-'.$matches[2].'-'.$matches[3];
-			//$db_field = 'date_value';
-			//$result = '';
 		}
 		elseif ($field_info['value_type'] == 'Z')//files
 		{
 			$hr_value = $value;//количество файлов
-			//$db_field = 'int_value';
-			//$result = '';
 		}
 		elseif ($field_info['value_type'] == 'T')//table in JSON
 		{
@@ -610,11 +597,6 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 		}
 
 		//тут все хорошо, все проверки сделали early return до этого места
-
-		//da("$document_id, $field_id, $value, $hr_value");die;
-		//проверяем - есть ли такой значение
-
-
 		$db_field = $this->fields_model->value_field_names[$field_info['value_type']];
 
 		if ($this->db->exec("
@@ -716,7 +698,8 @@ class Document_fieldsModel extends DbTable
 	/** Типы данных полей - названия для юзеров
 	 */
 	public array $value_types = [
-		'A'	=> 'Строковый', // alphabet
+		'A'	=> 'Строковый', // alphabet (input type=text)
+		'M'	=> 'Многострочный текст', // alphabet / MEMO field (textarea)
 		'I'	=> 'Целый', // integer
 		'F'	=> 'Вещественный', // float
 		'D'	=> 'Дата', // date
@@ -731,6 +714,7 @@ class Document_fieldsModel extends DbTable
 	 */
 	public array $value_field_names = [
 		'A'	=> 'text_value', // alphabet
+		'M'	=> 'text_value', // alphabet
 		'I'	=> 'int_value', // integer
 		'F'	=> 'float_value', // float
 		'D'	=> 'date_value', // date
@@ -744,6 +728,7 @@ class Document_fieldsModel extends DbTable
 	/** Типы данных полей - названия полей, по которым надо их сортировать	 */
 	public array $sort_field_names = [
 		'A'	=> 'text_value', // alphabet
+		'M'	=> 'text_value', // alphabet
 		'I'	=> 'int_value', // integer
 		'F'	=> 'float_value', // float
 		'D'	=> 'date_value', // date
@@ -756,6 +741,7 @@ class Document_fieldsModel extends DbTable
 
 	public array $value_type_cgi_types = [
 		'A'	=> 'string', // alphabet
+		'M'	=> 'string', // alphabet
 		'I'	=> 'integer', // integer
 		'F'	=> 'float', // float
 		'D'	=> 'string', // date
@@ -770,6 +756,7 @@ class Document_fieldsModel extends DbTable
  * [width, height]*/
 	public array $value_type_sizes = [
 		'A'	=> [25, 1],
+		'M'	=> [25, 5],
 		'I'	=> [25, 1],
 		'F'	=> [25, 1],
 		'D'	=> [ 6, 1],
