@@ -932,12 +932,16 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 		$data['sort_order'] ??= 0;
 		$data['automated'] ??= 0;
 
-		foreach (['height', 'width'] as $f)
+		$f = 'width';
+		if (($data[$f] ?? 0) <= 0)
 		{
-			if (($data[$f] ?? 0) <= 0)
-			{
-				$data[$f] = 0;
-			}
+			$data[$f] = $this->value_type_sizes[$data['value_type']][0];
+		}
+
+		$f = 'height';
+		if (($data[$f] ?? 0) <= 0)
+		{
+			$data[$f] = $this->value_type_sizes[$data['value_type']][1];
 		}
 
 		if ($action == 'insert')
@@ -947,7 +951,6 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 				return 'Только разработчик может создавать поля типа Внешний словарь, т.к. для этого требуется модификация исходного кода.';
 			}
 
-
 			if ($data['value_type'] == 'T')
 			{
 				return 'Только разработчик может создавать поля этого типа.';
@@ -956,7 +959,7 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 
 		if ($action == 'update')
 		{
-			$data['value_type'] = $old_data['value_type'];//тип не меняем из интерфейса.
+			$data['value_type'] = $old_data['value_type'];//тип явно не меняем из интерфейса.
 
 			if ($data['value_type'] == 'X')
 			{//эти атрибуты не меняем из интерфейса.
@@ -965,6 +968,15 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 					$data[$f] = $old_data[$f];
 				}
 			}
+		}
+		//переключение между типами строковых полей автоматическое
+		if ($data['height'] > 1 && $data['value_type'] == 'A')
+		{
+			$data['value_type'] = 'M';
+		}
+		if ($data['height'] == 1 && $data['value_type'] == 'M')
+		{
+			$data['value_type'] = 'A';
 		}
 
 		$f = 'x_description';
