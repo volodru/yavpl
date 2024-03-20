@@ -512,7 +512,7 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 
 
 		$insert_clause = '';
-		if (in_array($field_info['value_type'], ['A', 'M']))//string
+		if (in_array($field_info['value_type'], ['A', 'M', 'H']))//string
 		{
 			//теоретически тут хранятся совсем произвольные данные, хотя мы уже раньше сделалии trim
 			/* мы ее уже удалили и сделали return выше
@@ -700,6 +700,7 @@ class Document_fieldsModel extends DbTable
 	public array $value_types = [
 		'A'	=> 'Строковый', // alphabet (input type=text)
 		'M'	=> 'Многострочный текст', // alphabet / MEMO field (textarea)
+		'H'	=> 'Текст с разметкой', // alphabet / textarea + WYSIWYG editor
 		'I'	=> 'Целый', // integer
 		'F'	=> 'Вещественный', // float
 		'D'	=> 'Дата', // date
@@ -715,6 +716,7 @@ class Document_fieldsModel extends DbTable
 	public array $value_field_names = [
 		'A'	=> 'text_value', // alphabet
 		'M'	=> 'text_value', // alphabet
+		'H'	=> 'text_value', // alphabet
 		'I'	=> 'int_value', // integer
 		'F'	=> 'float_value', // float
 		'D'	=> 'date_value', // date
@@ -729,6 +731,7 @@ class Document_fieldsModel extends DbTable
 	public array $sort_field_names = [
 		'A'	=> 'text_value', // alphabet
 		'M'	=> 'text_value', // alphabet
+		'H'	=> 'text_value', // alphabet
 		'I'	=> 'int_value', // integer
 		'F'	=> 'float_value', // float
 		'D'	=> 'date_value', // date
@@ -742,6 +745,7 @@ class Document_fieldsModel extends DbTable
 	public array $value_type_cgi_types = [
 		'A'	=> 'string', // alphabet
 		'M'	=> 'string', // alphabet
+		'H'	=> 'string', // alphabet
 		'I'	=> 'integer', // integer
 		'F'	=> 'float', // float
 		'D'	=> 'string', // date
@@ -757,6 +761,7 @@ class Document_fieldsModel extends DbTable
 	public array $value_type_sizes = [
 		'A'	=> [25, 1],
 		'M'	=> [25, 5],
+		'H'	=> [25, 5],
 		'I'	=> [25, 1],
 		'F'	=> [25, 1],
 		'D'	=> [ 6, 1],

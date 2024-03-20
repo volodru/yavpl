@@ -230,11 +230,11 @@ class View
 /**
  * Добавляет JS файл в заголовок документа
  */
-	public function addJS(string $filename, string $options = ''): View
+	public function addJS(string $filename, string $type = 'text/javascript'): View
 	{
 		if ($filename != '')
 		{
-			$this->__header_tags[] ="<script type='text/javascript' src='{$filename}' {$options}></script>";
+			$this->__header_tags[] = "<script type='{$type}' src='{$filename}'></script>";
 		}
 		return $this;
 	}
@@ -267,12 +267,12 @@ class View
 /**
  * Добавляет живой JS код в заголовок документа
  */
-	public function JS(string $js): View
+	public function JS(string $js, string $type = 'text/javascript'): View
 	{
 		$js = trim($js);
 		if ($js != '')
 		{
-			$this->__header_tags[] = "<script type='text/javascript'>\n{$js}\n\t</script>";
+			$this->__header_tags[] = "<script type='{$type}'>\n{$js}\n</script>";
 		}
 		return $this;
 	}
