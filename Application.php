@@ -84,7 +84,7 @@ if (!defined('APPLICATION_RUNNING_MODE') || trim(APPLICATION_RUNNING_MODE) == ''
 }
 //тут выясняем, где брать контроллеры
 if (APPLICATION_RUNNING_MODE == 'api')
-{//нет представления, контроллер всегда отдает JSON
+{//нет представления, контроллер всегда отдает JSON или файл
 	define('CONTROLLERS_BASE_PATH', 'api');
 }
 elseif (APPLICATION_RUNNING_MODE == 'cli')
