@@ -176,8 +176,18 @@ PARAMS: ".print_r($this->query_params, true) : '').$explain);
 		{
 			$this->connect();
 		}
-		list($i) = pg_fetch_array(pg_query($this->pg_dbh, "SELECT nextval('{$sequence_name}')"), 0, PGSQL_NUM);
-		return intval($i);
+		$sth = pg_query($this->pg_dbh, "SELECT nextval('{$sequence_name}')");
+		if ($sth)
+		{
+			list($i) = pg_fetch_array($sth, 0, PGSQL_NUM);
+			return intval($i);
+		}
+		else
+		{
+			$err_msg = pg_last_error($this->pg_dbh);
+			$notice_msg = pg_last_notice($this->pg_dbh);
+			$this->showErrorMessage($err_msg, $notice_msg);//it dies in the end. always.
+		}
 	}
 
 /** Все результаты в таблицу, массив структур.
