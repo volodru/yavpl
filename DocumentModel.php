@@ -778,6 +778,7 @@ class Document_fieldsModel extends DbTable
 			'title', 'value_type', 'measure', 'sort_order', 'description', 'automated',
 			'x_value_field_name', 'x_table_name', 'x_table_order', 'x_list_url', 'x_description',
 			'width', 'height',
+			'use_in_index_sort',
 		]);
 		$this->scheme = $scheme;
 	}
@@ -826,6 +827,7 @@ ORDER BY {$field_info['x_table_order']}")->fetchAll('id');
 		$row['automated'] = 0;
 		$row['width'] = 0;
 		$row['height'] = 0;
+		$row['use_in_index_sort'] = 1;
 		return $row;
 	}
 
@@ -936,6 +938,8 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 	{
 		$data['sort_order'] ??= 0;
 		$data['automated'] ??= 0;
+		$data['use_in_index_sort'] ??= 1;
+
 
 		$f = 'width';
 		if (($data[$f] ?? 0) <= 0)

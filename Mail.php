@@ -60,7 +60,7 @@ if (!defined('REMOTE_ADDR'))
 }
 
 if (!defined('CHARSET_FOR_EMAILS'))
-{//should be initialized once per project. probable in main.php
+{//should be initialized once per project. probable in defines.php
 	define('CHARSET_FOR_EMAILS', 'utf-8');
 }
 
@@ -253,7 +253,8 @@ class Mail
 		$result = [];
 		foreach ($data as $a)
 		{
-			$result[] = ($a[1] != '') ? '"'.$this->encodeCyr($a[1])."\" <{$a[0]}>" : $a[0];
+			//$result[] = ($a[1] != '') ? '"'.$this->encodeCyr($a[1])."\" <{$a[0]}>" : $a[0];
+			$result[] = ($a[1] != '') ? '"'.$this->encodeCyr($a[1]).'" <'.$a[0].'>' : $a[0];
 		}
 		return join(';', $result);
 	}
@@ -279,7 +280,15 @@ class Mail
 
 		$errors_to = TECH_SUPPORT_EMAIL;
 
-		$x_user_ip = isset($_SERVER['REMOTE_ADDR']) ? "\nX-user_IP: {$_SERVER['REMOTE_ADDR']}" : '';
+		//$x_user_ip = isset($_SERVER['REMOTE_ADDR']) ? "\nX-user_IP: {$_SERVER['REMOTE_ADDR']}" : '';
+		if (!empty($_SERVER['REMOTE_ADDR']))
+		{
+			$x_user_ip = "\nX-user_IP: {$_SERVER['REMOTE_ADDR']}";
+		}
+		else
+		{
+			$x_user_ip = '';
+		}
 
 		$letter = "MIME-Version: 1.0
 Content-Language: ru
