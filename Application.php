@@ -112,15 +112,11 @@ function __my_shutdown_handler()
 	$error = error_get_last();
 	if ($error !== NULL)
 	{
-		$info = "Fatal error: {$error['message']}\nfile: {$error['file']}, line :{$error['line']}";
 		if (APPLICATION_ENV == 'production')
 		{
-			sendBugReport('FATAL Error', $info);
+			print "<xmp>Fatal error: {$error['message']}</xmp>";
 		}
-		else
-		{
-			print "<xmp>{$info}</xmp>";
-		}
+		sendBugReport('FATAL ERROR', "Fatal error: {$error['message']}\nfile: {$error['file']}, line :{$error['line']}");
 	}
 //включать тут по большим праздникам, т.к. все это пишется после </body>, рушит валидность страницы и может покорежить дизайн.
 	if (0 && APPLICATION_ENV != 'production')
@@ -151,7 +147,7 @@ function __my_exception_handler($exception)
 	}
 	else
 	{
-		$user_message = '<h1>Uncaught exception. eMail to the system administrator already has been sent.</h1>';
+		$user_message = "<h1>Uncaught exception. eMail to the system administrator already has been sent.</h1><h2>{$message}</h2>";
 	}
 
 	if (1|| APPLICATION_RUNNING_MODE == 'ui')

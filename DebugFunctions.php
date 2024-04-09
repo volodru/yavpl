@@ -77,6 +77,7 @@ function sendBugReport($subject = 'Bug report', $message = 'Common bug', $is_fat
 <h1>BUG REPORT from [{$server_name}]</h1>
 <h2>{$subject}</h2>
 <h2>{$message}</h2>
+<h2>".($_SERVER['SCRIPT_URI']??'').'?'.($_SERVER['QUERY_STRING'] ?? '')."</h2>
 <div>TRACE:<xmp>".__getBacktrace()."</xmp></div>";
 		exit();
 	}
