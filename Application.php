@@ -277,6 +277,7 @@ class Application
 
 	/** Полное название класса, каким мы пытались его создать по заданному URI */
 	protected string $__controller_fq_class_name;
+	protected string $__view_fq_class_name;
 
 /** Загрузчик Контроллера
  *
@@ -304,7 +305,7 @@ class Application
  * */
 	public function loadView(): bool
 	{
-		$fq_class_name = 'Views\\'.(($this->module_name != '') ? $this->module_name.'\\' : '').$this->class_name;
+		$fq_class_name = $this->__view_fq_class_name;
 		if (class_exists($fq_class_name))
 		{
 			$this->view = new $fq_class_name();
@@ -330,6 +331,7 @@ class Application
 /class
 /
  *
+ * TODO
  *
 /module1/sub_module/sub_sub_module/class/method1
 /module1/sub_module/sub_sub_module/class --  index method
@@ -349,41 +351,41 @@ class Application
 		$this->method_name = (count($uri) > 2) ? $uri[2] : $this->default_method_name;
 
 		$this->__controller_fq_class_name = CONTROLLERS_BASE_PATH.'\\'.(($this->module_name != '') ? $this->module_name."\\" : '').$this->class_name;
+		$this->__view_fq_class_name = 'Views\\'.(($this->module_name != '') ? $this->module_name.'\\' : '').$this->class_name;
 	}
 
 /** Главный метод приложения */
 	public function run(): void
 	{
-		if (APPLICATION_RUNNING_MODE == 'cli')
-		{//CLI - для этого режима первый параметр магическая строка в виде "модуль/класс/метод", потом все остальные параметры для программы
-			$this->__request_uri = $_SERVER['argv'][1];
-		}
-		else
-		{//WEB And API
-			$this->__request_uri = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '', '/');
-		}
+//получаем запрос модуля-класса-метода
+		$this->__request_uri = (APPLICATION_RUNNING_MODE == 'cli') ?
+			$_SERVER['argv'][1] //CLI - для этого режима первый параметр магическая строка в виде "модуль/класс/метод", потом все остальные параметры для программы
+			:
+			trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '', '/');//WEB или API запрос
+
 //разбираем URI
 		$this->parseURI();//устанавливаем переменные module_name, class_name, method_name
 
-//создали экземпляр контроллера - вызвали конструктор класса контроллера
+//создаем экземпляр контроллера - вызвали конструктор класса контроллера
 		if (!$this->loadController())
 		{//ну тогда программа закончена.
 			$this->fileNotFound();
 			return;//а чё ещё делать, если контроллер не нашелся. пусть программист сам ищет контроллер.
 		}
 
-//эти методы там просто устанавливают протектед поля
+//эти методы просто устанавливают протектед поля
 		$this->controller->setModuleName($this->module_name);
 		$this->controller->setClassName($this->class_name);
 		$this->controller->setMethodName($this->method_name);
+
 //дефолтный ресурс для ACL - полное имя класса
 		$this->controller->setDefaultResourceId($this->__controller_fq_class_name);
 
 //инициализация класса ПОСЛЕ конструктора, но ПЕРЕД вызовом запрошенного метода.
-//именно в этом методе можно проверять имя вызываемого метода и делать ACL по имени running_method_name
+//именно в этом методе можно проверять имя вызываемого метода и делать ACL по имени running_method_name или проверять доступ к ресурсу
 		$this->controller->init();
 
-//вызвали нужный метод контроллера
+//вызываем нужный метод контроллера
 		if (method_exists($this->controller, $this->method_name))
 		{
 			$this->controller->{$this->method_name}();//если такой метод есть
@@ -441,14 +443,16 @@ class Application
 		unset($this->controller);
 	}
 
-/** Имитация глобальной переменной - коннектора к основной СУБД
- * в приложении наследнике перекрыть этот метод и в нем подключиться к базе и отдать коннектор типа \YAVPL\Db
+/** Имитация глобальной переменной - коннектора к основной СУБД.
+ * в приложении-наследнике перекрыть этот метод и в нем подключиться к базе и отдать коннектор типа \YAVPL\Db
  */
 	public function getMainDBConnector(): \YAVPL\Db
 	{
 		die('У класса приложения должна быть реализована функция getMainDBConnector()');
 	}
 
+/** Ссылка на хранилище сущностей. Для сложных проектов с таким хранилищем.
+ */
 	public function getEntityTypesInstance()
 	{
 		die('У класса приложения должна быть реализована функция getEntityTypesInstance()');
@@ -506,15 +510,6 @@ Why:
 			print "<xmp>".$message."</xmp>";
 		}
 	}
-
-/** DEPRECATED
- * Обработчик фатальный ситуаций - можно перекрыть, чтобы посылать их себе на почту */
-	/*
-	public function fatalError($msg)
-	{
-		print $msg."\n";
-		exit(0);
-	}*/
 
 /** Автозагрузчик всего и вся */
 	public static function __autoload(string $class_name): bool
