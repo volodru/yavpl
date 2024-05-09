@@ -535,39 +535,26 @@ Why:
 			{
 				//da("Loading YAVPL file: $s");
 				require_once($file_name.'.php');
-				return;// true;
+				return;
 			}
 		}
 
-		// дефолтное поведение для старых проектов - файлы лежат в пути в нижнем регистре
+//---- дефолтное поведение для старых проектов - файлы лежат в пути в нижнем регистре
 		//print "<xmp>class_name = $class_name\n";
 		$s = explode('\\', $class_name);
 		$file_name = APPLICATION_PATH.'/'.strtolower(join('/', $s)).".php";
 		if (file_exists($file_name))
 		{
 			require $file_name;
+			return;
 		}
-
-
-		return;// false;
-
-		//da("Classname ".$class_name);//DEBUG
-		/*
-		$s = explode('\\', strtolower($class_name));
-		$file_name = join('/', $s).".php";
-		//da($s);			da("file_name = ".$file_name);
-		if (file_exists(APPLICATION_PATH.'/'.$file_name))
+//----- возможное поведение для новых проектов - все пути регистрозависимы вплоть до имени файла.
+		$file_name = APPLICATION_PATH.'/'.join('/', $s).".php";
+		if (file_exists($file_name))
 		{
-			require_once($file_name);
-			return true;
+			require $file_name;
+			return;
 		}
-		else
-		{//can be another helpers models and controllers in third party libraries, ex. PHPExcel*
-		//print "__autoload error: file [$file_name] for class [$class_name] doesn't exists";
-		//__printBackTrace();
-		//exit(1);
-			return false;
-		}
-		*/
+//-------------------------------------------------------------------------------------
 	}
 }
