@@ -512,7 +512,7 @@ Why:
 	}
 
 /** Автозагрузчик всего и вся */
-	public static function __autoload(string $class_name): bool
+	public static function __autoload(string $class_name): void
 	{
 		// for DEBUGGING autoloader:
 		//print "<p>Application::__autoload loading: {$class_name}</p>";//для отладки
@@ -535,11 +535,24 @@ Why:
 			{
 				//da("Loading YAVPL file: $s");
 				require_once($file_name.'.php');
-				return true;
+				return;// true;
 			}
 		}
 
+		// дефолтное поведение для старых проектов - файлы лежат в пути в нижнем регистре
+		//print "<xmp>class_name = $class_name\n";
+		$s = explode('\\', $class_name);
+		$file_name = APPLICATION_PATH.'/'.strtolower(join('/', $s)).".php";
+		if (file_exists($file_name))
+		{
+			require $file_name;
+		}
+
+
+		return;// false;
+
 		//da("Classname ".$class_name);//DEBUG
+		/*
 		$s = explode('\\', strtolower($class_name));
 		$file_name = join('/', $s).".php";
 		//da($s);			da("file_name = ".$file_name);
@@ -555,5 +568,6 @@ Why:
 		//exit(1);
 			return false;
 		}
+		*/
 	}
 }
