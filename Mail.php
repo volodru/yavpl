@@ -81,6 +81,8 @@ class Mail
 	private string $charset = CHARSET_FOR_EMAILS;
 	private string $uid;
 
+	public string $letter_body;//сформированное письмо.
+
 	private array $__typeByExt = [
 		'doc'	=> 'application/msword',
 		'docx'	=> 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -290,7 +292,7 @@ class Mail
 			$x_user_ip = '';
 		}
 
-		$letter = "MIME-Version: 1.0
+		$this->letter_body = "MIME-Version: 1.0
 Content-Language: ru
 Organization: {$this->organization}{$x_user_ip}
 From: {$from_line}
@@ -301,17 +303,17 @@ Subject: {$subj}";
 
 		if (count($this->cc) > 0)
 		{
-			$letter .= "\nCc: ".$this->convertFieldToLine($this->cc);
+			$this->letter_body .= "\nCc: ".$this->convertFieldToLine($this->cc);
 		}
 
 		if (count($this->bcc) > 0)
 		{
-			$letter .= "\nBcc: ".$this->convertFieldToLine($this->bcc);
+			$this->letter_body .= "\nBcc: ".$this->convertFieldToLine($this->bcc);
 		}
 
 		if (count($this->attachments) == 0)
 		{
-			$letter .= "
+			$this->letter_body .= "
 Content-type: {$this->content_type}; charset={$this->charset}
 Content-Transfer-Encoding: 8bit
 
@@ -320,7 +322,7 @@ Content-Transfer-Encoding: 8bit
 		}
 		else
 		{
-			$letter .= "
+			$this->letter_body .= "
 Content-Type: multipart/mixed; boundary={$this->uid}; charset={$this->charset}
 
 --{$this->uid}
@@ -332,7 +334,7 @@ Content-Transfer-Encoding: 8bit
 
 			foreach ($this->attachments as $attachment)
 			{
-				$letter .= "
+				$this->letter_body .= "
 --{$this->uid}
 Content-Type: {$attachment['type']}; name=\"{$attachment['file_name']}\"; charset={$this->charset}
 Content-Transfer-Encoding: base64
@@ -343,14 +345,14 @@ Content-ID: <{$attachment['file_name']}>
 {$attachment['content']}
 ";
 			}
-			$letter .= "--{$this->uid}--";
+			$this->letter_body .= "--{$this->uid}--";
 		}
 
 		if (defined('APPLICATION_ENV') && (APPLICATION_ENV == 'production'))
 		{
 			if ($f = popen("/usr/sbin/sendmail -t -i -f {$this->from_email}", 'w'))
 			{
-				fwrite($f, $letter);
+				fwrite($f, $this->letter_body);
 				pclose($f);
 				sleep(1);//EXPERIMENTAL - попытка предотвратить блокировку 25 порта в МСК
 				//$st = pclose($f);
@@ -368,7 +370,7 @@ Content-ID: <{$attachment['file_name']}>
 			$log_file_name = "/tmp/mail_from_{$server_name}_".date('Y-m-d--H-i-s').'_'.rand(1,10000).".eml";
 			if ($f = fopen($log_file_name, 'w'))
 			{
-				fwrite($f, $letter);
+				fwrite($f, $this->letter_body);
 				fclose($f);
 			}
 			else
