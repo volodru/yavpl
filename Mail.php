@@ -67,21 +67,21 @@ if (!defined('CHARSET_FOR_EMAILS'))
 #[\AllowDynamicProperties]
 class Mail
 {
-	private array $to = [];
-	private array $cc = [];
-	private array $bcc = [];
-	private string $subj;
-	private string $content;
-	private string $content_type = 'text/plain';// or text/html
-	private string $robot_email = ADMIN_EMAIL;
-	private string $from_email;
-	private string $from_name;
-	private string $organization; //you should do define('ORGANIZATION_FIELD_FOR_EMAILS', 'you organization')
-	private array $attachments = [];
-	private string $charset = CHARSET_FOR_EMAILS;
-	private string $uid;
+	protected array $to = [];
+	protected array $cc = [];
+	protected array $bcc = [];
+	protected string $subj;
+	protected string $content;
+	protected string $content_type = 'text/plain';// or text/html
+	protected string $robot_email = ADMIN_EMAIL;
+	protected string $from_email;
+	protected string $from_name;
+	protected string $organization; //you should do define('ORGANIZATION_FIELD_FOR_EMAILS', 'you organization')
+	protected array $attachments = [];
+	protected string $charset = CHARSET_FOR_EMAILS;
+	protected string $uid;
 
-	public string $letter_body;//сформированное письмо.
+	protected string $letter_body;//сформированное письмо.
 
 	private array $__typeByExt = [
 		'doc'	=> 'application/msword',
@@ -250,13 +250,19 @@ class Mail
 		return $str;
 	}
 
-	private function convertFieldToLine(array $data): string
+	protected function convertFieldToLine(array $data, bool $encode_cyrillic = true): string
 	{
 		$result = [];
 		foreach ($data as $a)
 		{
-			//$result[] = ($a[1] != '') ? '"'.$this->encodeCyr($a[1])."\" <{$a[0]}>" : $a[0];
-			$result[] = ($a[1] != '') ? '"'.$this->encodeCyr($a[1]).'" <'.$a[0].'>' : $a[0];
+			if ($encode_cyrillic)
+			{
+				$result[] = ($a[1] != '') ? '"'.$this->encodeCyr($a[1]).'" <'.$a[0].'>' : $a[0];
+			}
+			else
+			{
+				$result[] = ($a[1] != '') ? '"'.$a[1].'" <'.$a[0].'>' : $a[0];
+			}
 		}
 		return join(';', $result);
 	}
