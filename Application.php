@@ -358,10 +358,19 @@ class Application
 	public function run(): void
 	{
 //получаем запрос модуля-класса-метода
-		$this->__request_uri = (APPLICATION_RUNNING_MODE == 'cli') ?
-			$_SERVER['argv'][1] //CLI - для этого режима первый параметр магическая строка в виде "модуль/класс/метод", потом все остальные параметры для программы
-			:
-			trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '', '/');//WEB или API запрос
+		if (APPLICATION_RUNNING_MODE == 'cli')
+		{//CLI - для этого режима первый параметр магическая строка в виде "модуль/класс/метод", потом все остальные параметры для программы
+			$this->__request_uri = $_SERVER['argv'][1];
+		}
+		else
+		{//WEB или API запрос
+			$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+			if ($path === false)//On seriously malformed URLs, parse_url() may return false.
+			{
+				$path = '';
+			}
+			$this->__request_uri = trim($path, '/');
+		}
 
 //разбираем URI
 		$this->parseURI();//устанавливаем переменные module_name, class_name, method_name
