@@ -75,10 +75,10 @@ trait SimpleDictionaryController
 		//da($new_info);
 
 		$this->message = $model_instance->saveRow($new_info);
-		$this->id = $model_instance->key_value;
 
 		if ($this->message == '')
 		{
+			$this->id = $model_instance->key_value;
 			$this->info = $model_instance->getRow($this->id);//get it once again after changing
 			print json_encode(['status' => 'OK', 'info' => $this->info]);
 		}

@@ -215,7 +215,7 @@ ORDER BY {$params['order']}
 	public function beforeSaveRow(string $action, array &$data, array $old_data): string
 	{
 		foreach ($this->fields as $field_name)
-		{//данные ($data) передаются по ссылке, так что overhead от пустых выхзовов должен быть минимальным.
+		{//данные ($data) передаются по ссылке, так что overhead от пустых вызовов должен быть минимальным.
 			$message = $this->checkFieldValue($action, $field_name, $data);
 			if (isset($message) && ($message != ''))
 			{
@@ -487,7 +487,6 @@ WHERE {$f_key_info['column_name']} = $1", $key_value)->rows > 0)
 		return '';//все хорошо, а ошибки уходят по early return
 	}
 
-
 /** Поддержка хранилища сущностей в проекте. Отдает описание сущности.
  */
 	public function getEntityTypeInfo(bool $can_return_cache = true): array
@@ -506,6 +505,7 @@ WHERE {$f_key_info['column_name']} = $1", $key_value)->rows > 0)
 				sendBugReport('getEntityTypeInfo', "Не найден тип сущности по таблице {$this->table_name}", true);
 		}
 	}
+
 /** Поддержка хранилища сущностей в проекте. Отдает ID  сущности.
  */
 	public function getEntityTypeId(): int
