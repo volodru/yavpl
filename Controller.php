@@ -10,7 +10,7 @@ namespace YAVPL;
  * @LICENSE LGPLv3 - http://www.gnu.org/licenses/lgpl-3.0.html
  */
 
-/* CHANGELOG
+/** CHANGELOG
  * 1.14
  * DATE: 2024-02-07
  * Можно потребовать массив из getParam() если к имени переменной дописать []
@@ -38,6 +38,9 @@ namespace YAVPL;
  * 1.11
  * DATE: 2020-03-21
  * добавлен RegisterHelper, теперь помощники могут быть и у представления и у модели и у контроллеров.
+ */
+
+/**
  *
  * 1.10
  * DATE: 2019-11-16
@@ -147,7 +150,7 @@ class Controller
  */
 	public bool $__need_render = true;
 
-/** Если это просто JSON вызов (отключаем рендер и отдаем результата в виде json_encode)
+/** Если это просто JSON вызов (используется в классе Application - отключаем рендер и отдаем результата в виде json_encode)
  */
 	public bool $__is_json = false;
 
@@ -220,22 +223,6 @@ class Controller
  */
 	public function __construct()
 	{
-		/* Заполняем параметры для CLI режима, только в формате key=value */
-		//@TODO сделать вменяемый разбор строковых значений, т.к. вот щас нельзя в значениях иметь знак =
-
-		/* 2024-02-08 перенесено в ControllerCLI
-		 * надо будет удалить отсюда
-		if (APPLICATION_RUNNING_MODE == 'cli')
-		{
-			foreach ($_SERVER['argv'] ?? [] as $param)
-			{
-				$a = explode("=", $param);
-				if (count($a) == 2)
-				{
-					$this->setParam($a[0], $a[1]);
-				}
-			}
-		}*/
 	}
 
 /** Что надо сделать ПОСЛЕ конструктора, имея на руках $this->running_method_name
@@ -485,13 +472,10 @@ class Controller
 /**
  * Для простых контроллеров без представления - выполнил работу и перешел на другую страницу.
  */
-	protected function redirect(string $url = '/', bool $exit = true): void
+	protected function redirect(string $url = '/'): void
 	{
 		header("Location: {$url}");
-		if ($exit)
-		{
-			exit(0);
-		}
+		exit(0);
 	}
 
 /**
