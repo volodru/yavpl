@@ -200,6 +200,11 @@ PARAMS: ".print_r($this->query_params, true) : '').$explain);
  */
 	public function fetchAll(string $hash_index = ''): array
 	{
+		if ($hash_index == '')
+		{
+			return pg_fetch_all($this->sth);
+		}
+
 		$t = [];
 		for ($row_num = 0; $row_num < $this->rows; $row_num++)
 		{
@@ -319,6 +324,8 @@ PARAMS: ".print_r($this->query_params, true) : '').$explain);
  *
  * осмысленные проверки надо делать на стороне вызывающей стороны!
  * тут заменяются \t на \T в строках и null элементы на \N
+ *
+ * по сути, эта функция аналог pg_copy_from работающий с другой структурой входных строк.
  */
 	public function bulkLoad(string $table_name, array $fields_list, array $data): void
 	{
@@ -328,10 +335,11 @@ PARAMS: ".print_r($this->query_params, true) : '').$explain);
 		{
 			return;
 		}
+
 		$buf = [];
 		foreach ($data as $line)
 		{
-			foreach($line as $k => $v)
+			foreach ($line as $k => $v)
 			{
 				if (isset($v))
 				{
