@@ -127,10 +127,12 @@ class Db
 			}
 			else
 			{//передали много аргументов - собираем из них тот же массив
+				$this->query_params = $args;
+				/*
 				foreach ($args as $arg)
 				{
 					$this->query_params[] = $arg;
-				}
+				}*/
 			}
 		}
 		//закончили разбор параметров
@@ -206,9 +208,9 @@ class Db
 
 		if ($this->show_error_messages)
 		{
-//@TODO: это мутный момент когда и как показывать ошибки БД для случаев,
+//@TODO: это мутный момент, когда и как показывать ошибки БД для случаев,
 //когда они допустимы.
-//и решить что это за случаи.
+//и решить, что это за случаи.
 			print "
 <h1>Ошибка в запросе</h1>
 <h2>Ваш запрос</h2>
@@ -232,7 +234,7 @@ class Db
  * @param $fields - остальные поля  - массив или строка через запятую
  * @param $data - hash с данными вида ключ (поле) -- значение
  */
-	public function insert(string $table, array|string $keys, array|string $fields, array $data):Db
+	public function insert(string $table, array|string $keys, array|string $fields, array $data): Db
 	{
 		if (!is_array($keys))
 		{
@@ -267,7 +269,7 @@ INSERT INTO {$table} (".join(', ', $ff).") VALUES (".join(', ', $p).")", $v);//-
  * @param $fields - остальные поля  - массив или строка через запятую
  * @param $data - hash с данными вида ключ (поле) -- значение
  */
-	public function update(string $table, $keys, $fields, array $data):Db
+	public function update(string $table, $keys, $fields, array $data): Db
 	{
 		if (!is_array($keys))
 		{
@@ -307,7 +309,7 @@ UPDATE {$table} SET ".join(', ', $s)." WHERE (".join(') AND (', $w).")", $v);
  * @param $keys - ключевые поля - массив или строка через запятую
  * @param $data - hash с данными вида ключ (поле) -- значение
  */
-	public function delete(string $table, $keys, array $data):Db
+	public function delete(string $table, $keys, array $data): Db
 	{
 		if (!is_array($keys))
 		{

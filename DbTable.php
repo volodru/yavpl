@@ -65,7 +65,7 @@ namespace YAVPL;
 
 class DbTable extends \YAVPL\Model
 {
-/** Имя таблица в базе (со схемой) */
+/** Имя таблица в базе (со схемой, например catalog.articles) */
 	public string $table_name = '';
 
 /** Ключевое поле - как правило - id*/
