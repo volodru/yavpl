@@ -221,7 +221,7 @@ PARAMS: ".print_r($this->query_params, true) : '').$explain);
 				//OLD CODE was unsafe : $code .= (is_string($row[$index])) ? "['{$row[$index]}']" : "[{$row[$index]}]";
 				if (!isset($row[$index]))
 				{
-					sendBugReport('Wrong index in fetchAll()', "index: {$hash_index}", true);
+					sendBugReport('Wrong index in fetchAll()', "Index [{$hash_index}] in ROW:\n".print_r($row, true), true);
 				}
 				if (is_string($row[$index]))//но строковых значений в индексе массива лучше избегать,
 				{
@@ -241,8 +241,7 @@ PARAMS: ".print_r($this->query_params, true) : '').$explain);
 			eval("\$t{$code} = \$row;");
 			if ($memory_limit > 0 && (\memory_get_usage() / $memory_limit > .99))
 			{
-				sendBugReport("Близкое ограничение памяти", "Получение данных привело к нехватке памяти.
-".\memory_get_usage()." / {$memory_limit}", true);
+				sendBugReport("Близкое ограничение памяти", "Получение данных в db->fetchAll привело к нехватке памяти.".\memory_get_usage()." / {$memory_limit}", true);
 			}
 		}
 		return $t;
