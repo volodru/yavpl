@@ -206,7 +206,11 @@ PARAMS: ".print_r($this->query_params, true) : '').$explain);
 		}
 
 		$memory_limit = \ini_get('memory_limit');
-		$memory_limit = (int)$memory_limit * 1024 ** ['k' => 1, 'm' => 2, 'g' => 3][strtolower($memory_limit)[-1]] ?? 0;
+		if ($memory_limit != -1)
+		{
+			$memory_limit = (int)$memory_limit * 1024 ** ['k' => 1, 'm' => 2, 'g' => 3][strtolower($memory_limit)[-1]] ?? 0;
+		}
+		da($memory_limit);
 		$t = [];
 		for ($row_num = 0; $row_num < $this->rows; $row_num++)
 		{
@@ -244,7 +248,7 @@ PARAMS: ".print_r($this->query_params, true) : '').$explain);
 				}
 				eval("\$t{$code} = \$row;");
 			//}
-			if (\memory_get_usage() / $memory_limit > .99)
+				if ($memory_limit > 0 && (\memory_get_usage() / $memory_limit > .99))
 			{
 				sendBugReport("Близкое ограничение памяти", "Получение данных привело к нехватке памяти.
 ".\memory_get_usage()." / {$memory_limit}", true);
