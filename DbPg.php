@@ -210,7 +210,6 @@ PARAMS: ".print_r($this->query_params, true) : '').$explain);
 		{
 			$memory_limit = (int)$memory_limit * 1024 ** ['k' => 1, 'm' => 2, 'g' => 3][strtolower($memory_limit)[-1]] ?? 0;
 		}
-		da($memory_limit);
 		$t = [];
 		for ($row_num = 0; $row_num < $this->rows; $row_num++)
 		{
