@@ -214,40 +214,32 @@ PARAMS: ".print_r($this->query_params, true) : '').$explain);
 		for ($row_num = 0; $row_num < $this->rows; $row_num++)
 		{
 			$row = pg_fetch_array($this->sth, $row_num, PGSQL_ASSOC);
-			/*
-			if ($hash_index == '')
+			$code = '';
+			foreach (preg_split("/,\s*/", $hash_index) as $index)
 			{
-				$t[] = $row;
-			}
-			else
-			{*/
-				$code = '';
-				foreach (preg_split("/,\s*/", $hash_index) as $index)
+				//проверку делать именно на string!, а не на целое и т.п.
+				//OLD CODE was unsafe : $code .= (is_string($row[$index])) ? "['{$row[$index]}']" : "[{$row[$index]}]";
+				if (!isset($row[$index]))
 				{
-					//проверку делать именно на string!, а не на целое и т.п.
-					//OLD CODE was unsafe : $code .= (is_string($row[$index])) ? "['{$row[$index]}']" : "[{$row[$index]}]";
-					if (!isset($row[$index]))
-					{
-						sendBugReport('Wrong index in fetchAll()', "index: {$hash_index}", true);
-					}
-					if (is_string($row[$index]))//но строковых значений в индексе массива лучше избегать,
-					{
-						$row[$index] = str_replace("'", '', $row[$index]);//we have to do it
-						/** @TODO - вопрос спорный что делать с обратными слэшами. если оставить
-						//$row[$index] = preg_replace("/^(.+)\\$/", '$1', $row[$index]);//в конце строки, чтобы не ломался eval со скобкой ]
-						*/
-						$row[$index] = trim($row[$index], '\\');
-						//вот такой попался артикул: 96308617\ и его нельзя было смешивать с 96308617
-						$code .= "['".$row[$index]."']" ;
-					}
-					else
-					{
-						$code .= "[{$row[$index]}]";
-					}
+					sendBugReport('Wrong index in fetchAll()', "index: {$hash_index}", true);
 				}
-				eval("\$t{$code} = \$row;");
-			//}
-				if ($memory_limit > 0 && (\memory_get_usage() / $memory_limit > .99))
+				if (is_string($row[$index]))//но строковых значений в индексе массива лучше избегать,
+				{
+					$row[$index] = str_replace("'", '', $row[$index]);//we have to do it
+					/** @TODO - вопрос спорный что делать с обратными слэшами. если оставить
+					//$row[$index] = preg_replace("/^(.+)\\$/", '$1', $row[$index]);//в конце строки, чтобы не ломался eval со скобкой ]
+					*/
+					$row[$index] = trim($row[$index], '\\');
+					//вот такой попался артикул: 96308617\ и его нельзя было смешивать с 96308617
+					$code .= "['".$row[$index]."']" ;
+				}
+				else
+				{
+					$code .= "[{$row[$index]}]";
+				}
+			}
+			eval("\$t{$code} = \$row;");
+			if ($memory_limit > 0 && (\memory_get_usage() / $memory_limit > .99))
 			{
 				sendBugReport("Близкое ограничение памяти", "Получение данных привело к нехватке памяти.
 ".\memory_get_usage()." / {$memory_limit}", true);
