@@ -375,8 +375,8 @@ class Application
 		}
 		else
 		{//WEB или API запрос
-			$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-			if ($path === false)//On seriously malformed URLs, parse_url() may return false.
+			$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '';
+			if (empty($path))//On seriously malformed URLs, parse_url() may return false.
 			{
 				$path = '';
 			}
