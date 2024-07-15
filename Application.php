@@ -511,7 +511,7 @@ class Application
 	protected function fileNotFound(): void
 	{//
 		header("HTTP/1.0 404 Not Found");
-		$message = "Cannot load appropriate controller [{$this->__controller_fq_class_name}] for URI [{$this->__request_uri}].
+		$message = "Cannot load appropriate controller class [{$this->__controller_fq_class_name}] for URI [{$this->__request_uri}].
 Why:
 1. Mistyped URL
 2. File with class not found (check autoloader)
