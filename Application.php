@@ -114,7 +114,7 @@ function __my_shutdown_handler()
 	{
 		if (APPLICATION_ENV == 'production')
 		{
-			print "<xmp>Fatal error: {$error['message']}</xmp>";
+			print "<h1>Фатальная ошибка:</h1> <xmp>{$error['message']}</xmp>";
 		}
 		sendBugReport('FATAL ERROR', "Fatal error: {$error['message']}\nfile: {$error['file']}, line :{$error['line']}");
 	}
@@ -140,20 +140,20 @@ register_shutdown_function('\\YAVPL\\__my_shutdown_handler');
 function __my_exception_handler($exception)
 {
 	$message = $exception->getMessage();
-	sendBugReport('Uncaught exception', $message);
+
+	$user_message = "<h1>Фатальная ошибка.</h1>
+<h2>Письмо администратору будет отправлено, но можно сообщить ему лично вместе с нижеследующим сообщением:</h2>
+<h2>{$message}</h2>
+<h3>Пожалуйста, делая скриншот или копируя текст ошибки, по возможности не переводите сообщение об ошибке с английского на русский язык - это затрудняет поиск источника ошибки.</h3>";
 	if (APPLICATION_ENV != 'production')
 	{
-		$user_message = "<h1>Uncaught exception</h1><h2>{$message}</h2><div>BACKTRACE\n<xmp>".__getBacktrace()."</xmp></div>";
+		$user_message .= "<div>BACKTRACE\n<xmp>".__getBacktrace()."</xmp></div>";
 	}
-	else
-	{
-		$user_message = "<h1>Uncaught exception. eMail to the system administrator already has been sent.</h1><h2>{$message}</h2>";
-	}
-
 	if (1|| APPLICATION_RUNNING_MODE == 'ui')
 	{
 		print $user_message;
 	}
+	sendBugReport('FATAL exception', $message);
 }
 set_exception_handler('\\YAVPL\\__my_exception_handler');
 
