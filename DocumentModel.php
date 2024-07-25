@@ -405,6 +405,10 @@ WHERE document_id = $1 AND f.id = $2
 					{
 						$params['where'][] = "v{$field_id}.int_value {$action} {$value}";
 					}
+					elseif ($field_info['value_type'] == 'B')
+					{
+						$params['where'][] = "v{$field_id}.int_value {$action} 1";
+					}
 					elseif ($field_info['value_type'] == 'F')
 					{
 						$params['where'][] = "v{$field_id}.float_value {$action} {$value}";
