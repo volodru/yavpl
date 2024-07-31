@@ -546,8 +546,9 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 		elseif ($field_info['value_type'] == 'F')//float
 		{
 			$value = preg_replace("/\,/", '.', $value);
+			$value = preg_replace("/[^\-\d\.]/", '', $value);
 			//$value = preg_replace("/[\s\xA0]+/", '', $value);
-			$value = filter_var($value, FILTER_VALIDATE_FLOAT);
+			//$value = filter_var($value, FILTER_VALIDATE_FLOAT);
 			if (!is_numeric($value + 0))
 			{
 				return "{$field_info['title']} - [{$value}]: Ожидается вещественное число";
