@@ -166,10 +166,6 @@ class Controller
  */
 	private array $__params_array = [];
 
-/** TS документа на случай управления кешированием страниц
- */
-	private int $__document_ts = 0;
-
 /** Обеспечение Хелперов - список подключенных методов. Кто подключился последним - тот и работает.
  */
 	private array $__methods = [];//for Helper
@@ -492,8 +488,12 @@ class Controller
  * $title заголовок
  * $link гиперссылка (лучше локальная, без протокола)
  */
-	protected function addBreadcrumb(string $title, string $link = ''): Controller
+	protected function addBreadcrumb(string $title = '', string $link = ''): Controller
 	{
+		if ($title == '')
+		{
+			$title = debug_backtrace()[1]['function'];
+		}
 		$this->__breadcrumbs[] = ($link != '') ? "<a href='{$link}'>{$title}</a>" : $title;
 		return $this;
 	}
@@ -673,17 +673,6 @@ class Controller
 			}
 		}
 		return $result;
-	}
-
-/**
- * Устанавливает TS документа для нужд поисковых систем.
- */
-	public function setDocumentTS(int $ts): void //FOR POSTGRESQL: EXTRACT(epoch FROM ts)::integer as epoch_ts
-	{//берем только самое новое значение. получаем во времени документа - время самой молодой его части.
-		if ($ts > $this->__document_ts)
-		{
-			$this->__document_ts = $ts;
-		}
 	}
 
 /**  Устанавливает title Документа.
