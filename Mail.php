@@ -360,7 +360,7 @@ Content-ID: <{$attachment['file_name']}>
 			{
 				fwrite($f, $this->letter_body);
 				pclose($f);
-				sleep(1);//EXPERIMENTAL - попытка предотвратить блокировку 25 порта в МСК
+				//sleep(1);//EXPERIMENTAL - попытка предотвратить блокировку 25 порта в МСК
 				//$st = pclose($f);
 				/*if ($st != 0)
 				 	die(" (Mail status is: $st)");*/
