@@ -34,8 +34,15 @@ class DbPg extends Db implements iDb
 	{
 		$connect_string = "host={$this->host_params['host']} port={$this->host_params['port']} user={$this->host_params['user']} password={$this->host_params['passwd']} dbname={$this->host_params['dbname']} connect_timeout=5";
 
-		$this->pg_dbh = @pg_connect($connect_string, PGSQL_CONNECT_FORCE_NEW)
-			OR die("Cannot connect to PostgresQL host={$this->host_params['host']} base=[{$this->host_params['dbname']}] port=[{$this->host_params['port']}] user=[{$this->host_params['user']}] (PGSQL_CONNECT_FORCE_NEW)");
+		$this->pg_dbh = @pg_connect($connect_string, PGSQL_CONNECT_FORCE_NEW);
+		if ($this->pg_dbh === false)
+		{
+			print pg_last_error();
+			print "\n<br/>Cannot connect to PostgresQL host={$this->host_params['host']} base=[{$this->host_params['dbname']}] port=[{$this->host_params['port']}] user=[{$this->host_params['user']}] (PGSQL_CONNECT_FORCE_NEW)";
+			die();
+		}
+
+
 		if (isset($this->host_params['exec_after_connect']))
 		{
 			@pg_query($this->pg_dbh, $this->host_params['exec_after_connect']);
