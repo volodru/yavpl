@@ -535,13 +535,17 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 		}
 		elseif ($field_info['value_type'] == 'B')// boolean
 		{
-			$value = preg_replace("/\D/", '', $value);
+			//da($value);
+			$value = intval(preg_replace("/\D/", '', $value));
+			//da($value);
 			$value = ($value != 0) ? 1 : 0;//всё, кроме нуля - ДА
+			//da($value);
 			if ($value == '')
 			{
 				return "{$field_info['title']} - [{$value}]: Ожидается число 0 или 1";
 			}
 			$hr_value = ($value != 0) ? 'да' : 'нет';
+			//da($value);da($hr_value);die;
 		}
 		elseif ($field_info['value_type'] == 'F')//float
 		{
