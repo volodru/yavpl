@@ -407,7 +407,10 @@ WHERE document_id = $1 AND f.id = $2
 					}
 					elseif ($field_info['value_type'] == 'B')
 					{
-						$params['where'][] = "v{$field_id}.int_value {$action} 1";
+						if ($value != '')
+						{
+							$params['where'][] = "v{$field_id}.int_value = ".(($value == 'yes') ? 1 : 0);
+						}
 					}
 					elseif ($field_info['value_type'] == 'F')
 					{
