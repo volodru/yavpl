@@ -536,11 +536,11 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 		elseif ($field_info['value_type'] == 'B')// boolean
 		{
 			$value = preg_replace("/\D/", '', $value);
+			$value = ($value != 0) ? 1 : 0;//всё, кроме нуля - ДА
 			if ($value == '')
 			{
 				return "{$field_info['title']} - [{$value}]: Ожидается число 0 или 1";
 			}
-			$value = ($value != 0) ? 1 : 0;//всё, кроме нуля - ДА
 			$hr_value = ($value != 0) ? 'да' : 'нет';
 		}
 		elseif ($field_info['value_type'] == 'F')//float
