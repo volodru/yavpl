@@ -162,7 +162,7 @@ class View
 /**
  * Используется в методе render()
  */
-	public function getHeaderTags(): array
+	protected function getHeaderTags(): array
 	{
 		return array_merge(
 			["<title>".($this->controller->getTitle())."</title>"],
@@ -174,7 +174,7 @@ class View
  * то можно установить с нуля все тэги в заголовке документа.
  * Рекомендуется делать это только в конструкторе defaultView всего проекта.
  */
-	public function setHeaderTags(array $tags): View
+	protected function setHeaderTags(array $tags): View
 	{
 		$this->__header_tags = $tags;
 		return $this;
@@ -184,7 +184,7 @@ class View
  * Добавить тэг к заголовку документа
  * Делать ПОСЛЕ setHeaderTags, т.к. тот игнорирует все выставленное до него.
  */
-	public function addHeaderTag(string $tag): View
+	protected function addHeaderTag(string $tag): View
 	{
 		$this->__header_tags[] = $tag;
 		return $this;
@@ -194,7 +194,7 @@ class View
  * Возвращает <!DOCTYPE... секцию документа
  * Используется в методе render()
  */
-	public function getDoctypeDeclaration(): string
+	protected function getDoctypeDeclaration(): string
 	{
 		return $this->__doctype_declaration;
 	}
@@ -203,7 +203,7 @@ class View
  * Если не устраивает дефолтное значение, то в defaultView проекта
  * можно сделать установку любого <!DOCTYPE...>
  */
-	public function setDoctypeDeclaration(string $doctype): View
+	protected function setDoctypeDeclaration(string $doctype): View
 	{
 		$this->__doctype_declaration = $doctype;
 		return $this;
@@ -213,7 +213,7 @@ class View
  * Возвращает атрибуты тэга html.
  * Используется в методе render()
  */
-	public function getHtmlTagAttributes(): string
+	protected function getHtmlTagAttributes(): string
 	{
 		return $this->__html_tag_attributes;
 	}
@@ -221,7 +221,7 @@ class View
 /**
  * Устанавливает атрибуты тэга html.
  */
-	public function setHtmlTagAttributes(string $attr): View
+	protected function setHtmlTagAttributes(string $attr): View
 	{
 		$this->__html_tag_attributes = $attr;
 		return $this;
@@ -230,7 +230,7 @@ class View
 /**
  * Добавляет JS файл в заголовок документа
  */
-	public function addJS(string $filename, string $type = 'text/javascript'): View
+	protected function addJS(string $filename, string $type = 'text/javascript'): View
 	{
 		if ($filename != '')
 		{
@@ -242,7 +242,7 @@ class View
 /**
  * Добавляет CSS файл в заголовок документа
  */
-	public function addCSS(string $filename): View
+	protected function addCSS(string $filename): View
 	{
 		if ($filename != '')
 		{
@@ -254,7 +254,7 @@ class View
 /**
  * Добавляет живой CSS код в заголовок документа
  */
-	public function CSS(string $css): View
+	protected function CSS(string $css): View
 	{
 		$css = trim($css);
 		if ($css != '')
@@ -267,7 +267,7 @@ class View
 /**
  * Добавляет живой JS код в заголовок документа
  */
-	public function JS(string $js, string $type = 'text/javascript'): View
+	protected function JS(string $js, string $type = 'text/javascript'): View
 	{
 		$js = trim($js);
 		if ($js != '')
@@ -281,7 +281,7 @@ class View
  * Возвращает накопленные контроллерами "хлебные крошки".
  * Использовать желательно в defaultView проекта.
  */
-	public function getBreadcrumbs(): string
+	protected function getBreadcrumbs(): string
 	{
 		$breadcrumbs = $this->controller->getBreadcrumbs();
 		if (count($breadcrumbs) > 0)
@@ -299,7 +299,7 @@ class View
  * Метод должен быть перекрыт в defaultView проекта.
  * Метод должен отрисовать содержимое тэга body документа.
  */
-	public function body(string $method): void
+	protected function body(string $method): void
 	{
 		die("Redeclare method 'body' in descendant view!");
 	}
@@ -334,8 +334,8 @@ class View
 		{
 			print json_encode($this->controller->result);
 		}
-		elseif ((isset($this->controller->message) && $this->controller->message != '') ||//просто сообщение с логами
-			(isset($this->controller->log) && count($this->log) > 0))
+		elseif ((($this->controller->message ?? '') != '') ||//просто сообщение с логами
+			(count($this->log ?? []) > 0))
 		{
 			print json_encode(['message' => $this->controller->message ?? '', 'log' => $this->log ?? []]);
 		}

@@ -558,6 +558,11 @@ class Controller
 		}
 		elseif ($type == 'string')
 		{
+			//da($value);da(mb_detect_encoding($value));
+			if (mb_detect_encoding($value, 'UTF-8', true) === false)
+			{
+				die('Passed string argument is not valid');
+			}
 			return strval($value);
 			/* 2015-09-29
 			 * возможно сможем прожить без stripslashes,
@@ -640,7 +645,7 @@ class Controller
 	$this->__params_array[$name],//что поставили ручками + автотесты
 	$GLOBALS[$name], //для передачи данных из глобального контекста, например реализаци ЧПУ в Application
 
-(!)	Сессию тут не используем - все желабющие хранить дефолтные значения в сессии перекрывают этот метод.
+(!)	Сессию тут не используем - все желающие хранить дефолтные значения в сессии перекрывают этот метод.
 */
 		$value = $this->__params_array[$name] ?? $_GET[$name] ?? $_POST[$name] ?? $_COOKIE[$name] ?? $GLOBALS[$name] ?? $default_value;
 		if ($array_expected && !is_array($value))
