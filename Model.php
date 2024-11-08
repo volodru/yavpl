@@ -114,17 +114,16 @@ class Model
 	{
 		global $application;
 		if ($name == 'db')
-		{
-			//return $this->connectToMainDB();
+		{//главная СУБД проекта. все модели имеют доступ к главной базе по переменной $this->db
 			return $this->db = $application->getMainDBConnector();
 		}
 		elseif (isset($this->__sub_models_cache[$name]))
-		{
+		{//кеш подмоделей, если вызываем их не первый раз
 			//da('IN __sub_models_cache');
 			return $this->__sub_models_cache[$name];
 		}
 		elseif (in_array($name, $this->__sub_models))
-		{
+		{//подмодели - инициируем и кладем ссылку на класс в кеш
 			//DEBUG
 			//da('MODEL->__get submodels'); da(get_class($this).'--'.$name);//FOR DEBUG
 			//END DEBUG
@@ -139,13 +138,14 @@ class Model
 			$this->__sub_models_cache[$name]->__parent = $this;
 			return $this->__sub_models_cache[$name];
 		}
+		//базовые модели подразделов - практически глобальные переменные
 		$this->$name = $application->getBasicModel($name);
 		if (isset($this->$name))
 		{
 			return $this->$name;
 		}
 		else
-		{
+		{//если нет - пусть дальше разбираются наследники
 			//da('__get model '.$name);
 			return;//null
 		}
