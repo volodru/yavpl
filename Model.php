@@ -98,6 +98,7 @@ class Model
 	}
 
 /** Поле __sub_models - READ ONLY
+ * volod, 2024-11-19 proposed for deletion - т.к. вроде оно никому не надо
  */
 	public function getSubModelList(): array
 	{

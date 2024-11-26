@@ -242,6 +242,8 @@ ORDER BY {$params['order']}
  * */
 	public function saveRow(array $data): string
 	{
+		$this->key_value = 0;
+
 		$data[$this->key_field] ??= 0;
 
 		$action = ($data[$this->key_field] == 0) ? 'insert' : 'update';
@@ -296,7 +298,7 @@ ORDER BY {$params['order']}
 		}
 		else
 		{
-			return "Вероятно произошла ошибка при сохранении: количество измененных записей = {$this->affected_rows}";
+			return "Вероятно, произошла ошибка при сохранении, т.к. количество измененных записей = {$this->affected_rows}";
 		}
 	}
 
