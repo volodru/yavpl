@@ -224,6 +224,10 @@ class Mail
 	{
 		$content = chunk_split(base64_encode($content));
 		$point_pos = strrpos($file_name, '.');
+		if ($point_pos == 0)
+		{
+			die("MAIL: Cannot recognize file type in [{$file_name}].");
+		}
 		$this->attachments[] = [
 			'file_name'	=> basename($file_name),
 			'type'		=> $this->getTypeByExt(strtolower(substr(strtolower($file_name), $point_pos + 1, strlen($file_name) - $point_pos))),
