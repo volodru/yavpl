@@ -20,3 +20,9 @@ do
   ssh svn@$server "cd $project && git pull && git checkout-index -a -f --prefix=/www/src/$project/"
 done
 
+for server in v.volod.ru
+do
+  echo ----EXPORTING TO SERVER $server
+  ssh volod@$server "cd $project && git pull && git checkout-index -a -f --prefix=/www/src/$project/"
+done
+
