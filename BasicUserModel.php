@@ -159,6 +159,14 @@ FROM {$this->table_name}
 WHERE email = $1 AND passkey = $2 AND now() < passkey_valid_till", $email, $passkey)->fetchRow()[$this->key_field] ?? 0;
 	}
 
+	public function clearPasskey(int $user_id): void
+	{
+		$this->db->exec("-- ".get_class($this).", method: ".__METHOD__."
+UPDATE {$this->table_name}
+SET passkey = NULL, passkey_valid_till = NULL
+WHERE id = $1", $user_id);
+	}
+
 /** Начать новую сессию пользователя. ID берется после проверки логина/пароля/OAuth/смс с кодом - как угодно.
  * В любом случае, приходим сюда и стартуем сессию.
  * Вызываем из всех скриптов типа login, после успешной проверки ID юзера.
