@@ -9,8 +9,9 @@ namespace YAVPL;
  */
 
 /** CHANGELOG
+ * DATE: 2025-01-12
+ * серьезный рефакторинг
 
- * 1.00
  * DATE: 2017-02-23
  * создание универсального класса для пользователей
 */
@@ -26,7 +27,7 @@ class UserModel extends BasicUserModel
 		parent::__construct([
 			'table_name'	=> 'public.users',
 			'key_field'		=> 'id',
-			'fields'		=> [name, email, password],
+			'fields'		=> [name, email, passkey],
 			'options'		=> [],
 		]);
 	}
@@ -39,12 +40,6 @@ class UserModel extends BasicUserModel
  * Все селекты делают выборку ВСЕХ полей, поэтому стоит избегать хранить в таблице с юзерами, что-то тяжелое и
  * не_всегда_нужное. Картинки, логи и т.п. надо хранить в отдельных связанных 1to1 таблицах.
  */
-
-// @TODO: на фиг не надо тут эти 2 константы, т.к. используется это дело строго 1 раз в жизни.
-// разве, что для красоты, чтобы не плодить magic strings.
-// оставим на подумать.
-define('BASIC_USER_TABLE_NAME', 'public.users');
-define('BASIC_USER_TABLE_KEY_FIELD', 'id');
 
 // без этой константы авторизация не работает от слова вообще.
 // без нее много чего еще не работает (например сессии), так что она должна быть.
@@ -72,35 +67,13 @@ class BasicUserModel extends DbTable
 		'autologin_field_name'			=> 'autologin',
 		'autologin_cookie_name'			=> 'autologin',
 		'autologin_cookie_ttl'			=> 60*60*24*365,// 1 год
+		'log_id_session_parameter'		=> 'log_id',
 		'autologin_is_always_new'		=> false,
 		'logout_magic_string'			=> 'logout',
 		'auth_by_login_and_password'	=> false,
 		'write_all_activities'			=> true,
-		'settings_field_name'			=> 'settings',
-		'settings_cookie_name'			=> 'settings',
-		'settings_cookie_ttl'			=> 60*60*24*365,// 1 год
 	];
 
-
-/** Формат валидатора:
- * для каждого ключа массив из от 1 до 3 элементов: тип, дефолтное значение, список допустимых значений
- * если не указаны дефолтные значения, то для целого это 0, для строки - ''
- * если указано дефолтное значение и список допустимых значений и при этом в списке нет дефолного значения - будет die() на этапе валидации.
- * такой случай - ошибка программиста и исправлять ее надо сразу.
- * если значение не входит в список допустимых - оно молча преобразуется в дефолтное.
- *
- * допустимые типы данных: integer/double/float/string
- *
- * $this->valid_settings = [
- * 	'key1'	=> ['integer', 0, [0,1,2]], //целое, варианты 0,1,2
- *  'key2'	=> ['string', 'qwqw'], //строка, по дефолту 'qwqw', принимает любые значения
- *  'key2a'	=> ['string'], //строка, по дефолту ''
- *  'key2b'	=> ['string', '', ['aa', '', 'cccc'], //строка, по дефолту пустая, варианты из списка 'aa', '', 'cccc'
- *  'key2e'	=> ['string', 'qq', ['aa', '', 'cccc'], //ошибка, дефолтное значение не входит в список допустимых
- * ];
- */
-	// наследники сами объявляют массив валидных настроек.
-	protected $valid_settings = [];
 
 /**
  * Конструктор берет массив параметров.
@@ -110,23 +83,16 @@ class BasicUserModel extends DbTable
  */
 	public function __construct(array $params = [])
 	{
-		$params['table_name'] ??= BASIC_USER_TABLE_NAME;
-		$params['key_field'] ??= BASIC_USER_TABLE_KEY_FIELD;
+		$params['table_name'] ??= 'public.users';
+		$params['key_field'] ??= 'id';
 		$params['fields'] ??= [];//в худшем случае будет таблица из одного PK
-//предок - простой словарик, отдаем ему таблицу, ПК и поля
+//предок - DBTable, отдаем ему таблицу, ПК и поля
 		parent::__construct($params['table_name'], $params['key_field'], $params['fields']);
 
 //опции для параметров работы класса, которые отличаются от дефолтных
 		foreach (array_keys($this->options) as $k)
 		{
 			$this->options[$k] = $params['options'][$k] ?? $this->options[$k];
-		}
-//??? а оно тут надо всегда???
-//проверки в зависимости от опций
-		if ($this->options['auth_by_login_and_password'])
-		{
-			if (!in_array('login', $this->fields)) {die ('auth_by_login_and_password required field login');}
-			if (!in_array('password', $this->fields)) {die ('auth_by_login_and_password required field password');}
 		}
 	}
 
@@ -139,57 +105,58 @@ class BasicUserModel extends DbTable
 
 /** Получить строку данных по уникальному полю (код авторизации, логин, почта, телефон и т.п.)
  */
-	public function getRowByUniqueField(string $field_name, string $value)
+	/*
+	public function getRowByUniqueField(string $field_name, string $value): ?array
 	{
 		if (!in_array($field_name, $this->fields))
 		{
 			die(__METHOD__." requires field $field_name");
 		}
 		return $this->db->exec("SELECT * FROM {$this->table_name} WHERE {$field_name} = $1", $value)->fetchRow();
-	}
+	}*/
 
-/** Получить ID по уникальному полю (код авторизации, логин, почта, телефон и т.п.)
+/** Получить запись по уникальному полю (код авторизации, логин, почта, телефон и т.п.).
+ * Если не найден - вернем NULL, проверять if (empty(....))
+ * Работа с анонимами в контроллерах всегда отдельная!
  */
-	public function getIdByUniqueField(string $field_name, string $value)
+
+	public function getRowByUniqueField(string $field_name, string $value): ?array
 	{
 		if (!in_array($field_name, $this->fields))
 		{
 			die(__METHOD__." requires field $field_name");
 		}
-		$this->db->exec("SELECT {$this->key_field} FROM {$this->table_name} WHERE {$field_name} = $1", $value);
-		//проверка строго на 1, т.к. это уникальное поле. если в базе это поле не уникально, то нефиг им пользоваться для получения ID
-		if ($this->db->rows == 1)
-		{
-			list($id) = $this->db->fetchRowArray();
-		}
-		else
-		{//не нашли. почему именно null: 0 это валидный аноним, -1 это извращение, IMHO.
-			$id = null;
-		}
-		return $id;
+		return $this->db->exec("
+SELECT *
+FROM {$this->table_name}
+WHERE {$field_name} = $1", $value)->fetchRow();
 	}
 
-/** Получить ID юзера по логину и незашифрованному паролю. Пароль в базе зашифрован и во время этой проверки закже шифруется.
- * Кому этого мало - перекрывают метод и шифруют пароли, как хотят.
+/** Получить ID по уникальному полю (код авторизации, логин, почта, телефон и т.п.).
+ * Если не найден - вернем 0, как-бы аноним.
+ * У анонимов не должно быть валидных уникальных полей, либо они должны быть зарезервированы.
+ * Работа с анонимами в контроллерах всегда отдельная!
  */
-	public function getIdByLoginAndPassword(string $login, string $password)
+	public function getIdByUniqueField(string $field_name, string $value): int
 	{
-		if (!$this->options['auth_by_login_and_password'])
+		if (!in_array($field_name, $this->fields))
 		{
-			die(__METHOD__.' Login by login&password is not supported.');
+			die(__METHOD__." requires field $field_name");
 		}
+		return $this->db->exec("
+SELECT {$this->key_field}
+FROM {$this->table_name}
+WHERE {$field_name} = $1", $value)->fetchRow()[$this->key_field] ?? 0;
+	}
 
-		$this->db->exec("-- ".get_class($this).", method: ".__METHOD__."
-SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password = $2", $login, md5($password));
-		if ($this->db->rows == 1)
-		{
-			list($id) = $this->db->fetchRowArray();
-		}
-		else
-		{
-			$id = null;
-		}
-		return $id;
+/** Получить ID юзера по почте и одноразовому ключу.
+ */
+	public function getIdByEmailAndPasskey(string $email, string $passkey): int
+	{
+		return $this->db->exec("-- ".get_class($this).", method: ".__METHOD__."
+SELECT {$this->key_field}
+FROM {$this->table_name}
+WHERE email = $1 AND passkey = $2 AND now() < passkey_valid_till", $email, $passkey)->fetchRow()[$this->key_field] ?? 0;
 	}
 
 /** Начать новую сессию пользователя. ID берется после проверки логина/пароля/OAuth/смс с кодом - как угодно.
@@ -197,18 +164,18 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
  * Вызываем из всех скриптов типа login, после успешной проверки ID юзера.
  * Метод просто стартует сессию, ничего больше не проверяя!!!
  */
-	public function createCurrentSession(int $id)
+	public function startCurrentSession(int $id): void
 	{
-		daf(__METHOD__);
+		//daf(__METHOD__);
 		if (!isset($_SESSION)){ session_start();}
 		$this->id = $id;
-		$_SESSION['log_id'] = $id;
+		$_SESSION[$this->options['log_id_session_parameter']] = $id;
 		session_write_close();//to avoid locking
-		$this->loadCurrentData();
-		daf("session started id = $id");
-		daf($this->data);
+		$this->loadData();
+		//daf("session started id = $id");
+		//daf($this->data);
 		$this->setAutologin();
-		$this->notifyOnCreateCurrentSession();
+		$this->notifyOnStartCurrentSession();
 	}
 
 /** Продолжить текущую сессию пользователя.
@@ -216,31 +183,33 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
  * куки с автологином.
  * Вызывается, как правило, из синглтона.
  */
-	public function continueCurrentSession()
+	public function continueCurrentSession(): void
 	{
 		//daf(__METHOD__);
+
+		$log_id_session_parameter = $this->options['log_id_session_parameter'];
 
 		if (!isset($_SESSION)){ session_start();}
 		$this->id = 0;//аноним
 
 		//daf('session');daf($_SESSION);daf('cookies');daf($_COOKIE);
-		if (isset($_SESSION['log_id']) && intval($_SESSION['log_id']) > 0)
+		if (isset($_SESSION[$log_id_session_parameter]) && intval($_SESSION[$log_id_session_parameter]) > 0)
 		{
-			$this->id = $_SESSION['log_id'];
+			$this->id = $_SESSION[$log_id_session_parameter];
 			//daf('continue old session with user id = '.$this->id);
-			$this->loadCurrentData();
+			$this->loadData();
 		}
 		elseif (isset($_COOKIE[$this->options['autologin_cookie_name']]))
 		{
 			//daf('continue on cookies');
 			$id = $this->getIdByUniqueField($this->options['autologin_field_name'], $_COOKIE[$this->options['autologin_cookie_name']]);
-			if (isset($id))
+			if ($id > 0)
 			{
 				//daf('found id '.$id. ' by cookie '.$_COOKIE[$this->options['autologin_cookie_name']]);
-				if (!isset($_SESSION)){ session_start();}
-				$this->id = $_SESSION['log_id'] = $id;
+				//if (!isset($_SESSION)){ session_start();}
+				$this->id = $_SESSION[$log_id_session_parameter] = $id;
 				session_write_close();//to avoid locking
-				$this->loadCurrentData();
+				$this->loadData();
 				//daf('got user id from cookies '.$this->id);
 				$this->notifyOnContinueCurrentSession();
 			}
@@ -261,7 +230,7 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
 		//нашли юзера под номером $this->id ?
 		if ($this->id > 0)
 		{
-			if (($this->data === false) || //какой-то неправильный юзер
+			if ((empty($this->data)) || //какой-то неправильный юзер
 				//а не force logout случай?
 				(strpos($this->data[$this->options['autologin_field_name']], $this->options['logout_magic_string'])))//logout. magic string. set in UserModel->forceLogout
 			{//LOG OUT
@@ -282,26 +251,26 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
 
 /** Закончить текущую сессию. Все вариатны log-out приводят сюда.
  */
-	public function destroyCurrentSession()
+	public function destroyCurrentSession(): void
 	{
 		daf(__METHOD__);
 //стираем куки
 		setcookie($this->options['autologin_cookie_name'], '', time() - 3600, '/', COOKIE_DOMAIN);
 //останавливаем текущую сессию
 		if (!isset($_SESSION)){ session_start();}
-		unset($_SESSION['log_id']);
+		unset($_SESSION[$this->options['log_id_session_parameter']]);
 		session_write_close();
 
 //обнуляем юзера до анонима
 		$this->id = 0;
 //грузим данные и настройки для анонимуса.
-		$this->loadCurrentData();
+		$this->loadData();
 		$this->notifyOnDestroyCurrentSession();
 	}
 
 /** Разлогинить все открытые сессии, не допустить автологина больше нигде.
  */
-	public function forceLogOut()
+	public function forceLogOut(): void
 	{
 		if ($this->id > 0)
 		{
@@ -320,7 +289,7 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
  * Чтобы только продлить куку или залогинить юзера на другом устройстве,
  * надо сначала получить старый ключ, а потом его же и поставить.
  */
-	public function setAutologin()
+	public function setAutologin(): void
 	{
 		daf(__METHOD__);
 		if ($this->id > 0)
@@ -336,30 +305,29 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
 			}
 			setcookie($this->options['autologin_cookie_name'], $autologinkey, time() + $this->options['autologin_cookie_ttl'], '/', COOKIE_DOMAIN);
 		}//else ну какой у анонима автологин?
-		return $this;
 	}
 
 /** Тут можно послать письмо
  */
-	public function notifyOnCreateCurrentSession()
+	public function notifyOnStartCurrentSession(): void
 	{
 	}
 
 /** Тут можно послать письмо
  */
-	public function notifyOnContinueCurrentSession()
+	public function notifyOnContinueCurrentSession(): void
 	{
 	}
 
 /** Тут можно послать письмо
  */
-	public function notifyOnDestroyCurrentSession()
+	public function notifyOnDestroyCurrentSession(): void
 	{
 	}
 
 /** Тут можно послать письмо
  */
-	public function notifyOnBannedUserLoggedIn()
+	public function notifyOnBannedUserLoggedIn(): void
 	{
 	}
 
@@ -367,16 +335,15 @@ SELECT {$this->key_field} FROM {$this->table_name} WHERE login = $1 AND password
  * Надо перекрыть метод и в нем проверять забаненных юзеров.
  * Предка (этот код) не вызываем!!!
  */
-	public function isUserAllowedToLogin()
+	public function isUserAllowedToLogin(): bool
 	{
 		return true;
 	}
 
 /** Записать текущую активность в лог.
  * Недовольные набором полей или самим методом логгирования перекрывают метод и не вызывают предка.
- *
  */
-	public function writeActivityLog()
+	public function writeActivityLog(): void
 	{
 /**
  * прототип таблицы с логами активности юзеров
@@ -405,155 +372,40 @@ CREATE TABLE public.user_activity_logs
 				'ip'				=> defined('REMOTE_ADDR') ? REMOTE_ADDR : '-',
 			]);
 		}
-		return $this;
 	}
 
 /** Если не устраивает SELECT * по PK, перекрывают и делают сложные селекты, грузят картинки и пр.
  * Должно работать быстро, т.к. делается при каждом посещении каждой страницы.
  */
-	public function loadCurrentData()
+	public function loadData(): void
 	{
-		daf(__METHOD__);
-		//загружаем данные юзера в память их СУБД.
-//@TODO: тут же можно грузить какие-то данные из кукиёв, а можно отдать это наследникам.
-		if ($this->id > 0)
-		{
-			$this->data = $this->getRow($this->id);
-		}
-		else
-		{
-			$this->data = (isset($_COOKIE['user_data'])) ? unserialize(stripslashes($_COOKIE['user_data'])) : [];
-		}
-		//if (($this->data === false) && ($this->id == 0)) die("You must create an anonymous user with ID == 0");
-		//загружаем настройки юзера - нормальному юзеру из базы, анониму из кукиёв.
-		$this->loadSettings();
-		return $this;
+		$this->data = $this->getRawRow($this->id);
 	}
 
 /** Можно перекрыть этот метод, если автологин требуется привязать к паролю, например.
  * И при этом отвязать от адреса/времени, т.е. получать всё время один и тот же автологин для одного и того же юзера (пароля/логина)
  * По умолчанию, автологин случайный каждый раз.
  */
-	public function generateNewAutologin()
+	public function generateNewAutologin(): string
 	{
 		return md5(time().REMOTE_ADDR);
 	}
 
-/** Загружаем настройки из сессии или кук, в зависимости от юзер или аноним.
- * Настройки тут же валидируем.
- * Вызывается один раз при старте или продолжении сессии.
- */
-	public function loadSettings()
+
+/** Если в проекте есть класс вида
+class User extends \YAVPL\BasicUserModel{...}
+
+Использование в главном контроллере:
+namespace Controllers;
+
+class Controller extends \YAVPL\Controller
+{
+	public function __construct()
 	{
-		$settings_field_name = $this->options['settings_field_name'];
-		$settings_cookie_name = $this->options['settings_cookie_name'];
-
-		if ($this->id > 0)
-		{
-			$this->settings = (isset($this->data[$settings_field_name])) ? unserialize($this->data[$settings_field_name]) : [];
-		}
-		else
-		{
-			$this->settings = (isset($_COOKIE[$settings_cookie_name])) ? unserialize(stripslashes($_COOKIE[$settings_cookie_name])) : [];
-		}
-		//и сильно мы так сэкономим память?
-		if (isset($this->data[$settings_field_name]))
-		{
-			unset($this->data[$settings_field_name]);
-		}
-
-		//Пропускаем через себя массив настроек юзера.
-		$tmp = [];
-		foreach ($this->valid_settings as $key => $options)
-		{//валидатор сам берез проверяемое значение из $this->settings по ключу $key
-			$tmp[$key] = $this->validateSettings($key, $options);
-		}
-		$this->settings = $tmp;
-		return $this;
+		parent::__construct();
+		$this->user = \Models\User::getCurrentInstance();
 	}
-
-/** Нужен в validateSettings()
- */
-	protected function verifyDefaultValue(string $type)
-	{
-		if ($type == 'string')
-		{
-			$default_value = '';
-		}
-		elseif ($type == 'integer' || $type == 'float' || $type == 'double')
-		{
-			$default_value = 0;
-		}
-		else
-		{
-			die("Unrecognized type cast [{$type}]");
-		}
-		return $default_value;
-	}
-
-/** Валидируем конкретную настройку.
- * Все настройки, которых нет в валидаторе пропадают.
- * Все значения, которые не входят в список допустимых становятся дефолтными.
- * Описание валидатора смотри в блоке объявлений этого класса.
- * Наследникам с другим форматом валидатора надо полностью перекрыть этот метод и не беспокоить предка.
- * $options - массив [тип, дефотное значение, список допустимых значений]
- */
-	protected function validateSettings(string $key, $options = null)
-	{
-		// при переборе опции передаются сразу, при проверки одной строки вытягиваем их из валидатора
-		$options = isset($options) ? $options : $this->valid_settings[$key];
-		// с типами все жестко. он должен быть указан.
-		$type = isset($options[0]) ? $options[0] : die("Unknown type for settings key: [{$key}]");
-		// вычисляем сразу дефолтное значение. оно нам надо тут в двух местах.
-		$default_value = (isset($options[1])) ? $options[1] : $this->verifyDefaultValue($type);
-
-		if (isset($this->settings[$key]))
-		{// есть проверяемое значение
-			if (isset($options[2]) && is_array($options[2]) && count($options[2]) > 0)
-			{// есть список допустимых значений
-				$result = (in_array($this->settings[$key], $options[2])) ? $this->settings[$key] : $default_value;
-			}
-			else
-			{// нет списка - ничего не проверяем
-				$result = $this->settings[$key];
-			}
-		}
-		else
-		{// если не передали значение, то устанавливаем дефолтное из валидатора, либо дефотное к типу
-			$result = $default_value;
-		}
-		return $result;
-	}
-
-/** Изменить отдельную настройку. Меняем данные в памяти и пишем в базу или в куку.
- */
-	public function changeSettings(string $key, string $val)
-	{
-		if (!isset($this->valid_settings[$key]))
-		{//фаталити. надо сразу звать программиста. где-то ставится настройка, которой нет в валидаторе.
-			sendBugReport('attempt to change settings was invalid', "INVALID KEY OR VAL!\nKEY='{$key}' VALUE='{$val}'\n\n".print_r($this, true));
-			die("your attempt to change settings was invalid. KEY='{$key}' VALUE='{$val}'");
-		}
-		//устанавливаем настройку
-		$this->settings[$key] = $val;
-		//проверяем ее валидатором
-		$this->validateSettings($key);
-		//все, что после валидатора останется, мы пишем в хранилище
-
-		if ($this->id > 0)
-		{//живых пишем в базу
-			$settings_field_name = $this->options['settings_field_name'];
-			$this->db->update($this->table_name, $this->key_field, $settings_field_name,
-				[$this->key_field => $this->id, $settings_field_name => serialize($this->settings)]);
-		}
-		else
-		{//аноним пишет в куки
-			setcookie($this->options['settings_cookie_name'], serialize($this->settings), time() + $this->options['settings_cookie_ttl'], '/', COOKIE_DOMAIN);
-		}
-		return $this;
-	}
-
-/** Использование: $this->user = UserModel::getCurrentInstance();
+}
  */
 	public static function getCurrentInstance()
 	{
