@@ -425,4 +425,9 @@ class Controller extends \YAVPL\Controller
 		}
 		return self::$current_instance;
 	}
+
+	public static function hasInstance()
+	{
+		return !is_null(self::$current_instance);
+	}
 }

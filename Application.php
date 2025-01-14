@@ -82,22 +82,26 @@ if (!defined('APPLICATION_RUNNING_MODE') || trim(APPLICATION_RUNNING_MODE) == ''
 {
 	define('APPLICATION_RUNNING_MODE', 'ui');//режим по-умолчанию
 }
-//тут выясняем, где брать контроллеры
-if (APPLICATION_RUNNING_MODE == 'api')
-{//нет представления, контроллер всегда отдает JSON или файл
-	define('CONTROLLERS_BASE_PATH', 'api');
-}
-elseif (APPLICATION_RUNNING_MODE == 'cli')
-{//режим командной строки - нет пользовательской сессии, все делается от администратора.
-	define('CONTROLLERS_BASE_PATH', 'cli');
-}
-elseif (APPLICATION_RUNNING_MODE == 'ui')
-{//режим веб-интерфейса - работает всё, выдаем HTML или что решит контроллер
-	define('CONTROLLERS_BASE_PATH', 'controllers');
-}
-else
-{//а всякую дичь отметаем сразу
-	die('Wrong APPLICATION_RUNNING_MODE: '.APPLICATION_RUNNING_MODE);
+
+if (!defined('CONTROLLERS_BASE_PATH'))
+{
+	//тут выясняем, где брать контроллеры
+	if (APPLICATION_RUNNING_MODE == 'api')
+	{//нет представления, контроллер всегда отдает JSON или файл
+		define('CONTROLLERS_BASE_PATH', 'api');
+	}
+	elseif (APPLICATION_RUNNING_MODE == 'cli')
+	{//режим командной строки - нет пользовательской сессии, все делается от администратора.
+		define('CONTROLLERS_BASE_PATH', 'cli');
+	}
+	elseif (APPLICATION_RUNNING_MODE == 'ui')
+	{//режим веб-интерфейса - работает всё, выдаем HTML или что решит контроллер
+		define('CONTROLLERS_BASE_PATH', 'controllers');
+	}
+	else
+	{//а всякую дичь отметаем сразу
+		die('Wrong APPLICATION_RUNNING_MODE: '.APPLICATION_RUNNING_MODE);
+	}
 }
 
 require_once('DebugFunctions.php');
