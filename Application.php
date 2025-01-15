@@ -494,21 +494,26 @@ class Application
  */
 	public function getBasicModel(string $name): ?Model
 	{
-		$name = strtolower($name);
-		if (in_array($name, $this->basic_models_names))
-		{
-			if (!isset($this->__basic_models_cash[$name]))
-			{
-				$model_name = "\\Models\\".$name;//базовые модели в пространстве \Models
-				$model = new $model_name();
-				$this->__basic_models_cash[$name] = $model;
-			}
-			return $this->__basic_models_cash[$name];
+		if (in_array(strtolower($name), $this->basic_models_names))
+		{//путь в нижнем регистре
+			$name = strtolower($name);
+		}
+		elseif (in_array($name, $this->basic_models_names))
+		{//путь с учетом регистра - ничего не делаем
 		}
 		else
-		{
+		{//никак его нет - выходим отсюда
 			return null;
 		}
+
+		//нашли можель в списке
+		if (!isset($this->__basic_models_cash[$name]))
+		{
+			$model_name = "\\Models\\".$name;//базовые модели в пространстве \Models
+			$model = new $model_name();
+			$this->__basic_models_cash[$name] = $model;
+		}
+		return $this->__basic_models_cash[$name];
 	}
 
 /** Обработчик ситуации когда не нашли Контроллер по URI */
