@@ -219,7 +219,7 @@ class Db
 <xmp style='color: #F00;'>{$err_msg}</xmp>
 <xmp style='color: #0FF;'>{$notice_msg}</xmp>";
 		}
-		if (APPLICATION_RUNNING_MODE == 'cli')
+		if (APPLICATION_RUNNING_MODE == 'CLI')
 		{
 			$debug_info = strip_tags($debug_info);
 		}

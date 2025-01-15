@@ -17,7 +17,7 @@ declare(strict_types=1);
 function da($v)
 {
 	require_once('sage.phar');
-	if (APPLICATION_RUNNING_MODE == 'cli')
+	if (APPLICATION_RUNNING_MODE == 'CLI')
 	{
 		print var_export($v, true)."\n";
 	}
@@ -62,7 +62,7 @@ function __printBacktrace()
  */
 function sendBugReport($subject = 'Bug report', $message = 'Common bug', $is_fatal = false)
 {
-	if (APPLICATION_RUNNING_MODE != 'cli')
+	if (APPLICATION_RUNNING_MODE != 'CLI')
 	{
 		if (!isset($_SESSION)){session_start();}
 	}

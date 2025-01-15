@@ -9,92 +9,39 @@ namespace YAVPL;
  */
 
 /** CHANGELOG
+ * DATE: 2025-01-15
+ * Рефакторинг под case-sensitive УРЛы проекта cloudstorage
+ *
+ * public function parseURI(): void переделана в public function routeToClassName(): string - возвращает имя класса.
+ * теперь загружалки контроллера и представления сами подставляют префиксы к классу
+ *
+ *
  *
  * DATE: 2023-05-27
  * убран fatalError
  * fileNotFound теперь понимает режим JSON
  * добавлен вызов метода init контроллера сразу после создания класса контроллера и заполнения его полей типа $this->running_method_name
  *
- * 1.11
- * DATE: 2020-05-22
- * Добавлена возможность работы через CLI
-
- * 1.10
- * DATE: 2020-04-12
- * в методе run теперь вызывается метод для JSON вызовов
- * if ($this->controller->__is_json) $this->view->default_JSON_Method();
-
- * 1.09
- * DATE: 2018-12-12
- * Добавлена уведомлялка sendNotification() - просто посылает письмо без остановки процесса.
- *
- * 1.08
- * DATE: 2018-09-04
- * В sendBugReport() добавлен третий параметр - (....., $is_fatal = false)
- *
- * 1.07
- * DATE: 2018-05-24
- * Добавлена поддержка API контроллеров
- * Концепция: index.php разбирает URL и если видит, что домен похож на API вызов, то определяет
- * глобальную константу APPLICATION_RUNNING_MODE и
- * контроллеры грузятся не из папки controllers, а из папки api.
- * Через глобальную переменную пришлось делать, т.к. __autoload у нас статический, а делать его не статическим - значить менять
- * index.php во всех проектах. В данном случае проекты, в которых нет API трогать не надо. А в тех у которых есть - надо определить
- * константу APPLICATION_RUNNING_MODE в зависимости, от того, как реализован вызов API (по домену, по URL и т.д.)
- *
- * Наименования классов контроллеров такое же, представлений нет в принципе.
- * Контроллеры API пользуются теми же моделями проекта, но отдают данные через JSON|XML|etc.
- *
- * 1.06
- * DATE: 2017-09-30
- * Добавлен перехват исключений с посылкой письма админу __my_exception_handler
- *
- * 1.05
- * DATE: 2015-10-30
- * кодировка установлена в UTF8
- *
- * 1.04
- * DATE: 2015-09-29
- * Использован класс ToolBar
- *
- * 1.03
- * Глобальные функции da(), sendBugReport(), __getBacktrace(), __printBacktrace() и __my_shutdown_handler()
- * теперь общие для всех проектов и находятся здесь
- *
- * 1.02
- * DATE: 2014-11-28
- * parseURI() - теперь не возвращает результат, а устанавливает переменные класса.
- * теперь можно не только перекрыть его, но и сделать ЧПУ в методе loadController(),
- * в котором загрузить правильный класс, поправить переменную с классом
- * и правильное представление загрузится само.
- *
- * loadController() - теперь возвращает true или false и фатальная ошибка загрузки контроллера
- * выводится классом Application
- *
- * loadController() и loadView() теперь используют не параметры, а переменные класса
- *
- * fileNotFound() - теперь просто выдает header("HTTP/1.0 404 Not Found"); и если надо обрабатывать
- * ЧПУ, то этот метод надо перекрыть, чтобы он ничего не делал, а 404 выдавать уже в обработчике ЧПУ
  */
 
-//приложение работает в одном из 3х режимов: веб интерфейс (UI), API и CLI
+//приложение работает в одном из 3х режимов: веб интерфейс WebUI, API и CLI
 if (!defined('APPLICATION_RUNNING_MODE') || trim(APPLICATION_RUNNING_MODE) == '')
 {
-	define('APPLICATION_RUNNING_MODE', 'ui');//режим по-умолчанию
+	define('APPLICATION_RUNNING_MODE', 'WebUI');//режим по-умолчанию
 }
 
 if (!defined('CONTROLLERS_BASE_PATH'))
 {
 	//тут выясняем, где брать контроллеры
-	if (APPLICATION_RUNNING_MODE == 'api')
+	if (APPLICATION_RUNNING_MODE == 'API')
 	{//нет представления, контроллер всегда отдает JSON или файл
 		define('CONTROLLERS_BASE_PATH', 'api');
 	}
-	elseif (APPLICATION_RUNNING_MODE == 'cli')
+	elseif (APPLICATION_RUNNING_MODE == 'CLI')
 	{//режим командной строки - нет пользовательской сессии, все делается от администратора.
 		define('CONTROLLERS_BASE_PATH', 'cli');
 	}
-	elseif (APPLICATION_RUNNING_MODE == 'ui')
+	elseif (APPLICATION_RUNNING_MODE == 'WebUI')
 	{//режим веб-интерфейса - работает всё, выдаем HTML или что решит контроллер
 		define('CONTROLLERS_BASE_PATH', 'controllers');
 	}
@@ -153,7 +100,7 @@ function __my_exception_handler($exception)
 	{
 		$user_message .= "<div>BACKTRACE\n<xmp>".__getBacktrace()."</xmp></div>";
 	}
-	if (1|| APPLICATION_RUNNING_MODE == 'ui')
+	if (1|| APPLICATION_RUNNING_MODE == 'WebUI')
 	{
 		print $user_message;
 	}
@@ -286,8 +233,9 @@ class Application
 	protected string $__request_uri;
 
 	/** Полное название класса, каким мы пытались его создать по заданному URI */
-	protected string $__controller_fq_class_name;
-	protected string $__view_fq_class_name;
+	//DELETE protected string $__controller_fq_class_name;
+	//DELETE protected string $__view_fq_class_name;
+	protected string $__fq_class_name;
 
 /** Загрузчик Контроллера
  * Создает экземпляр класса. Класс грузится автолоадером.
@@ -295,7 +243,7 @@ class Application
  */
 	public function loadController(): bool
 	{
-		$fq_class_name = $this->__controller_fq_class_name;
+		$fq_class_name = CONTROLLERS_BASE_PATH.'\\'.$this->__fq_class_name;
 		if (class_exists($fq_class_name))//тут запускается автозагружалка
 		{
 			$this->controller = new $fq_class_name();//делаем экземпляр класса
@@ -308,14 +256,12 @@ class Application
 	}
 
 /** Загрузчик Представления
- *
  * Представления работают только для UI режима и всегда лежат в namespace (и папке) views
- *
  * @return bool - загрузили мы класс или не смогли.
  * */
 	public function loadView(): bool
 	{
-		$fq_class_name = $this->__view_fq_class_name;
+		$fq_class_name = 'Views\\'.$this->__fq_class_name;
 		if (class_exists($fq_class_name))
 		{
 			$this->view = new $fq_class_name();
@@ -334,46 +280,26 @@ class Application
  * Формируем имя класса контроллера из разобранных module и class names, т.е. заполняем переменные
  * $this->__controller_fq_class_name, $this->__view_fq_class_name
  *
- * Используется константа CONTROLLERS_BASE_PATH - controllers|api|cli в зависимости от типа вызова
- *
- *
- * TODO решить неопределенности
-
-/module1/sub_module2/class/method1
-/module1/sub_module2/class
-/module1/class/method1
-/class/method1
-/class
-/
- *
- * TODO
- *
-/module1/sub_module/sub_sub_module/class/method1
-/module1/sub_module/sub_sub_module/class --  index method
-/module1/sub_module/sub_sub_module -- index class + index method
-/module1/sub_module/class -- index method
-/module1/sub_module -- index class + index method
-/module1/class/method1
-/class/method1
-/class -- index method
-/
- * */
-	public function parseURI(): void
+ * Используется константа CONTROLLERS_BASE_PATH - controllers|api|cli (WebUi|API|CLI) в зависимости от типа вызова
+ */
+	//public function parseURI(): void
+	public function routeToClassName(): string
 	{
 		$uri = explode('/', $this->__request_uri);
 		$this->module_name = ($uri[0] != '') ? $uri[0] : $this->default_module_name;
 		$this->class_name = (count($uri) > 1) ? $uri[1] : $this->default_class_name;
 		$this->method_name = (count($uri) > 2) ? $uri[2] : $this->default_method_name;
 
-		$this->__controller_fq_class_name = CONTROLLERS_BASE_PATH.'\\'.(($this->module_name != '') ? $this->module_name."\\" : '').$this->class_name;
-		$this->__view_fq_class_name = 'Views\\'.(($this->module_name != '') ? $this->module_name.'\\' : '').$this->class_name;
+		return (($this->module_name != '') ? $this->module_name."\\" : '').$this->class_name;
+		//$this->__controller_fq_class_name = CONTROLLERS_BASE_PATH.'\\'.(($this->module_name != '') ? $this->module_name."\\" : '').$this->class_name;
+		//$this->__view_fq_class_name = 'Views\\'.(($this->module_name != '') ? $this->module_name.'\\' : '').$this->class_name;
 	}
 
 /** Главный метод приложения */
 	public function run(): void
 	{
-//получаем запрос модуля-класса-метода
-		if (APPLICATION_RUNNING_MODE == 'cli')
+//получаем запрос модуля-класса-метода или какого-то алиаса для какого-то класса
+		if (APPLICATION_RUNNING_MODE == 'CLI')
 		{//CLI - для этого режима первый параметр магическая строка в виде "модуль/класс/метод", потом все остальные параметры для программы
 			$this->__request_uri = $_SERVER['argv'][1];
 		}
@@ -388,7 +314,7 @@ class Application
 		}
 
 //разбираем URI
-		$this->parseURI();//устанавливаем переменные module_name, class_name, method_name и полные названия классов контрллера и представления
+		$this->__fq_class_name = $this->routeToClassName();//устанавливаем переменные module_name, class_name, method_name и названия классов контроллера и представления
 
 //создаем экземпляр контроллера - вызвали конструктор класса контроллера
 		if (!$this->loadController())
@@ -403,7 +329,7 @@ class Application
 		$this->controller->setMethodName($this->method_name);
 
 //дефолтный ресурс для ACL - полное имя класса
-		$this->controller->setDefaultResourceId($this->__controller_fq_class_name);
+		$this->controller->setDefaultResourceId($this->__fq_class_name);
 
 //"инициализация" класса ПОСЛЕ конструктора, но ПЕРЕД вызовом запрошенного метода.
 //именно в этом методе можно проверять имя вызываемого метода и делать ACL по имени running_method_name или проверять доступ к ресурсу
@@ -421,7 +347,7 @@ class Application
 
 //для WEB режима идем дальше
 //загрузили файл и создали представление - вызвали его конструктор
-		if (APPLICATION_RUNNING_MODE == 'ui')
+		if (APPLICATION_RUNNING_MODE == 'WebUI')
 		{
 			//если представление вообще загрузилось, то продолжаем.
 			if ($this->loadView())//загрузили сам класс
@@ -520,12 +446,12 @@ class Application
 	protected function fileNotFound(): void
 	{//
 		header("HTTP/1.0 404 Not Found");
-		$message = "Cannot load appropriate controller class [{$this->__controller_fq_class_name}] for URI [{$this->__request_uri}].
+		$message = "Cannot load appropriate controller class [".CONTROLLERS_BASE_PATH."\\{$this->__fq_class_name}] for URI [{$this->__request_uri}].
 Why:
 1. Mistyped URL
 2. File with class not found (check autoloader)
 3. Class was not defined in loaded file (check class name in file)";
-		if (APPLICATION_RUNNING_MODE == 'api')
+		if (APPLICATION_RUNNING_MODE == 'API')
 		{
 			header("Content-type: application/json");
 			print json_encode([
