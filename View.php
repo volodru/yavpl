@@ -279,7 +279,7 @@ class View
 
 /**
  * Возвращает накопленные контроллерами "хлебные крошки".
- * Использовать желательно в defaultView проекта.
+ * Использовать желательно в главном View проекта.
  */
 	protected function getBreadcrumbs(): string
 	{
@@ -287,7 +287,7 @@ class View
 		if (count($breadcrumbs) > 0)
 		{
 			$breadcrumbs[count($breadcrumbs)-1] = strip_tags($breadcrumbs[count($breadcrumbs)-1]);
-			return "\n<div id='breadcrumbs'>\n\t<span class='breadcrumb'>".join("</span>\n\t{$this->__breadcrumbs_delimiter}<span class='breadcrumb'>", $breadcrumbs)."</span>\n</div>\n";
+			return "<div id='breadcrumbs'><span class='breadcrumb'>".join("</span>\n\t{$this->__breadcrumbs_delimiter}<span class='breadcrumb'>", $breadcrumbs)."</span></div>";
 		}
 		else
 		{
@@ -296,7 +296,7 @@ class View
 	}
 
 /**
- * Метод должен быть перекрыт в defaultView проекта.
+ * Метод должен быть перекрыт в главном View проекта.
  * Метод должен отрисовать содержимое тэга body документа.
  */
 	protected function body(string $method): void
