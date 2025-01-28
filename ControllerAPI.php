@@ -44,12 +44,12 @@ class ControllerAPI extends Controller
 
 /** для отдачи бинарников вызываем
  * $this->isBINARY
- * и данные кладем в $this->result['data']
+ * потом либо файл/поток либо Excel().......->output()
+ * 		(new \Models\Excel())->setFilledData($result)->output("Articles_Without_400_".date('Y-m-d'));
  */
-	public function isBINARY(string $content_type = ''): Controller
+	public function isBINARY(): void
 	{
 		$this->__result_content_type = 'binary';
-		return parent::isBINARY($content_type);
 	}
 
 /** Окончание работы контроллера.
@@ -58,10 +58,9 @@ class ControllerAPI extends Controller
  * Метод формирует http заголовки и отдает $this->result в виде JSON как оно есть.
  * Навязываются поля $this->result['status'] и $this->result['http_response_code'], от них отказаться нельзя, но можно перекрыть
  *
- * Для отдачи бинарника
-	$this->__result_content_type = 'binary';
-	$this->result['file_name'] = 'имф файла'.
-	$this->result['data'] = бинарные данные файла
+ * Бинарник отдаем так:
+ * $this->isBINARY();
+ * $this->__sendFile(Stream)ToClient(.........);
  */
 	public function done(): void
 	{

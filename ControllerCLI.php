@@ -19,22 +19,19 @@ namespace YAVPL;
 
 class ControllerCLI extends Controller
 {
-/**
-* Для консольного режима разбираем командную строку на параметры вида key=value
+/** Для консольного режима разбираем командную строку на параметры вида key=value
 * Всё, что не в этом формате - игнорим.
 * Параметры заполняем в глобальный массив через setParam.
 */
 	public function __construct()
 	{
 		parent::__construct();
-		/* Заполняем параметры для CLI режима, только в формате key=value */
-		//@TODO сделать вменяемый разбор строковых значений, т.к. вот щас нельзя в значениях иметь знак =
 		foreach ($_SERVER['argv'] ?? [] as $param)
 		{
-			$a = explode("=", $param);
-			if (count($a) == 2)
+			$matches = [];
+			if (preg_match("/^(.+?)\=(.+)$/", $param, $matches))
 			{
-				$this->setParam($a[0], $a[1]);
+				$this->setParam($matches[1], $matches[2]);
 			}
 		}
 	}

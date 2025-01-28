@@ -180,7 +180,6 @@ set_exception_handler('\\YAVPL\\__my_exception_handler');
  * Чтобы отрисовать отдельный элемент в AJAX или iframe в контроллере нужно установить disableRender().
  *
  * Для AJAX есть специальный метод controller->isAJAX() устанавливающий заголовок с кодировкой и отключающий рендер.
- * Для отдачи бинарников есть метод controller->isBINARY().
  * Для работы с JSON - вызываем controller->isJSON() и заполняем переменную $this->result (и всё) см. view->default_JSON_Method().
  *
  * Соглашение об именах в библиотеке:
@@ -198,8 +197,8 @@ set_exception_handler('\\YAVPL\\__my_exception_handler');
  * * представление берет все данные из контроллера через магию __get. и ими же должно ограничиваться.
  * * все вычисления в представлении могут быть только для красивого вывода.
  * * представление без большой необходимости не должно использовать ссылки на модели из контроллера.
- * 		исключения, например, для ACL - можно в представлении делать if ($this->user->isAllowe('resource_id')) {print "...";}
- * * и вообще, представление как бы ничего не знает о моделях. но иногда в лом объявлять в контроллере shortcut
+ * 		исключения, например, для ACL - можно в представлении делать if ($this->user->isAllowed('resource_id')) {print "...";}
+ * * и вообще, представление как бы ничего не знает о моделях. но иногда влом объявлять в контроллере shortcut
  * 		на какую-нибудь структуру в модели только для того, чтобы ее один раз показать в каком-нибудь селекторе
 */
 
@@ -361,6 +360,7 @@ class Application
 					else
 					{//сюда попадаем если представление не наследовано от базового класса View
 					 //и чё делать тут? вообще-то это фаталити.
+						sendBugReport("Установлен __need_render, но в представлении нет метода render()", "FATALITY!", true);
 					}
 				}
 				else
@@ -374,7 +374,23 @@ class Application
 					 // скорее всего, контроллер сам отдал данные в виде файла или JSON
 						if ($this->controller->__is_json)//а если прямо явно указано, что это JSON
 						{
-							$this->view->default_JSON_Method();//то выводим данные в формате JSON
+							//$this->view->default_JSON_Method();//то выводим данные в формате JSON
+
+							if (isset($this->controller->result))//как правило это структура типа хеш
+							{
+								print json_encode($this->controller->result);
+							}
+							elseif (
+								(($this->controller->message ?? '') != '') ||//просто сообщение с логами
+								(count($this->controller->log ?? []) > 0)
+								)
+							{
+								print json_encode(['message' => $this->controller->message ?? '', 'log' => $this->controller->log ?? []]);
+							}
+							else
+							{//надо выдать хоть что-то, а то непонятно, зачем мы все это делали
+								sendBugReport("Вызов в режиме isJSON(), но контроллером не заполнены ни \$result, ни \$message, ни \$log", "FATALITY!", true);
+							}
 						}
 					}
 				}
@@ -483,7 +499,7 @@ Why:
 				'Mail',//Почта
 				'SimpleDictionaryModel', //DEPRECATED
 				'Model', 'SimpleFilesModel', 'BasicUserModel', 'DocumentModel',//модельки
-				'Controller', 'ControllerAPI', 'ControllerCLI', 'View', 'Helper', //ядро фреймворка
+				'Controller', 'ControllerWebUI', 'ControllerAPI', 'ControllerCLI', 'View', 'Helper', //ядро фреймворка
 				'ToolBar', //тулбар - библиотека
 				'Test',//DEPRECATED
 			]))

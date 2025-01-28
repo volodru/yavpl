@@ -306,9 +306,10 @@ class Controller
 
 	Можно перекрыть этот метод в контроллере и организовать собственный маршрутизатор в пределах класса.
  * */
+	/*
 	public function defaultMethod(string $method_name):void
 	{
-	}
+	}*/
 
 /**
  * Устанавливается после вызова конструктора контроллера в Application.
@@ -330,12 +331,24 @@ class Controller
 	}
 
 /**
+ * TODO
+ * $this->__need_render - нужен только в WEBUI режиме.
+ * но пока есть вывод бинарников через View метод __sendStreamToClient должен дизаблить рендерер
+ * а сам метод __sendStreamToClient используется в API
+ * что надо сделать:
+ * 1. убрать из всех view вывод бинарников
+ * 2. в методе __sendStreamToClient  убрать disableRender() т.к. он тут не нужен
+ * 3. переменную $this->__need_render  и disableRender() перенести в контроллер webui
+ *
+ *
+ *
  * Выключает рендеринг через главное представление.
  * Нужно для аджакса, бинарников и некоторых специальных случаев, типа печатных версий или
  * версий для мобильных устройств.
  *
  * Принцип выделения минимального - 99% страниц отдаются в виде именно страницы с шапкой, хлебными крошками и подвалом.
  */
+
 	public function disableRender(): Controller
 	{
 		$this->__need_render = false;
@@ -381,38 +394,14 @@ class Controller
  * @param $file_name string имя файла для клиента
  * @param $file_path string путь к файлу в файловой системе
  * @param $params array см. параметры для __sendStreamToClient
+ * После отдачи файла скрипт сразу завершается.
  */
 	protected function __sendFileToClient(string $file_name, string $file_path, array $params = []): void
 	{
 		header("Content-Length: ".filesize($file_path));
 		$this->__sendStreamToClient($file_name, $params);
 		readfile($file_path);
-	}
-
-/**
- * Перед отдачей бинарника вызвать этот метод. Экономит 1 строчку :)
- *
- * TODO подумать на тему удалить этот метод, т.к. есть __sendStreamToClient и функция exit();
- * во всяком случае указывать content_type прямо в вызове isBINARY - странно.
- * на 2023-10-10 актуально только для выдачи сгенерированных картинок
- */
-	public function isBINARY(string $content_type = ''): Controller
-	{
-		if ($content_type != '')
-		{
-			header("Content-Type: {$content_type}");
-		}
-		$this->disableRender();
-		return $this;
-	}
-
-/**
- * Для аджаксных вызовов, если результат в виде HTML
- */
-	public function isAJAX(): Controller
-	{//просто отдаём HTML без обёрток из шапки и подвала сайта
-		$this->disableRender();//как рендерить, проверяет View
-		return $this;
+		exit();
 	}
 
 /**
@@ -433,6 +422,7 @@ class Controller
 /**
  * Для вызовов text/event-stream
  */
+	/*
 	public function isEventStream(): Controller
 	{
 		header('Content-Type: text/event-stream');
@@ -443,51 +433,54 @@ class Controller
 
 		$this->disableRender();
 		return $this;
-	}
+	}*/
 
 /**
  * Для вызовов text/event-stream
  */
-	public function sendEventStreamMessage($id, $data)
+/*	public function sendEventStreamMessage($id, $data)
 	{
 		//https://www.php.net/manual/en/function.cli-set-process-title.php
 		print "id: {$id}" . PHP_EOL . "data: " . json_encode($data) . PHP_EOL . PHP_EOL;
 		ob_flush();
 		flush();
-	}
+	}*/
 
 /**
  * Больше для нужд тестирования. Хотя где-то может и пригодится.
  */
+	/*
 	protected function resetParams(): Controller
 	{
 		$this->__params_array = [];
 		return $this;
-	}
+	}*/
 
 /**
  * Для простых контроллеров без представления - выполнил работу и перешел на другую страницу.
  */
+/*
 	protected function redirect(string $url = '/'): void
 	{
 		header("Location: {$url}");
 		exit(0);
-	}
+	}*/
 
 /**
  *
 Получить приватное поле с крошками
  */
+/*
 	public function getBreadcrumbs(): array
 	{
 		return $this->__breadcrumbs;
-	}
+	}*/
 
 /** Добавить хлебную крошку. Если не передать заголовок, выведет имя метода.
  * $title заголовок
  * $link гиперссылка (лучше локальная, без протокола)
  */
-	protected function addBreadcrumb(string $title = '', string $link = ''): Controller
+/*	protected function addBreadcrumb(string $title = '', string $link = ''): Controller
 	{
 		if ($title == '')
 		{
@@ -495,10 +488,9 @@ class Controller
 		}
 		$this->__breadcrumbs[] = ($link != '') ? "<a href='{$link}'>{$title}</a>" : $title;
 		return $this;
-	}
+	}*/
 
-/**
- * добавить параметр в набор входных параметров CGI.
+/** Добавить параметр в набор входных параметров CGI.
  * эти значения берутся самыми первыми и перекрывают остальные (cookies, get, post)
  *
  * не подходит для передачи параметров из Application в Controller,
@@ -510,16 +502,19 @@ class Controller
 		return $this;
 	}
 
-/**
- * Приватный метод для getParam. Валидирует значения в общем случае.
- * Кому тут тесно - берите строку и валидируйте ее самостоятельно.
- */
-	private function checkParamType(string $type, $value, $default_value)
+/** Приватный метод для getParam. Валидирует значения в общем случае.
+ * Кому тут тесно - берите строку и валидируйте ее самостоятельно. */
+	private function checkParamType(string $type, mixed $value, mixed $default_value): mixed
 	{
-		//TODO - надо что-то сделать с массивами
+		//TODO - проверить как оно будет работать с массивами
 		if (is_array($value))
 		{
-			return $value;
+			$result = [];
+			foreach ($value as $v)
+			{
+				$result[] = $this->checkParamType($type, $v, $default_value);
+			}
+			return $result;
 		}
 		if (in_array($type, ['integer', 'int', 'bigint', 'int64', 'float', 'double']))
 		{//все числа, особенно из экселя, могут содержать форматирующие пробелы/переносы/неразрывные пробелы
@@ -563,11 +558,6 @@ class Controller
 				die('Passed string argument is not valid');
 			}
 			return strval($value);
-			/* 2015-09-29
-			 * возможно сможем прожить без stripslashes,
-			 * т.к. иногда надо принимать от юзера практически программный код.
-			 */
-			//return stripslashes(strval($value));
 		}
 		else
 		{//значит накосячили при вызове getParam
@@ -575,10 +565,8 @@ class Controller
 		}
 	}
 
-/**
- * Приватный метод для getParam.
- */
-	private function verifyDefaultValue(string $type, mixed $default_value): mixed
+/** Приватный метод для getParam. */
+	private function createDefaultValue(string $type, mixed $default_value): mixed
 	{
 		if (!isset($default_value))
 		{//если не передали дефолтное значение, то берем его исходя из типа
@@ -586,7 +574,6 @@ class Controller
 			{
 				$default_value = '';
 			}
-			//elseif ($type == 'integer' || $type == 'float' || $type == 'double')
 			elseif (in_array($type, ['integer', 'int', 'bigint', 'int64', 'float', 'double']))
 			{
 				$default_value = 0;
@@ -599,10 +586,18 @@ class Controller
 		return $default_value;
 	}
 
-/** Получить параметр извне.
+/** Особо одаренные наследники могут перекрыть метод и выдавать данные из своих источников с любым приоритетом.
+(!)	Сессию тут не используем - все желающие хранить дефолтные значения в сессии перекрывают этот метод.
+	$this->__params_array[$name],//что поставили ручками + автотесты
+	$GLOBALS[$name], //для передачи данных из глобального контекста, например реализаци ЧПУ в Application
+*/
+	protected function getValueFromEverywhere(string $name, mixed $default_value = null)
+	{//см. setParam() - $this->__params_array
+		return $this->__params_array[$name] ?? $_GET[$name] ?? $_POST[$name] ?? $_COOKIE[$name] ?? $GLOBALS[$name] ?? $default_value;
+	}
 
-Параметр - это параметр.
-Концепция: Код не может действовать по-разному в засимости от источника данных.
+/** Получить параметр извне.
+Концепция: Параметр - это параметр. Код не может действовать по-разному в засимости от источника данных.
 
 Приоритет параметров:
 1. установленные через setParam
@@ -618,13 +613,24 @@ class Controller
 Если имя оканчивается на конструкцию [] (например, person_id[] - имя переменной будет person_id),
 то будет возвращен массив значений. Использовать для блоков чекбоксов.
 
+experimental: Если тип начинается со знака вопроса И дефолтное значение не передано, то возвращаемое значение может быть null.
 
-Особо одаренные наследники могут перекрыть/переписать метод getParam и выдавать данные с любым приоритетом.
-Пока (2015-09-29) это еще никому не понадобилось.
+
  */
 	protected function getParam(string $name, string $type, mixed $default_value = null, array $valid_values = []): mixed
 	{
-		$default_value = $this->verifyDefaultValue($type, $default_value);
+		/* experimental*/
+		$is_nullable = false;
+		if (substr($type, 0, 1) == '?')
+		{
+			$type = substr($type, 1, strlen($type) - 1);
+			$is_nullable = !isset($default_value);
+		}
+
+		if (!$is_nullable)
+		{
+			$default_value = $this->createDefaultValue($type, $default_value);
+		}
 
 		//da("$name, string $type, mixed $default_value");
 
@@ -640,13 +646,10 @@ class Controller
 		{//значит накосячили при вызове getParam
 			die("Значение по-умолчанию [{$default_value}] не входит в список разрешенных значений.");
 		}
-/*
-	$this->__params_array[$name],//что поставили ручками + автотесты
-	$GLOBALS[$name], //для передачи данных из глобального контекста, например реализаци ЧПУ в Application
 
-(!)	Сессию тут не используем - все желающие хранить дефолтные значения в сессии перекрывают этот метод.
-*/
-		$value = $this->__params_array[$name] ?? $_GET[$name] ?? $_POST[$name] ?? $_COOKIE[$name] ?? $GLOBALS[$name] ?? $default_value;
+		//получили данные из окружения - GET|POST|globals|etc
+		$value = $this->getValueFromEverywhere($name, $default_value);
+
 		if ($array_expected && !is_array($value))
 		{
 			if (isset($default_value) && $value == $default_value)
@@ -681,6 +684,7 @@ class Controller
 
 /**  Устанавливает title Документа.
  */
+	/*
 	public function setTitle(string $title = ''): Controller
 	{
 		if ($title != '')
@@ -701,15 +705,16 @@ class Controller
 			$this->__title = join(' : ', array_reverse($a));
 		}
 		return $this;
-	}
+	}*/
 
 /**  Возвращает title Документа.
  * это не "public Морозов", это только чтение.
  */
+	/*
 	public function getTitle(): string
 	{
 		return $this->__title;
-	}
+	}*/
 
 /**
  * магия по-умолчанию. на нее ссылается View.

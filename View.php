@@ -328,6 +328,7 @@ class View
  * это только для ui режима!
  * для режима API используется свой механизм прямо в контроллере.
  */
+	/*
 	public function default_JSON_Method(): void
 	{
 		if (isset($this->controller->result))//как правило это структура типа хеш
@@ -343,5 +344,5 @@ class View
 		{//надо выдать хоть что-то, а то непонятно, зачем мы все это делали
 			sendBugReport("Call of __default_JSON() without \$result or \$message", "FATALITY!", true);
 		}
-	}
+	}*/
 }
