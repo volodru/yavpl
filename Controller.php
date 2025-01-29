@@ -380,7 +380,8 @@ class Controller
 Если Вы самостоятельно набрали этот URL, то больше так не делайте.");
 				}
 			}
-			return intval($value);
+			//return intval($value);
+			return (is_numeric($value)) ? intval($value) : $default_value;
 		}
 		elseif (in_array($type,['float', 'double']))
 		{//а плавающая точка где-то может быть запятой. тут захардкоден американский формат чисел!
@@ -463,13 +464,15 @@ experimental: Если тип начинается со знака вопрос�
 		if (substr($type, 0, 1) == '?')
 		{
 			$type = substr($type, 1, strlen($type) - 1);
-			$is_nullable = !isset($default_value);
+			//$is_nullable = !isset($default_value);
+			$is_nullable = is_null($default_value);
 		}
 
 		if (!$is_nullable)
 		{
 			$default_value = $this->createDefaultValue($type, $default_value);
 		}
+		//da($name);		da($is_nullable);		da($default_value);
 
 		//da("$name, string $type, mixed $default_value");
 
@@ -527,13 +530,23 @@ experimental: Если тип начинается со знака вопрос�
  */
 	public function __get(string $name)
 	{
+		//da("CONTROLLER __get {$name}");
 		global $application;
 		$this->$name = $application->getBasicModel($name);
 		if (isset($this->$name))
 		{
 			return $this->$name;
 		}
-		//!это всегда ошибка. у контроллера не должно быть необъявленных переменных.
+
+		//var_dump(get_object_vars($this));
+		//da(get_object_vars($this)[$name]);
+		/*
+		if (array_key_exists($name, get_object_vars($this)))
+		{
+			return $this->$name;
+		}*/
+
+		//!это всегда ошибка. у контроллера не должно быть неинициализированных переменных.
 		sendBugReport("CONTROLLER __get(): variable [{$name}] is undefined", $name);
 		return null;
 	}

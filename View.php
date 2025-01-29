@@ -109,10 +109,24 @@ class View
 		{
 			return $this->controller->$name;
 		}
-		else
+
+		//da("VIEW __get $name");
+
+/* проблема
+ * get_object_vars - процедура долгая
+ * нужна редко - для переменных которые могут быть null
+ * поэтому ее бы поставить в конце
+ * НО в конце у нас магия __get контроллера, которая если не найдет переменную сделает фаталити
+ *
+ * поэтому пока рекомендация: все переменные инициировать в контроллере, тогда они там будут храниться как в кеше и
+ * до get_object_vars дело не дойдет.
+	 */
+		if (array_key_exists($name, get_object_vars($this->controller)))
 		{
-			return $this->controller->__get($name);
+			return $this->controller->$name;
 		}
+
+		return $this->controller->__get($name);
 	}
 
 /**

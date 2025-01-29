@@ -232,8 +232,6 @@ class Application
 	protected string $__request_uri;
 
 	/** Полное название класса, каким мы пытались его создать по заданному URI */
-	//DELETE protected string $__controller_fq_class_name;
-	//DELETE protected string $__view_fq_class_name;
 	protected string $__fq_class_name;
 
 /** Загрузчик Контроллера
@@ -245,6 +243,8 @@ class Application
 		$fq_class_name = CONTROLLERS_BASE_PATH.'\\'.$this->__fq_class_name;
 		if (class_exists($fq_class_name))//тут запускается автозагружалка
 		{
+			//присвоение $this->controller теперь в протоконструкторе контроллера, т.к. для error() надо
+			//иметь инициализированную $application->controller уже в конструкторе класса любого контролдлера, чтобы вызвать loadView
 			//$this->controller = new $fq_class_name();//делаем экземпляр класса
 			new $fq_class_name();//делаем экземпляр класса
 			return true;
@@ -282,7 +282,6 @@ class Application
  *
  * Используется константа CONTROLLERS_BASE_PATH - controllers|api|cli (WebUi|API|CLI) в зависимости от типа вызова
  */
-	//public function parseURI(): void
 	public function routeToClassName(): string
 	{
 		$uri = explode('/', $this->__request_uri);
@@ -291,8 +290,6 @@ class Application
 		$this->method_name = (count($uri) > 2) ? $uri[2] : $this->default_method_name;
 
 		return (($this->module_name != '') ? $this->module_name."\\" : '').$this->class_name;
-		//$this->__controller_fq_class_name = CONTROLLERS_BASE_PATH.'\\'.(($this->module_name != '') ? $this->module_name."\\" : '').$this->class_name;
-		//$this->__view_fq_class_name = 'Views\\'.(($this->module_name != '') ? $this->module_name.'\\' : '').$this->class_name;
 	}
 
 /** Главный метод приложения */
@@ -506,7 +503,7 @@ Why:
 				'Test',//DEPRECATED
 			]))
 			{
-				//da("Loading YAVPL file: $s");
+				//da("Loading YAVPL file: {$file_name}");
 				require_once($file_name.'.php');
 				return;
 			}
