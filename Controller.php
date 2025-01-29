@@ -408,6 +408,7 @@ class Controller
 /** Приватный метод для getParam. */
 	private function createDefaultValue(string $type, mixed $default_value): mixed
 	{
+		//da('default_value: ['.$default_value.']');da(isset($default_value));da(is_null($default_value));
 		if (!isset($default_value))
 		{//если не передали дефолтное значение, то берем его исходя из типа
 			if ($type == 'string')
@@ -459,20 +460,21 @@ experimental: Если тип начинается со знака вопрос�
  */
 	protected function getParam(string $name, string $type, mixed $default_value = null, array $valid_values = []): mixed
 	{
+		//da("START----------- ($type)  $name");		da('default_value: ['.$default_value.']');da(isset($default_value));da(is_null($default_value));
 		/* experimental*/
 		$is_nullable = false;
 		if (substr($type, 0, 1) == '?')
 		{
 			$type = substr($type, 1, strlen($type) - 1);
-			//$is_nullable = !isset($default_value);
 			$is_nullable = is_null($default_value);
 		}
 
+		//da('default_value before');da($default_value);
 		if (!$is_nullable)
 		{
 			$default_value = $this->createDefaultValue($type, $default_value);
 		}
-		//da($name);		da($is_nullable);		da($default_value);
+		//da("----------- ($type)  $name");		da($is_nullable);		da($default_value);
 
 		//da("$name, string $type, mixed $default_value");
 
@@ -484,9 +486,12 @@ experimental: Если тип начинается со знака вопрос�
 		}
 
 		//проверяем дефолтное значение в любом случае, а не только, если до него дошла очередь
-		if (is_array($valid_values) && (count($valid_values) > 0) && !in_array($default_value, $valid_values))
-		{//значит накосячили при вызове getParam
-			die("Значение по-умолчанию [{$default_value}] не входит в список разрешенных значений.");
+		if (!$is_nullable)
+		{
+			if (is_array($valid_values) && (count($valid_values) > 0) && !in_array($default_value, $valid_values))
+			{//значит накосячили при вызове getParam
+				die("Значение по-умолчанию параметра {$name} ({$type}) равное [{$default_value}] не входит в список разрешенных значений.");
+			}
 		}
 
 		//получили данные из окружения - GET|POST|globals|etc
