@@ -250,8 +250,6 @@ class Controller
  * 2. в методе __sendStreamToClient  убрать disableRender() т.к. он тут не нужен
  * 3. переменную $this->__need_render  и disableRender() перенести в контроллер webui
  *
- *
- *
  * Выключает рендеринг через главное представление.
  * Нужно для аджакса, бинарников и некоторых специальных случаев, типа печатных версий или
  * версий для мобильных устройств.
@@ -328,77 +326,6 @@ class Controller
 		$this->__is_json = true;
 		return $this;
 	}
-
-/**
- * Для вызовов text/event-stream
- */
-	/*
-	public function isEventStream(): Controller
-	{
-		header('Content-Type: text/event-stream');
-		// recommended to prevent caching of event data.
-		header('Cache-Control: no-cache');
-		//header('Transfer-Encoding: identity');
-		header('X-Accel-Buffering: no');
-
-		$this->disableRender();
-		return $this;
-	}*/
-
-/**
- * Для вызовов text/event-stream
- */
-/*	public function sendEventStreamMessage($id, $data)
-	{
-		//https://www.php.net/manual/en/function.cli-set-process-title.php
-		print "id: {$id}" . PHP_EOL . "data: " . json_encode($data) . PHP_EOL . PHP_EOL;
-		ob_flush();
-		flush();
-	}*/
-
-/**
- * Больше для нужд тестирования. Хотя где-то может и пригодится.
- */
-	/*
-	protected function resetParams(): Controller
-	{
-		$this->__params_array = [];
-		return $this;
-	}*/
-
-/**
- * Для простых контроллеров без представления - выполнил работу и перешел на другую страницу.
- */
-/*
-	protected function redirect(string $url = '/'): void
-	{
-		header("Location: {$url}");
-		exit(0);
-	}*/
-
-/**
- *
-Получить приватное поле с крошками
- */
-/*
-	public function getBreadcrumbs(): array
-	{
-		return $this->__breadcrumbs;
-	}*/
-
-/** Добавить хлебную крошку. Если не передать заголовок, выведет имя метода.
- * $title заголовок
- * $link гиперссылка (лучше локальная, без протокола)
- */
-/*	protected function addBreadcrumb(string $title = '', string $link = ''): Controller
-	{
-		if ($title == '')
-		{
-			$title = debug_backtrace()[1]['function'];
-		}
-		$this->__breadcrumbs[] = ($link != '') ? "<a href='{$link}'>{$title}</a>" : $title;
-		return $this;
-	}*/
 
 /** Добавить параметр в набор входных параметров CGI.
  * эти значения берутся самыми первыми и перекрывают остальные (cookies, get, post)
