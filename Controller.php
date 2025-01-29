@@ -129,6 +129,8 @@ class Controller
  */
 	public function __construct()
 	{
+		global $application;
+		$application->controller = $this;
 	}
 
 /** Что надо сделать ПОСЛЕ конструктора, имея на руках $this->running_method_name

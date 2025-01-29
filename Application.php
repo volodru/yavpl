@@ -245,7 +245,8 @@ class Application
 		$fq_class_name = CONTROLLERS_BASE_PATH.'\\'.$this->__fq_class_name;
 		if (class_exists($fq_class_name))//тут запускается автозагружалка
 		{
-			$this->controller = new $fq_class_name();//делаем экземпляр класса
+			//$this->controller = new $fq_class_name();//делаем экземпляр класса
+			new $fq_class_name();//делаем экземпляр класса
 			return true;
 		}
 		else//по идее - фаталити, т.к. куда же без контроллера.
@@ -364,7 +365,7 @@ class Application
 					}
 				}
 				else
-				{//если Аджакс, рисуем сразу нужный метод без оберток
+				{//если Аджакс с отрисовкой через View, рисуем сразу нужный метод без оберток
 					if (method_exists($this->view, $this->method_name))
 					{
 						$this->view->{$this->method_name}();
@@ -372,6 +373,7 @@ class Application
 					else
 					{// сюда попадаем, если есть аджаксовый код, но без представления.
 					 // скорее всего, контроллер сам отдал данные в виде файла или JSON
+					 //хотя еще может быть JSON:
 						if ($this->controller->__is_json)//а если прямо явно указано, что это JSON
 						{
 							//$this->view->default_JSON_Method();//то выводим данные в формате JSON
