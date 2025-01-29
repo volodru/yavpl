@@ -385,7 +385,7 @@ class Application
 								(count($this->controller->log ?? []) > 0)
 								)
 							{
-								print json_encode(['message' => $this->controller->message ?? '', 'log' => $this->controller->log ?? []]);
+								print json_encode(['message' => $this->controller->message ?? '', 'log' => ($this->controller->log ?? [])]);
 							}
 							else
 							{//надо выдать хоть что-то, а то непонятно, зачем мы все это делали
