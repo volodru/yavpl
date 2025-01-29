@@ -53,8 +53,7 @@ class View
 	private string $__doctype_declaration = "<!DOCTYPE html>";
 	private string $__html_tag_attributes = "xmlns='http://www.w3.org/1999/xhtml' xml:lang='ru' lang='ru' dir='ltr'";
 
-	private array $__methods = [];
-	private array $breadcrumbs = [];
+	private array $__methods = [];//for Helpers
 
 /**
  *  Берем контроллер из глобальной пременной $application, т.к. в наследниках нужна магия _get и данные контроллера сразу в конструкторе
@@ -98,20 +97,6 @@ class View
 	}
 
 /**
- * Регистрирует помощник.
- * Инициируется помощник, из него берутся все методы и складываются в кучку.
- * После этого все методы класса могут пользоваться методами помощника, как своими собственными.
- * Типичный помощник: helpers/html.php
- * Помощник сам может использовать методы вызвавшего его представления через магию __get()
- *
- */
-	public function registerHelper(string $helper_class_name): View//class
-	{
-		$this->__methods = array_merge($this->__methods, \YAVPL\Helper::registerHelper($helper_class_name, $this));
-		return $this;
-	}
-
-/**
  * Если нет поля, то берем его из своего контроллера
  */
 	public function __get(string $name): mixed
@@ -142,6 +127,19 @@ class View
 		return isset($this->controller->$name);
 	}
 
+/**
+ * Регистрирует помощник.
+ * Инициируется помощник, из него берутся все методы и складываются в кучку.
+ * После этого все методы класса могут пользоваться методами помощника, как своими собственными.
+ * Типичный помощник: helpers/html.php
+ * Помощник сам может использовать методы вызвавшего его представления через магию __get()
+ *
+ */
+	public function registerHelper(string $helper_class_name): View//class
+	{
+		$this->__methods = array_merge($this->__methods, \YAVPL\Helper::registerHelper($helper_class_name, $this));
+		return $this;
+	}
 /**
  *
  * FOR DEBUGGING!
@@ -292,6 +290,26 @@ class View
 		else
 		{
 			return '';
+		}
+	}
+
+/** Если есть действие в контроллере, но там особенно нечего рисовать, кроме сообщения или логов -
+ * то метод представления можно и не делать - а будет вызван этот код
+ */
+	protected function defaultMethod(): void
+	{
+		if ($this->message != '')
+		{
+			print "<div class='message'>{$this->message}</div>";
+		}
+		if (isset($this->log) && is_array($this->log) && count($this->log) > 0)
+		{
+			print "<div class='log'><pre>";
+			foreach ($this->log as $line)
+			{
+				print "{$line}\n";
+			}
+			print "</pre></div>";
 		}
 	}
 

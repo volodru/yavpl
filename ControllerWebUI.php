@@ -21,6 +21,12 @@ class ControllerWebUI extends Controller
 	public $__breadcrumbs_delimiter = " &raquo;&raquo;\n\t";
 	public $__breadcrumbs = [];
 
+/** Сообщение юзеру. Если нет View, то будет просто выведено это поле. */
+	public $message = '';
+
+/** Логи контроллера. Если нет View выведутся после сообщения $this->message. */
+	public $log = [];
+
 /** Включать ли рендер всей страницы (meta/head/body) или это AJAX в виде простого потока HTML
  */
 	//public bool $__need_render = true;
