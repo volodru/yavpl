@@ -68,11 +68,20 @@ class DbTable extends \YAVPL\Model
 /** Имя таблица в базе (со схемой, например catalog.articles) */
 	public string $table_name = '';
 
-/** Ключевое поле, как правило - id*/
+/** Ключевое поле, как правило - id */
 	public string $key_field = 'id';
 
-/** Список полей - массив */
+/** Список полей - линейный массив. */
 	public array $fields = [];
+
+/** Типы полей - int, string, bool etc. Нет типа - фаталити. */
+	public ?array $fields_types = null;
+
+/** Дефолтные значения полей - если есть. По-умолчанию - null */
+	public ?array $fields_default_values = null;
+
+/** Поле может быть NULL. По-умолчанию - false */
+	public ?array $fields_is_nullable = null;
 
 /** Последний добавленный ключ / ID сущности.
  * После сохранения строки (saveRow) с ключом 0 в этой переменной будет новый id записи.
@@ -93,6 +102,17 @@ class DbTable extends \YAVPL\Model
 		$this->table_name = $table_name;
 		$this->key_field = $key_field;
 		$this->fields = $fields;
+
+		//da($fields);		da(array_values($fields));
+		if (array_values($fields) !== $fields)//проверка: передали ассоциативный массив, а не линейный
+		{
+			$this->fields = array_keys($fields);
+			$this->fields_types = array_map(function($index, $v){return $v[0] ?? sendBugReport("Undefined field type [{$index}]", '', true);}, array_keys($fields), $fields);
+			$this->fields_default_values = array_map(function($v){return $v[1] ?? null;}, $fields);
+			$this->fields_is_nullable = array_map(function($v){return $v[2] ?? false;}, $fields);
+			//da("table: {$this->table_name}");da($this->fields);da($this->fields_types);da($this->fields_default_values);da($this->fields_is_nullable);
+		}
+
 	}
 
 //-------------------------------------------------------------------------------------------------------------------
@@ -105,7 +125,14 @@ class DbTable extends \YAVPL\Model
  */
 	public function getEmptyRow(): array
 	{
-		return [$this->key_field => 0] + array_fill_keys($this->fields, '');
+		if (isset($this->fields_default_values))
+		{
+			return [$this->key_field => 0] + $this->fields_default_values;
+		}
+		else
+		{
+			return [$this->key_field => 0] + array_fill_keys($this->fields, '');
+		}
 	}
 
 /** Максимально быстрый и корректный способ проверить наличие строки в базе.
@@ -241,6 +268,24 @@ ORDER BY {$params['order']}
  */
 	public function beforeSaveRow(string $action, array &$data, array $old_data): string
 	{
+		if (isset($this->fields_is_nullable))
+		{//проход на тему NULL значений делаем только тогда, когда у нас установлены параметры fields_is_nullable, иначе не тратим время вообще
+			foreach ($this->fields as $field_name)
+			{
+				if (!isset($data[$field_name]) &&//не установлено поле И
+					(!$this->fields_is_nullable[$field_name]))//поле НЕ может быть NULL
+				{
+					if (isset($this->fields_default_values[$field_name]))
+					{//ставим дефолтное значение
+						$data[$field_name] = $this->fields_default_values[$field_name];
+					}
+					else
+					{//ошибка
+						return "Ошибка при сохранении в таблицу [{$this->table_name}]: поле [{$field_name}] не имеет значения и для него не задано значение по-умолчанию.";
+					}
+				}
+			}
+		}
 		foreach ($this->fields as $field_name)
 		{//данные ($data) передаются по ссылке, так что overhead от пустых вызовов должен быть минимальным.
 			if (($message = $this->checkFieldValue($action, $field_name, $data)) != '')
@@ -443,7 +488,7 @@ WHERE {$f_key_info['column_name']} = $1", $key_value)->rows > 0)
  * Сюда пихать зачистку файловой системы от файлов, т.к. надо сначала точно удалить запись в СУБД прежде, чем удалять файл.
  * Файл удалится наверняка, а в СУБД бывают дедлоки и прочее.
  *
- * Но все это работает только в том случае, если нужен только ID записи.
+ * Но все это работает только в том случае, если для удаления файла нужен только ID записи, а не полный путь или еще какая-нибудь экзотика.
  * Саму-то запись мы уже удалили :(
  *
  * Возвращает пустую строку, если все хорошо, иначе возвращает сообщение об ошибке.
