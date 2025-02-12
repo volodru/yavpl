@@ -226,7 +226,8 @@ PARAMS: ".print_r($this->query_params, true) : '').$explain);
 				//OLD CODE was unsafe : $code .= (is_string($row[$index])) ? "['{$row[$index]}']" : "[{$row[$index]}]";
 				if (!isset($row[$index]))
 				{
-					sendBugReport('Wrong index value in fetchAll()', "Index [{$hash_index}] in ROW:\n".print_r($row, true), true);
+					$row[$index] = '';//для NULL значений - ключ результирующего массива пустая строка
+					//sendBugReport('Wrong index value in fetchAll()', "Index [{$hash_index}] in ROW:\n".print_r($row, true), true);
 				}
 				if (is_string($row[$index]))//но строковых значений в индексе массива лучше избегать,
 				{

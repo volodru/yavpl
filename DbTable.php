@@ -74,7 +74,7 @@ class DbTable extends \YAVPL\Model
 /** Список полей - линейный массив. */
 	public array $fields = [];
 
-/** Типы полей - int, string, bool etc. Нет типа - фаталити. */
+/** Типы полей - int, string, bool (в терминах PHP + тип date) etc. Нет типа - фаталити. */
 	public ?array $fields_types = null;
 
 /** Дефолтные значения полей - если есть. По-умолчанию - null */
