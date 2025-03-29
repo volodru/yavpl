@@ -485,7 +485,7 @@ Why:
 	public static function __autoload(string $class_name): void
 	{
 		// for DEBUGGING autoloader:
-		//print "<p>Application::__autoload loading: {$class_name}</p>";//для отладки
+		//print "<p>".__METHOD__." loading: [{$class_name}]</p>";//для отладки
 		//__printBackTrace();//для отладки
 
 		// свои библиотечные файлы проверяем первыми.

@@ -56,10 +56,10 @@ class ToolBar
 			'type'			=> 'button',
 			'header'		=> $header,
 			'action'		=> $action,
-			'enabled'		=> isset($options['enabled']) ? $options['enabled'] : true,
-			'enabled_hint'	=> isset($options['enabled_hint']) ? $options['enabled_hint'] : null,
-			'disabled_hint'	=> isset($options['disabled_hint']) ? $options['disabled_hint'] : null,
-			'width'			=> isset($options['width']) ? $options['width'] : '0',
+			'enabled'		=> $options['enabled'] ?? true,
+			'enabled_hint'	=> $options['enabled_hint'] ?? null,
+			'disabled_hint'	=> $options['disabled_hint'] ?? null,
+			'width'			=> $options['width'] ?? '0',
 		];
 		return $this;
 	}
@@ -120,8 +120,12 @@ function __runToolbarButton(e, action, type)
 					if (isset($element['enabled_hint']))
 					{
 						$hint = preg_replace("/\'/", '`', $element['enabled_hint']);
-						$hint_attr = "title='{$hint}'";
 					}
+					else
+					{
+						$hint = preg_replace("/\'/", '`', $element['action']);
+					}
+					$hint_attr = "title='{$hint}'";
 					//$header = "<a onclick='__stopPropagation(event)' href='{$element['action']}'>{$element['header']}</a>";
 					$header = $element['header'];
 					$matches = [];
