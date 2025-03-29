@@ -30,7 +30,7 @@ class ToolBar
 /**
  * сбросить накопленные элементы тулбара. надо если не подходят дефолтные кнопки собранные предками и хочется сделать с нуля.
  */
-	public function resetToolbar()
+	public function resetToolbar(): ToolBar
 	{
 		$this->__elements = [];
 		return $this;
@@ -39,7 +39,7 @@ class ToolBar
 /**
  * Получить скрытое поле __elements с содержимым тулбара
  */
-	public function getElements()
+	public function getElements(): array
 	{
 		return $this->__elements;
 	}
@@ -50,7 +50,7 @@ class ToolBar
  * @param $action string ссылка/URL или функция на JS
  * @param $options string разные опции, каждая емеет право быть неопределена и должна иметь значение по умолчанию.
  */
-	public function addButton($header, $action, $options = [])
+	public function addButton(string $header, string $action, array $options = []): ToolBar
 	{
 		$this->__elements[] = [
 			'type'			=> 'button',
@@ -67,7 +67,7 @@ class ToolBar
 /**
  * добавить разделитель на тублар
  */
-	public function addDivider($options = [])
+	public function addDivider(array $options = []): ToolBar
 	{
 		$this->__elements[] = [
 			'type'	=> 'divider',
@@ -79,7 +79,7 @@ class ToolBar
 /**
  * Возвращает тулбар с кнопками. Кнопки набираются в контроллере методами addDivider/addButton etc.
  */
-	public function render($show_empty = false)
+	public function render(bool $show_empty = false): string
 	{
 		if ((count($this->__elements) == 0) && (!$show_empty))
 		{
