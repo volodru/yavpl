@@ -494,13 +494,14 @@ Why:
 		{
 			$file_name = preg_replace("/YAVPL\\\\/", "", $class_name);
 			if (in_array($file_name, [
-				'Db', 'DbPg', 'DbPgSingleton', 'DbMy', 'DbTable',//СУБД
+				'Db', 'DbPg', 'DbPgSingleton', 'DbTable',//СУБД
+				//DEPRECATED'DbMy',
 				'Mail',//Почта
-				'SimpleDictionaryModel', //DEPRECATED
+				//DEPRECATED'SimpleDictionaryModel', //DEPRECATED
 				'Model', 'SimpleFilesModel', 'BasicUserModel', 'DocumentModel',//модельки
 				'Controller', 'ControllerWebUI', 'ControllerAPI', 'ControllerCLI', 'View', 'Helper', //ядро фреймворка
 				'ToolBar', //тулбар - библиотека
-				'Test',//DEPRECATED
+				//DEPRECATED'Test',
 			]))
 			{
 				//da("Loading YAVPL file: {$file_name}");
