@@ -109,6 +109,8 @@ class Mail
 		'cer'	=> 'application/octet-stream',// public keys
 	];
 
+	public bool $force_sending_even_on_non_production = false;//по-умолчанию почта расслыется только с продакшна.
+
 	public function __construct(string $to_email = '', string $subj = '', string $content = '', string $from_email = '', string $from_name = '')
 	{
 		if ($to_email != '')
@@ -358,20 +360,22 @@ Content-ID: <{$attachment['file_name']}>
 			$this->letter_body .= "--{$this->uid}--";
 		}
 
-		if (defined('APPLICATION_ENV') && (APPLICATION_ENV == 'production'))
+		if ((defined('APPLICATION_ENV') && (APPLICATION_ENV == 'production'))//отсылаем либо только на проде
+			|| //или программист уверен, что можно рассылать на дев/тест и других серверах. в основном оно надо для тестовой аутентификации.
+			$this->force_sending_even_on_non_production
+			)
 		{
-			if ($f = popen("/usr/sbin/sendmail -t -i -f {$this->from_email}", 'w'))
+			$command = "/usr/sbin/sendmail -t -i -f {$this->from_email}";
+			if ($f = popen($command, 'w'))
 			{
 				fwrite($f, $this->letter_body);
 				pclose($f);
-				//sleep(1);//EXPERIMENTAL - попытка предотвратить блокировку 25 порта в МСК
 				//$st = pclose($f);
-				/*if ($st != 0)
-				 	die(" (Mail status is: $st)");*/
+				/*if ($st != 0) die(" (Mail status is: $st)");*/
 			}
 			else
 			{
-				die("Write to sendmail failed!");
+				die("Write to sendmail failed! Command line was: [{$command}]");
 			}
 		}
 		else

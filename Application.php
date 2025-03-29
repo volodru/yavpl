@@ -495,19 +495,19 @@ Why:
 			$file_name = preg_replace("/YAVPL\\\\/", "", $class_name);
 			if (in_array($file_name, [
 				'Db', 'DbPg', 'DbPgSingleton', 'DbTable',//СУБД
-				//DEPRECATED'DbMy',
+				//удалить DEPRECATED'DbMy',
 				'Mail',//Почта
-				//DEPRECATED'SimpleDictionaryModel', //DEPRECATED
+				//удалить DEPRECATED'SimpleDictionaryModel', //DEPRECATED
 				'Model', 'SimpleFilesModel', 'BasicUserModel', 'DocumentModel',//модельки
 				'Controller', 'ControllerWebUI', 'ControllerAPI', 'ControllerCLI', 'View', 'Helper', //ядро фреймворка
 				'ToolBar', //тулбар - библиотека
-				//DEPRECATED'Test',
+				//удалить DEPRECATED'Test',
 			]))
 			{
 				//da("Loading YAVPL file: {$file_name}");
 				require_once($file_name.'.php');
 				return;
-			}
+			}//else - нам чего-то не того подложили в папку и хотят запустить. нуихнафиг.
 		}
 
 		//print "<xmp>class_name = $class_name\n";
