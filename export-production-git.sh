@@ -17,7 +17,7 @@ for server in srv3.adrussia.ru srv2.adrussia.ru
 #for server in srv2.adrussia.ru
 do
   echo ----EXPORTING TO SERVER $server
-  ssh svn@$server "cd $project && git pull && git checkout-index -a -f --prefix=/www/src/$project/"
+  ssh deploy@$server "cd $project && git pull && git checkout-index -a -f --prefix=/www/src/$project/"
 done
 
 for server in v.volod.ru
