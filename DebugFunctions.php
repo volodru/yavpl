@@ -12,11 +12,10 @@ declare(strict_types=1);
  * Вынесены в глобальное пространство имен
 
 
-/** Мега универсальный отладчик. Название - сокращение от DumpArray
- */
+/** Мега универсальный отладчик. Название - сокращение от DumpArray */
 function da($v)
 {
-	require_once('sage.phar');
+	//require_once('sage.phar');
 	if (APPLICATION_RUNNING_MODE == 'CLI')
 	{
 		print var_export($v, true)."\n";
