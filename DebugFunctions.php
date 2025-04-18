@@ -28,13 +28,25 @@ function da($v)
 	}
 }
 
+/** Dump And Die */
+function dd(...$val)
+{
+	foreach ($val as $v)
+	{
+		print "<pre>";
+		print_r($v);
+		print "</pre>";
+	}
+	die;
+}
+
 /** DumpArray in temp File - специально для отладки кукиев и сессий
  */
 function daf($v)
 {
 	if (APPLICATION_ENV != 'production')
 	{
-		$l = fopen('/tmp/'.($_SERVER['SERVER_NAME']??'SERVER').'__'.date('Y_m_d__H_i_s').'.log', 'a+');
+		$l = fopen('/tmp/'.($_SERVER['SERVER_NAME'] ?? 'SERVER').'__'.date('Y_m_d__H_i_s').'.log', 'a+');
 		fwrite($l, var_export($v, true)."\n");
 		//fwrite($l, $v); //FOR DEBUG BINARIES
 		fclose($l);
