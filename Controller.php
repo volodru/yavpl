@@ -130,6 +130,7 @@ class Controller
 	public function __construct()
 	{
 		global $application;
+//оно именно тут, т.к. это надо для работы метода error(), который можно вызвать из конструктора класса контроллера наследника
 		$application->controller = $this;
 	}
 

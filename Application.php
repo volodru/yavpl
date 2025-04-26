@@ -220,7 +220,7 @@ class Application
 	/** название метода по умолчанию*/
 	public string $default_method_name = 'index';
 
-	/** список "базовых" моделей проекта
+	/** список "базовых" моделей проекта (т.е. список "разделов" или "модулей" проекта)
 	 * для работы getBasicModel и магии __get на его основе в наследнике надо заполнить и поддерживать актуальный список базовых моделей */
 	public array $basic_models_names = [];
 
@@ -245,8 +245,8 @@ class Application
 		if (class_exists($fq_class_name))//тут запускается автозагружалка
 		{
 			//присвоение $this->controller теперь в протоконструкторе контроллера, т.к. для error() надо
-			//иметь инициализированную $application->controller уже в конструкторе класса любого контролдлера, чтобы вызвать loadView
-			//$this->controller = new $fq_class_name();//делаем экземпляр класса
+			//иметь инициализированную $application->controller уже в конструкторе класса любого контроллера, чтобы вызвать loadView
+			//НЕ НАДО ТАК! $this->controller = new $fq_class_name();//делаем экземпляр класса
 			new $fq_class_name();//делаем экземпляр класса автолоадером
 			return true;
 		}
@@ -264,8 +264,8 @@ class Application
 	{
 		$fq_class_name = 'Views\\'.$this->__fq_class_name;
 		if (class_exists($fq_class_name))
-		{
-			$this->view = new $fq_class_name();
+		{//ссылку вида $this->view = new $fq_class_name() можно и тут поставить, но пусть будет для красоты как с контроллером.
+			new $fq_class_name();//грузим автолоадером. в конструкторе ставим ссылки из application на этот view и в view на контроллер приложения
 			return true;
 		}
 		else
@@ -320,12 +320,12 @@ class Application
 			return;//а чё ещё делать, если контроллер не нашелся. пусть программист сам ищет контроллер.
 		}
 
-//эти методы устанавливают протектед поля. для чего их использовать - см. комментарии в контроллере (\YAVPL\Controller)
+//эти методы устанавливают protected поля. для чего их использовать - см. комментарии в контроллере (\YAVPL\Controller)
 		$this->controller->setModuleName($this->module_name);
 		$this->controller->setClassName($this->class_name);
 		$this->controller->setMethodName($this->method_name);
 
-//дефолтный ресурс для ACL - полное имя класса
+//дефолтный ресурс для проектов с ACL - полное имя класса
 		$this->controller->setDefaultResourceId($this->__fq_class_name);
 
 //"инициализация" класса ПОСЛЕ конструктора, но ПЕРЕД вызовом запрошенного метода.
@@ -370,16 +370,14 @@ class Application
 					else
 					{// сюда попадаем, если есть аджаксовый код, но без представления.
 					 // скорее всего, контроллер сам отдал данные в виде файла или JSON
-					 //хотя еще может быть JSON:
+					 // хотя еще может быть JSON:
 						if ($this->controller->__is_json)//а если прямо явно указано, что это JSON
 						{
-							//$this->view->default_JSON_Method();//то выводим данные в формате JSON
-
 							if (isset($this->controller->result))//как правило это структура типа хеш
-							{
+							{//просто выводим ее в ответ
 								print json_encode($this->controller->result);
 							}
-							elseif (
+							elseif (//нет результатов, но есть сообщение или логи
 								(($this->controller->message ?? '') != '') ||//просто сообщение с логами
 								(count($this->controller->log ?? []) > 0)
 								)
@@ -423,7 +421,7 @@ class Application
 		die('У класса приложения должна быть реализована функция getEntityTypesInstance()');
 	}
 
-/** Получить экземпляр класса модели ("базовой", т.е. НЕ субмодели, т.е. сразу в папке с моделями - \models\)
+/** Получить экземпляр класса модели ("базовой" (например, модель типа "раздел"), т.е. НЕ субмодели, т.е. сразу в папке с моделями - \models\)
  * вызовы кешируются в глобальной переменной приложения.
  *
  * Имеет смысл использовать в магических методах базовой модели \Models\Main проекта и главном контроллере проекта.
@@ -443,18 +441,18 @@ class Application
 		{//путь с учетом регистра - ничего не делаем
 		}
 		else
-		{//никак его нет - выходим отсюда
+		{//никак нет - выходим отсюда
 			return null;
 		}
 
-		//нашли можель в списке
-		if (!isset($this->__basic_models_cash[$name]))
+		//нашли модель в списке
+		if (!isset($this->__basic_models_cash[$name]))//нет в кеше моделей
 		{
 			$model_name = "\\Models\\".$name;//базовые модели в пространстве \Models
-			$model = new $model_name();
-			$this->__basic_models_cash[$name] = $model;
+			$model = new $model_name();//модель грузится автолоадером
+			$this->__basic_models_cash[$name] = $model;//сохраняем в кеш
 		}
-		return $this->__basic_models_cash[$name];
+		return $this->__basic_models_cash[$name];//отдаем из кеша
 	}
 
 /** Обработчик ситуации когда не нашли Контроллер по URI */
@@ -463,7 +461,7 @@ class Application
 		header("HTTP/1.0 404 Not Found");
 		$message = "Cannot load appropriate controller class [".CONTROLLERS_BASE_PATH."\\{$this->__fq_class_name}] for URI [{$this->__request_uri}].
 Why:
-1. Mistyped URL
+1. Mistyped, malformed or outdated URL (check URL in your brouser)
 2. File with class not found (check autoloader)
 3. Class was not defined in loaded file (check class name in file)";
 		if (APPLICATION_RUNNING_MODE == 'API')
@@ -507,7 +505,7 @@ Why:
 				//da("Loading YAVPL file: {$file_name}");
 				require_once($file_name.'.php');
 				return;
-			}//else - нам чего-то не того подложили в папку и хотят запустить. нуихнафиг.
+			}//else - нам чего-то не того подложили в папку с библиотекой и хотят запустить. нуихнафиг.
 		}
 
 		//print "<xmp>class_name = $class_name\n";
@@ -520,6 +518,7 @@ Why:
 			require $file_name;
 			return;
 		}
+
 //----- возможное поведение для новых проектов - все пути регистрозависимы вплоть до имени файла.
 		$file_name = APPLICATION_PATH.'/'.join('/', $s).".php";
 		if (file_exists($file_name))

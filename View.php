@@ -65,6 +65,7 @@ class View
  * например, в JS коде, где надо упоминать переменные из контроллера*/
 		global $application;
 		$this->controller = $application->controller;
+		$application->view = $this;
 	}
 
 /**
@@ -356,25 +357,5 @@ class View
 </html>";
 	}
 
-/** Если установлен режим controler->isJSON() и в представлении нет нужного метода, то вызывается этот метод.
- * это только для ui режима!
- * для режима API используется свой механизм прямо в контроллере.
- */
-	/*
-	public function default_JSON_Method(): void
-	{
-		if (isset($this->controller->result))//как правило это структура типа хеш
-		{
-			print json_encode($this->controller->result);
-		}
-		elseif ((($this->controller->message ?? '') != '') ||//просто сообщение с логами
-			(count($this->log ?? []) > 0))
-		{
-			print json_encode(['message' => $this->controller->message ?? '', 'log' => $this->log ?? []]);
-		}
-		else
-		{//надо выдать хоть что-то, а то непонятно, зачем мы все это делали
-			sendBugReport("Call of __default_JSON() without \$result or \$message", "FATALITY!", true);
-		}
-	}*/
+
 }
