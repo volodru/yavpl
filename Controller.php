@@ -131,6 +131,7 @@ class Controller
 	{
 		global $application;
 //оно именно тут, т.к. это надо для работы метода error(), который можно вызвать из конструктора класса контроллера наследника
+//причем не столько для метода error, сколько для View, который вызывается из error() в режиме показа ошибки через рендер проекта
 		$application->controller = $this;
 	}
 
@@ -154,6 +155,33 @@ class Controller
 	public function __destruct()
 	{
 		//da(__METHOD__);
+	}
+
+/** Выводит сообщение о фатальной ошибке и завершает работу скрипта.
+ * Внешний вид вывода зависит от контекста - рендер на сайте, ajax или json
+ */
+	public function error(string $message): void
+	{
+		$html_message = preg_replace("/\n/", "<br/>\n", $message);
+		if ($this->__need_render)
+		{// пытаемся впихнуть сообщение об ошибке внутрь стандартной страницы проекта
+			global $application;
+			if ($application->loadView())
+			{
+				$this->message = $html_message;
+				$application->view->render('');//отдаем несуществующий метод (''), тогда вызывается "дефолтный" метод, который просто выводит $this->message
+			}
+		}
+		elseif ($this->__is_json)
+		{//json
+			print json_encode(['message' => $message]);
+		}
+		else
+		{//ajax
+//@TODO - нехорошая практика ссылка на глобальный класс CSS. надо что-нибудь придумать красивое.
+			print "<div class='global_ajax_error_block_class'>{$html_message}</div>";
+		}
+		die();
 	}
 
 /**
