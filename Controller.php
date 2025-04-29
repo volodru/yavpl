@@ -160,8 +160,12 @@ class Controller
 /** Выводит сообщение о фатальной ошибке и завершает работу скрипта.
  * Внешний вид вывода зависит от контекста - рендер на сайте, ajax или json
  */
-	public function error(string $message): void
+	public function error(string $message, int $http_response_code = 200): void
 	{
+		if ($http_response_code != 200)
+		{
+			http_response_code($http_response_code);
+		}
 		$html_message = preg_replace("/\n/", "<br/>\n", $message);
 		if ($this->__need_render)
 		{// пытаемся впихнуть сообщение об ошибке внутрь стандартной страницы проекта
