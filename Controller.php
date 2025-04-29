@@ -160,7 +160,8 @@ class Controller
 /** Выводит сообщение о фатальной ошибке и завершает работу скрипта.
  * Внешний вид вывода зависит от контекста - рендер на сайте, ajax или json
  */
-	public function error(string $message, int $http_response_code = 200): void
+	//public function error(string $message, int $http_response_code = 200): void
+	public function error(string $message, string $status = 'ERROR', int $http_response_code = 200): void
 	{
 		if ($http_response_code != 200)
 		{
@@ -178,7 +179,7 @@ class Controller
 		}
 		elseif ($this->__is_json)
 		{//json
-			print json_encode(['message' => $message]);
+			print json_encode(['message' => $message, 'status' => $status]);
 		}
 		else
 		{//ajax
