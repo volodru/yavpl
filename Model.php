@@ -123,23 +123,30 @@ class Model
 			//da('IN __sub_models_cache');
 			return $this->__sub_models_cache[$name];
 		}
-		elseif (in_array($name, $this->__sub_models))
+		elseif (in_array(strtolower($name), $this->__sub_models))//старый вариант - всё маленькими буквами
 		{//подмодели - инициируем и кладем ссылку на класс в кеш
-			//DEBUG
-			//da('MODEL->__get submodels'); da(get_class($this).'--'.$name);//FOR DEBUG
-			//END DEBUG
-
 			$matches = [];
 			if (preg_match("/^Models\\\\(.+)/", get_class($this), $matches))
 			{
-				//da($matches);//FOR DEBUG
 				$s = "Models\\{$matches[1]}\\".ucfirst($name);
 			}
 			$this->__sub_models_cache[$name] = new $s();
 			$this->__sub_models_cache[$name]->__parent = $this;
 			return $this->__sub_models_cache[$name];
 		}
-		//базовые модели подразделов - практически глобальные переменные
+		elseif (in_array($name, $this->__sub_models))//новый вариант - регистрозависимый
+		{//подмодели - инициируем и кладем ссылку на класс в кеш
+			$matches = [];
+			if (preg_match("/^Models\\\\(.+)/", get_class($this), $matches))
+			{
+				$s = "Models\\{$matches[1]}\\".$name;
+			}
+			$this->__sub_models_cache[$name] = new $s();
+			$this->__sub_models_cache[$name]->__parent = $this;
+			return $this->__sub_models_cache[$name];
+		}
+
+//---------- Базовые модели подразделов - практически глобальные переменные
 		$this->$name = $application->getBasicModel($name);
 		if (isset($this->$name))
 		{
