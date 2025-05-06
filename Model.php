@@ -105,11 +105,12 @@ class Model
 		return $this->__sub_models;
 	}
 
+	/* //OBSOLETE proposed for deletion 2025-05-06
 	public function getBasicModel(string $name): Model
 	{
 		global $application;
 		return $application->getBasicModel($name);
-	}
+	}*/
 
 	public function __get(string $name)//: mixed
 	{
@@ -123,26 +124,28 @@ class Model
 			//da('IN __sub_models_cache');
 			return $this->__sub_models_cache[$name];
 		}
-		elseif (in_array(strtolower($name), $this->__sub_models))//старый вариант - всё маленькими буквами
+		//старый вариант - всё маленькими буквами
+		elseif (in_array(strtolower($name), $this->__sub_models))
 		{//подмодели - инициируем и кладем ссылку на класс в кеш
 			$matches = [];
-			if (preg_match("/^Models\\\\(.+)/", get_class($this), $matches))
+			if (preg_match("/^(Models\\\\.+)/", get_class($this), $matches))
 			{
-				$s = "Models\\{$matches[1]}\\".ucfirst($name);
+				$s = $matches[1].'\\'.ucfirst($name);
 			}
 			$this->__sub_models_cache[$name] = new $s();
-			$this->__sub_models_cache[$name]->__parent = $this;
+			//OBSOLETE proposed for deletion 2025-05-06 $this->__sub_models_cache[$name]->__parent = $this;
 			return $this->__sub_models_cache[$name];
 		}
-		elseif (in_array($name, $this->__sub_models))//новый вариант - регистрозависимый
+		//новый вариант - регистрозависимый
+		elseif (in_array($name, $this->__sub_models))
 		{//подмодели - инициируем и кладем ссылку на класс в кеш
 			$matches = [];
-			if (preg_match("/^Models\\\\(.+)/", get_class($this), $matches))
+			if (preg_match("/^(Models\\\\.+)/", get_class($this), $matches))
 			{
-				$s = "Models\\{$matches[1]}\\".$name;
+				$s = $matches[1].'\\'.$name;
 			}
 			$this->__sub_models_cache[$name] = new $s();
-			$this->__sub_models_cache[$name]->__parent = $this;
+			//OBSOLETE proposed for deletion 2025-05-06 $this->__sub_models_cache[$name]->__parent = $this;
 			return $this->__sub_models_cache[$name];
 		}
 

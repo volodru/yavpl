@@ -493,13 +493,10 @@ Why:
 			$file_name = preg_replace("/YAVPL\\\\/", "", $class_name);
 			if (in_array($file_name, [
 				'Db', 'DbPg', 'DbPgSingleton', 'DbTable',//СУБД
-				//удалить DEPRECATED'DbMy',
 				'Mail',//Почта
-				//удалить DEPRECATED'SimpleDictionaryModel', //DEPRECATED
 				'Model', 'SimpleFilesModel', 'BasicUserModel', 'DocumentModel',//модельки
 				'Controller', 'ControllerWebUI', 'ControllerAPI', 'ControllerCLI', 'View', 'Helper', //ядро фреймворка
 				'ToolBar', //тулбар - библиотека
-				//удалить DEPRECATED'Test',
 			]))
 			{
 				//da("Loading YAVPL file: {$file_name}");
@@ -513,6 +510,15 @@ Why:
 
 //---- дефолтное поведение для старых проектов - файлы лежат в пути в нижнем регистре
 		$file_name = APPLICATION_PATH.'/'.strtolower(join('/', $s)).".php";
+		if (file_exists($file_name))
+		{
+			require $file_name;
+			return;
+		}
+
+//---- костыль на переходный период - каталоги controllers,api,models,views в нижнем регистре, а файлы регистрозависимы
+		$catalog_name = array_shift($s);
+		$file_name = APPLICATION_PATH.'/'.strtolower($catalog_name).'/'.join('/', $s).".php";
 		if (file_exists($file_name))
 		{
 			require $file_name;

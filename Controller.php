@@ -569,24 +569,14 @@ experimental: Если тип начинается со знака вопрос�
  */
 	public function __get(string $name)
 	{
-		//da("CONTROLLER __get {$name}");
 		global $application;
 		$this->$name = $application->getBasicModel($name);
 		if (isset($this->$name))
 		{
 			return $this->$name;
 		}
-
-		//var_dump(get_object_vars($this));
-		//da(get_object_vars($this)[$name]);
-		/*
-		if (array_key_exists($name, get_object_vars($this)))
-		{
-			return $this->$name;
-		}*/
-
-		//!это всегда ошибка. у контроллера не должно быть неинициализированных переменных.
-		sendBugReport("CONTROLLER __get(): variable [{$name}] is undefined", $name);
+//!это всегда ошибка. у контроллера не должно быть неинициализированных переменных. это 99% опечатка в коде и надо проверять.
+		sendBugReport(get_class($this).": variable [{$name}] is undefined", $name);
 		return null;
 	}
 
