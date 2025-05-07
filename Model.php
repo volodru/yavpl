@@ -112,6 +112,19 @@ class Model
 		return $application->getBasicModel($name);
 	}*/
 
+/** ЭКСПЕРИМЕНТ от 2025-05-07!
+ * Возможный вызов
+ * use \Models\Catalog;
+ * Catalog::Articles()->getList(['limit' => 10]);
+ * либо
+ * \Models\Catalog::Articles()->getList(['limit' => 10]);
+ */
+	public static function __callStatic($name, $arguments)
+	{
+		$s = get_called_class().'\\'.$name;
+		return new $s(...$arguments);
+	}
+
 	public function __get(string $name)//: mixed
 	{
 		global $application;
@@ -119,11 +132,19 @@ class Model
 		{//главная СУБД проекта. все модели имеют доступ к главной базе по переменной $this->db
 			return $this->db = $application->getMainDBConnector();
 		}
-		elseif (isset($this->__sub_models_cache[$name]))
+
+		$sub_model_name = strtolower($name);
+		if (isset($this->__sub_models_cache[$sub_model_name]))
 		{//кеш подмоделей, если вызываем их не первый раз
-			//da('IN __sub_models_cache');
-			return $this->__sub_models_cache[$name];
+			return $this->__sub_models_cache[$sub_model_name];
 		}
+		elseif (in_array($sub_model_name, array_map(fn($name) => strtolower($name), $this->__sub_models)))
+		{//подмодели - инициируем и кладем ссылку на класс в кеш
+			$model_name = get_class($this).'\\'.$name;
+			return $this->__sub_models_cache[$sub_model_name] = new $model_name();
+		}
+
+		/*
 		//старый вариант - всё маленькими буквами
 		elseif (in_array(strtolower($name), $this->__sub_models))
 		{//подмодели - инициируем и кладем ссылку на класс в кеш
@@ -147,7 +168,7 @@ class Model
 			$this->__sub_models_cache[$name] = new $s();
 			//OBSOLETE proposed for deletion 2025-05-06 $this->__sub_models_cache[$name]->__parent = $this;
 			return $this->__sub_models_cache[$name];
-		}
+		}*/
 
 //---------- Базовые модели подразделов - практически глобальные переменные
 		$this->$name = $application->getBasicModel($name);

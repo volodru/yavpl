@@ -246,8 +246,9 @@ class Application
 		{
 			//присвоение $this->controller теперь в протоконструкторе контроллера, т.к. для error() надо
 			//иметь инициализированную $application->controller уже в конструкторе класса любого контроллера, чтобы вызвать loadView
-			//НЕ НАДО ТАК! $this->controller = new $fq_class_name();//делаем экземпляр класса
+			//НЕ НАДО ТАК! $this->controller = new $fq_class_name();//
 			new $fq_class_name();//делаем экземпляр класса автолоадером
+
 			return true;
 		}
 		else//по идее - фаталити, т.к. куда же без класса контроллера. т.е. хотябы пустой класс контроллера должен быть.
@@ -461,7 +462,7 @@ class Application
 		header("HTTP/1.0 404 Not Found");
 		$message = "Cannot load appropriate controller class [".CONTROLLERS_BASE_PATH."\\{$this->__fq_class_name}] for URI [{$this->__request_uri}].
 Why:
-1. Mistyped, malformed or outdated URL (check URL in your brouser)
+1. Mistyped, malformed or outdated URL (check URL in your browser)
 2. File with class not found (check autoloader)
 3. Class was not defined in loaded file (check class name in file)";
 		if (APPLICATION_RUNNING_MODE == 'API')
@@ -506,9 +507,10 @@ Why:
 		}
 
 		//print "<xmp>class_name = $class_name\n";
-		$s = explode('\\', $class_name);
+
 
 //---- дефолтное поведение для старых проектов - файлы лежат в пути в нижнем регистре
+		$s = explode('\\', $class_name);
 		$file_name = APPLICATION_PATH.'/'.strtolower(join('/', $s)).".php";
 		if (file_exists($file_name))
 		{
@@ -516,7 +518,8 @@ Why:
 			return;
 		}
 
-//---- костыль на переходный период - каталоги controllers,api,models,views в нижнем регистре, а файлы регистрозависимы
+//---- костыли на переходный период - каталоги controllers,api,models,views в нижнем регистре, а файлы регистрозависимы
+		$s = explode('\\', $class_name);
 		$catalog_name = array_shift($s);
 		$file_name = APPLICATION_PATH.'/'.strtolower($catalog_name).'/'.join('/', $s).".php";
 		if (file_exists($file_name))
@@ -525,7 +528,19 @@ Why:
 			return;
 		}
 
+		$s = explode('\\', $class_name);
+		$catalog_name = array_shift($s);
+		$sub_catalog_name = array_shift($s);
+		$file_name = APPLICATION_PATH.'/'.strtolower($catalog_name).'/'.strtolower($sub_catalog_name).'/'.join('/', $s).".php";
+		if (file_exists($file_name))
+		{
+			require $file_name;
+			return;
+		}
+
+
 //----- возможное поведение для новых проектов - все пути регистрозависимы вплоть до имени файла.
+		$s = explode('\\', $class_name);
 		$file_name = APPLICATION_PATH.'/'.join('/', $s).".php";
 		if (file_exists($file_name))
 		{
