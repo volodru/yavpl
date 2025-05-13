@@ -95,6 +95,11 @@ class DbTable extends \YAVPL\Model
  * @param $table_name string таблица
  * @param $key_field string ключевое поле (как правило "id")
  * @param $fields array массив полей
+ *
+ * $fields - либо линейный массив строк (названий полей)
+ * либо массив массивов вида [
+ * 	название_поля => [тип_поля, дефолтное_значение, может быть null (true/false)]
+ * ]
  */
 	public function __construct(string $table_name, string $key_field, array $fields)
 	{
@@ -154,9 +159,8 @@ class DbTable extends \YAVPL\Model
  */
 	public function getRawRow(int $key_value): ?array
 	{
-		$row = $this->db->exec("-- ".get_class($this).", method: ".__METHOD__."
+		return $this->db->exec("-- ".get_class($this).", method: ".__METHOD__."
 SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->fetchRow();
-		return (empty($row)) ? null : $row;//костыль на переходный период. когда db->fetchRow будет сама давать null, можно его убрать.
 	}
 
 /**
@@ -335,7 +339,7 @@ ORDER BY {$params['order']}
 			{
 				$data[$this->key_field] = $this->db->nextVal($this->getSeqName());
 			}
-//костыль!
+//begin костыль!
 //если наследники сами нашли ID, например по UNIQ индексу и выдали сюда существущий ID, то
 //делаем апдейт.
 //некостыльный вариант - наследники меняют $action в beforeSaveRow, но надо всем наследникам во всех проектах проставить &$action
@@ -348,7 +352,7 @@ ORDER BY {$params['order']}
 			{
 				$ar = $this->db->update($this->table_name, $this->key_field, $this->fields, $data)->affectedRows();
 			}
-			//end костыль
+//end костыль
 		}
 		else
 		{
