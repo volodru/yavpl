@@ -179,7 +179,7 @@ class Controller
 		}
 		elseif ($this->__is_json)
 		{//json
-			print json_encode(['message' => $message, 'status' => $status]);
+			print json_encode(['message' => strip_tags($message), 'status' => $status]);
 		}
 		else
 		{//ajax
