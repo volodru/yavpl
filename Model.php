@@ -92,9 +92,9 @@ class Model
 /** устанавливает shared переменную для триггеров сохраняющих логи
  * надо делать именно от той модели, с которой делается загрузка
  */
-	public function setGlobalDescription($description): void
+	public function setGlobalDescription(string $description): void
 	{
-		$this->db->exec("SELECT set_var('description', '{$description}')");
+		$this->db->exec("SELECT set_var('description', $1)", $description);
 	}
 
 /** Поле __sub_models - READ ONLY
