@@ -376,14 +376,14 @@ class Application
 						{
 							if (isset($this->controller->result))//как правило это структура типа хеш
 							{//просто выводим ее в ответ
-								print json_encode($this->controller->result);
+								print json_encode($this->controller->result, JSON_UNESCAPED_UNICODE);
 							}
 							elseif (//нет результатов, но есть сообщение или логи
 								(($this->controller->message ?? '') != '') ||//просто сообщение с логами
 								(count($this->controller->log ?? []) > 0)
 								)
 							{
-								print json_encode(['message' => $this->controller->message ?? '', 'log' => ($this->controller->log ?? [])]);
+								print json_encode(['message' => $this->controller->message ?? '', 'log' => ($this->controller->log ?? [])], JSON_UNESCAPED_UNICODE);
 							}
 							else
 							{//надо выдать хоть что-то, а то непонятно, зачем мы все это делали
