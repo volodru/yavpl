@@ -562,7 +562,7 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 			}
 			$hr_value = $value;
 		}
-		elseif (in_array($field_info['value_type'], ['K', 'X']))//dictionary
+		elseif (in_array($field_info['value_type'], ['K']))//dictionary
 		{
 			$value = preg_replace("/\D/", '', $value);
 			if ($value == '')
@@ -575,6 +575,20 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 			}
 			$hr_value = $field_info['values'][$value]['value'];
 		}
+		elseif (in_array($field_info['value_type'], ['X']))//external dictionary or any table
+		{
+			$value = preg_replace("/\D/", '', $value);
+			if ($value == '')
+			{
+				return "{$field_info['title']} - [{$value}]: Ожидается ID записи в таблице {$field_info['x_table_name']}";
+			}
+			if ($this->db->exec("SELECT {$field_info['x_value_field_name']} FROM {$field_info['x_table_name']} WHERE id = $1", $value)->rows == 0)
+			{
+				return "Значение {$value} не найдено в таблице {$field_info['x_table_name']} для поля {$field_info['title']}";
+			}
+			$hr_value = $this->db->fetchRow()[$field_info['x_value_field_name']];
+		}
+
 		elseif ($field_info['value_type'] == 'D')//date
 		{
 			$value = trim($value);
@@ -789,7 +803,7 @@ class Document_fieldsModel extends DbTable
 	{
 		parent::__construct($scheme.'.documents_fields', 'id', [
 			'title', 'value_type', 'measure', 'sort_order', 'description', 'automated',
-			'x_value_field_name', 'x_table_name', 'x_table_order', 'x_list_url', 'x_description',
+			'x_value_field_name', 'x_table_name', 'x_table_order', 'x_list_url', 'x_description', 'x_fill_values',
 			'width', 'height',
 			'use_in_index_sort',
 		]);
@@ -815,13 +829,23 @@ class Document_fieldsModel extends DbTable
 			{
 				if (empty($field_info[$f]))
 				{
-					die("Для поля #{$field_info['id']} {$field_info['title']} типа Внешний словарь не задано поле [{$f}]");
+					//die("Для поля #{$field_info['id']} {$field_info['title']} типа Внешний словарь не задано поле [{$f}]");
+					return [];
 				}
 			}
-
-			return $this->db->exec("SELECT id, {$field_info['x_value_field_name']} AS value
+			if ($field_info['x_fill_values'] == 1)
+			{
+				$query = "
+SELECT id, {$field_info['x_value_field_name']} AS value
 FROM {$field_info['x_table_name']}
-ORDER BY {$field_info['x_table_order']}")->fetchAll('id');
+ORDER BY {$field_info['x_table_order']}
+LIMIT 1000";
+				return $this->db->exec($query)->fetchAll('id');
+			}
+			else
+			{
+				return [];
+			}
 		}
 		else
 		{
@@ -841,6 +865,7 @@ ORDER BY {$field_info['x_table_order']}")->fetchAll('id');
 		$row['width'] = 0;
 		$row['height'] = 0;
 		$row['use_in_index_sort'] = 1;
+		$row['x_fill_values'] = 1;
 		return $row;
 	}
 
@@ -953,6 +978,10 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 		$data['automated'] ??= 0;
 		$data['use_in_index_sort'] ??= 1;
 
+		if ($action == 'update')
+		{
+			$data['value_type'] = $old_data['value_type'];//тип явно не меняем из интерфейса.
+		}
 
 		$f = 'width';
 		if (($data[$f] ?? 0) <= 0)
@@ -966,11 +995,42 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 			$data[$f] = $this->value_type_sizes[$data['value_type']][1];
 		}
 
+		//для внешнего словаря проверяем существование таблицы и наличие указанных полей в таблице
+		///da($data);
+		if ($data['value_type'] == 'X')
+		{
+			//заполнять значения - либо 1 либо 0
+			$data['x_fill_values'] = (($data['x_fill_values'] ?? 0) == 1) ? 1 : 0;
+
+			if ($data['x_table_name'] != '')
+			{
+				$table_info = (new \Models\PostgresQL())->getFieldsList($data['x_table_name']);
+				//da($table_info);return 'sss';
+				if (empty($table_info))
+				{
+					return "Не найдена таблица [{$data['x_table_name']}]";
+				}
+				foreach (['x_value_field_name', 'x_table_order', ] as $f)
+				{
+					if ($data[$f]!= '' && !isset($table_info[$data[$f]]))
+					{
+						return "Не найдено поле [{$data[$f]}] в таблице {$data['x_table_name']}";
+					}
+				}
+				if ($data['x_list_url'] == '')
+				{
+					$data['x_list_url'] = '/'.preg_replace("/\./", '/', $data['x_table_name']);
+				}
+			}
+
+			//return 'Только разработчик может создавать поля типа Внешний словарь, т.к. для этого требуется модификация исходного кода.';
+		}
+
 		if ($action == 'insert')
 		{
 			if ($data['value_type'] == 'X')
 			{
-				return 'Только разработчик может создавать поля типа Внешний словарь, т.к. для этого требуется модификация исходного кода.';
+				//return 'Только разработчик может создавать поля типа Внешний словарь, т.к. для этого требуется модификация исходного кода.';
 			}
 
 			if ($data['value_type'] == 'T')
@@ -979,18 +1039,6 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 			}
 		}
 
-		if ($action == 'update')
-		{
-			$data['value_type'] = $old_data['value_type'];//тип явно не меняем из интерфейса.
-
-			if ($data['value_type'] == 'X')
-			{//эти атрибуты не меняем из интерфейса.
-				foreach (['x_value_field_name', 'x_table_name', 'x_table_order', 'x_list_url',] as $f)
-				{
-					$data[$f] = $old_data[$f];
-				}
-			}
-		}
 		//переключение между типами строковых полей автоматическое
 		if ($data['height'] > 1 && $data['value_type'] == 'A')
 		{
