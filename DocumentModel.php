@@ -498,7 +498,10 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 
 		$field_info = $this->fields_model->getRow($field_id);
 		//da($value);da($field_info);die;
-		if ($field_info == false){die("DocumentModel.saveFieldsValue: UNKNOWN field_id = {$field_id}");}
+		if ($field_info == false)
+		{
+			die("DocumentModel.saveFieldsValue: UNKNOWN field_id = {$field_id}");
+		}
 
 		$delete_clause = "DELETE FROM {$this->scheme}.documents_fields_values WHERE document_id = $1 AND field_id = $2";
 
