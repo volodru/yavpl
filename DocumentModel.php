@@ -736,6 +736,7 @@ class Document_fieldsModel extends DbTable
 		'B'	=> 'Логический', // integer (0|1), 0 - false, not 0 - true
 		'T'	=> 'Таблица',//описание структуры в x_description, данные в отдельной таблице
 		'Z'	=> 'Файлы',
+		'S'	=> 'Специальное поле',//Special Field
 	];
 
 	/** Типы данных полей - названия поля в базе
@@ -752,6 +753,7 @@ class Document_fieldsModel extends DbTable
 		'B'	=> 'int_value', // integer
 		'T'	=> 'int_value', // заглушка
 		'Z'	=> 'int_value', // files has no values here
+		'S'	=> 'text_value', // кастомные поля это спец структуры и спец код на кадый экземпляр поля. допустимо хранение данных в формате JSON
 	];
 
 	/** Типы данных полей - названия полей, по которым надо их сортировать	 */
@@ -767,6 +769,7 @@ class Document_fieldsModel extends DbTable
 		'B'	=> 'int_value', // integer
 		'T'	=> 'int_value',	// заглушка, по таблицам сортировать нельзя
 		'Z'	=> 'int_value',	// files has no values here
+		'S'	=> 'text_value', // кастомные поля - не участвуют в списках
 	];
 
 	public array $value_type_cgi_types = [
@@ -781,6 +784,7 @@ class Document_fieldsModel extends DbTable
 		'B'	=> 'integer', // integer (0|1), 0 - false, not 0 - true
 		'T'	=> 'string', // заглушка, таблицы сохраняются отдельно
 		'Z'	=> 'integer',//заглушка, файлы работают не через поля CGI
+		'S'	=> 'string',//заглушка
 	];
 
 /** Типы данных полей - ширина и высота по умолчанию, в "em"
@@ -797,6 +801,7 @@ class Document_fieldsModel extends DbTable
 		'B'	=> [ 1, 1],//не имеет смысла, т.к. это радио кнопки
 		'T'	=> [25, 5],	//рисуется в блоке с полями, редактируется отдельно
 		'Z'	=> [ 1, 1],	//рисуется в отдельной форме
+		'S'	=> [ 1, 1],	//рисуется в отдельной форме
 	];
 
 	public function __construct(string $scheme)
@@ -895,6 +900,8 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		}
 	}
 
+/** Возвращает список полей. Для интерйесов редактирования полей.
+ */
 	public function getList(array $params = []): array
 	{
 		if (!isset($params['order']) || $params['order'] == '')
@@ -903,8 +910,6 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		}
 		$params['pkey'] = 'id';
 		$params['where'] ??= [];
-
-		//DELETE $params['where'][] = "document_type_id = {$this->document_type_id}";
 
 		foreach (['automated'] as $f)
 		{
@@ -928,7 +933,6 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		{
 			$default_value_title = $params['default_value_title'] ?? '-- Выберите --';
 		}
-
 
 		foreach ($list as $id => $field_info)
 		{
@@ -1004,7 +1008,7 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 
 			if ($data['x_table_name'] != '')
 			{
-				$table_info = (new \Models\PostgresQL())->getFieldsList($data['x_table_name']);
+				$table_info = (new \YAVPL\PostgresQL())->getFieldsList($data['x_table_name']);
 				//da($table_info);return 'sss';
 				if (empty($table_info))
 				{
