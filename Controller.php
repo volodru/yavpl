@@ -427,7 +427,7 @@ class Controller
 		elseif ($type == 'string')
 		{
 			//da($value);da(mb_detect_encoding($value));
-			if (mb_detect_encoding($value, 'UTF-8', true) === false)
+			if (mb_detect_encoding($value ?? '', 'UTF-8', true) === false)
 			{
 				die('Passed string argument is not valid');
 			}
