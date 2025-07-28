@@ -611,6 +611,10 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 		{
 			$hr_value = $value;//количество файлов
 		}
+		elseif ($field_info['value_type'] == 'S')//special field
+		{
+			$hr_value = $value;//всё, что решит разработчик спец. поля
+		}
 		elseif ($field_info['value_type'] == 'T')//table in JSON
 		{
 			/* не может быть тут пустой строки.
