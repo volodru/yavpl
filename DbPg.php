@@ -150,7 +150,7 @@ class DbPg extends Db implements iDb
 #	{$_SERVER['PHP_SELF']} {$_SERVER['REQUEST_URI']}
 #	{$_SERVER['SERVER_NAME']}	{$_SERVER['REMOTE_ADDR']}
 ref: ".urldecode(isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER']:'')."
-agent: {$_SERVER['HTTP_USER_AGENT']}
+agent: ".($_SERVER['HTTP_USER_AGENT'] ?? 'HTTP_USER_AGENT is unknown')."
 {$query}
 ".((count($this->query_params) > 0) ? "
 PARAMS: ".print_r($this->query_params, true) : '').$explain);

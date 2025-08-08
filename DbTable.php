@@ -221,7 +221,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		$this->db->exec("-- ".get_class($this).", method: ".__METHOD__."
 {$params['select']}
 {$params['from']}
-".((count($params['where']) > 0) ? "WHERE ".join(" AND ", $params['where']):'')."
+".((count($params['where']) > 0) ? "WHERE \n\t".join(" AND\n\t", $params['where']):'')."
 ORDER BY {$params['order']}
 ".(($params['limit'] > 0) ? "\nLIMIT ".$params['limit'] : '')."
 ".(($params['offset'] > 0) ? "\nOFFSET ".$params['offset'] : ''));//->print_r();

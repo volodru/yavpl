@@ -613,7 +613,7 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 		}
 		elseif ($field_info['value_type'] == 'S')//special field
 		{
-			$hr_value = $value;//всё, что решит разработчик спец. поля
+			$hr_value = $value;//какая-то осмысленная строка с т.з. класса этого поля
 		}
 		elseif ($field_info['value_type'] == 'T')//table in JSON
 		{
