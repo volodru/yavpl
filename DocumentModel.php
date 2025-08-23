@@ -392,14 +392,20 @@ WHERE document_id = $1 AND f.id = $2
 				{
 					if (($field_info['value_type'] == 'K')|| ($field_info['value_type'] == 'X'))
 					{//сравнение по значению для больше-меньше и по ключу - когда равно / не равно
-						if (($action == '=') || ($action == '!='))
+						//da($field_info);						da($action);
+						if (($action == '='))
 						{
 							$params['where'][] = "v{$field_id}.int_value {$action} {$value}";
+						}
+						elseif (($action == '!='))
+						{
+							$params['where'][] = "(v{$field_id}.int_value IS NULL) OR (v{$field_id}.int_value {$action} {$value})";
 						}
 						else
 						{
 							$params['where'][] = "v{$field_id}.value {$action} '".$field_info['values'][$value]['value']."'";
 						}
+						//da($params['where']);
 					}
 					elseif ($field_info['value_type'] == 'I')
 					{
@@ -491,7 +497,7 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 - если все хорошо, то удаляем поле и вставляем его заново с новым значением
 - триггер, обновляющий value в {DOCUMENTS}_fields_values работает только на вставку!
 */
-	public function saveFieldValue(int $document_id = 0, int $field_id = 0, $value = null): string
+	public function saveFieldValue(int $document_id = 0, int $field_id = 0, mixed $value): string
 	{
 		if ($document_id == 0){die('DocumentModel.saveFieldsValue: $document_id == 0');}	// - absolutely
 		if ($field_id == 0){die('DocumentModel.saveFieldsValue: $field_id == 0');}			// - barbaric!
@@ -776,7 +782,7 @@ class Document_fieldsModel extends DbTable
 		'B'	=> 'int_value', // integer
 		'T'	=> 'int_value',	// заглушка, по таблицам сортировать нельзя
 		'Z'	=> 'int_value',	// files has no values here
-		'S'	=> 'text_value', // кастомные поля - не участвуют в списках
+		'S'	=> 'text_value', // кастомные поля - не участвуют в сортировки списков
 	];
 
 	public array $value_type_cgi_types = [
