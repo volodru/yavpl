@@ -45,7 +45,7 @@ function daf($v)
 {
 	if (APPLICATION_ENV != 'production')
 	{
-		$l = fopen('/tmp/'.($_SERVER['SERVER_NAME'] ?? 'SERVER').'__'.date('Y_m_d__H_i_s').'.log', 'a+');
+		$l = fopen(sys_get_temp_dir().'/'.($_SERVER['SERVER_NAME'] ?? 'SERVER').'__'.date('Y_m_d__H_i_s').'.log', 'a+');
 		fwrite($l, var_export($v, true)."\n");
 		//fwrite($l, $v); //FOR DEBUG BINARIES
 		fclose($l);

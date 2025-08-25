@@ -352,7 +352,7 @@ Content-ID: <{$attachment['file_name']}>
 		else
 		{
 			$server_name = $_SERVER['SERVER_NAME'] ?? 'local';
-			$log_file_name = "/tmp/mail_from_{$server_name}_".date('Y-m-d--H-i-s').'_'.rand(1,10000).".eml";
+			$log_file_name = sys_get_temp_dir()."/mail_from_{$server_name}_".date('Y-m-d--H-i-s').'_'.rand(1,10000).".eml";
 			if ($f = fopen($log_file_name, 'w'))
 			{
 				fwrite($f, $this->letter_body);

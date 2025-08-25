@@ -126,7 +126,7 @@ class SimpleFilesModel extends DbTable
 * Создает или обновляет запись в БД.
 *
 * Возможна загрузка локального файла (в обход CGI) путем указания параметра $i_file['src_file_path']
-* Исходный файл размещать в /tmp/! т.к. файл будет ПЕРЕМЕЩЕН!
+* Исходный файл размещать в sys_get_temp_dir()! т.к. файл будет ПЕРЕМЕЩЕН!
 *
 * Для обновления только полей нужно пользоваться saveRow().
 *
@@ -238,7 +238,7 @@ class SimpleFilesModel extends DbTable
 			return "Невозможно удалить старый файл [{$f}]";
 		}
 
-		//локальный файл ВСЕГДА передавать через /tmp/ - ему делается MOVE
+		//локальный файл ВСЕГДА передавать через sys_get_temp_dir() - ему делается MOVE
 		if (isset($i_file['src_file_path']))
 		{//local source
 			if (!file_exists($i_file['src_file_path']))
