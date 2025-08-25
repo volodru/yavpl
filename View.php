@@ -317,14 +317,25 @@ class View
 		{
 			print "<div class='message'>{$this->message}</div>";
 		}
-		if (isset($this->log) && is_array($this->log) && count($this->log) > 0)
+		if (isset($this->log))
 		{
-			print "<div class='log'><pre>";
-			foreach ($this->log as $line)
-			{
-				print "{$line}\n";
+			if (is_array($this->log))
+			{//штатный режим - массив
+				if (count($this->log) > 0)
+				{
+					print "<div class='log'><pre>";
+					foreach ($this->log as $line)
+					{
+						print "{$line}\n";
+					}
+					print "</pre></div>";
+				}
+				//else - массив есть но пустой - не выводим ничего
 			}
-			print "</pre></div>";
+			else
+			{//накосячили - вернули строку - выводим строку
+				print "<div class='log'><pre>{$this->log}</pre></div>";
+			}
 		}
 	}
 

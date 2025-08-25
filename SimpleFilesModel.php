@@ -315,7 +315,6 @@ class SimpleFilesModel extends DbTable
 	{
 		$this->log = [];
 
-		//da($i_files['name']);
 		if (count($i_files['name']) == 0)
 		{
 			return true;//все хорошо, если файлов вообще не выбрали
