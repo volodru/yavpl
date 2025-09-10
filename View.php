@@ -43,11 +43,11 @@ class View
 	public Controller $controller;
 
 	private array $__header_tags = [
-"<meta http-equiv='Content-Type' content='text/html; charset=UTF-8' />",
-"<meta http-equiv='Content-Language' content='ru' />",
-"<meta name='MS.LOCALE' content='RU' />",
-"<link rel='icon' href='/favicon.ico' type='image/x-icon' />",
-"<link rel='shortcut icon' href='/favicon.ico' type='image/x-icon' />",
+"<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>",
+"<meta http-equiv='Content-Language' content='ru'>",
+"<meta name='MS.LOCALE' content='RU'>",
+"<link rel='icon' href='/favicon.ico' type='image/x-icon'>",
+"<link rel='shortcut icon' href='/favicon.ico' type='image/x-icon'>",
 	];
 
 	private string $__doctype_declaration = "<!DOCTYPE html>";
@@ -247,7 +247,7 @@ class View
 	{
 		if ($filename != '')
 		{
-			$this->__header_tags[] = "<script type='{$type}' src='{$filename}'></script>";
+			$this->__header_tags[] = "<script ".(($type != 'text/javascript')? " type='{$type}'": '')."src='{$filename}'></script>";
 		}
 		return $this;
 	}
@@ -259,7 +259,7 @@ class View
 	{
 		if ($filename != '')
 		{
-			$this->__header_tags[] ="<link rel='stylesheet' type='text/css' href='{$filename}' />";
+			$this->__header_tags[] ="<link rel='stylesheet' type='text/css' href='{$filename}'>";
 		}
 		return $this;
 	}
