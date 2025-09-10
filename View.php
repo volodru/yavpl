@@ -259,7 +259,7 @@ class View
 	{
 		if ($filename != '')
 		{
-			$this->__header_tags[] ="<link rel='stylesheet' type='text/css' href='{$filename}'>";
+			$this->__header_tags[] ="<link rel='stylesheet' href='{$filename}'>";
 		}
 		return $this;
 	}
@@ -272,7 +272,7 @@ class View
 		$css = trim($css);
 		if ($css != '')
 		{
-			$this->__header_tags[] = "<style type='text/css'>\n{$css}\n\t</style>";
+			$this->__header_tags[] = "<style>\n{$css}\n\t</style>";
 		}
 		return $this;
 	}

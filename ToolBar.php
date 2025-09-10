@@ -87,7 +87,7 @@ class ToolBar
 		}
 
 		$buf = "
-<script type='text/javascript'>
+<script>
 function __stopPropagation(e)
 {
 	if (!e)	var e = window.event;
