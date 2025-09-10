@@ -44,7 +44,7 @@ class View
 
 	private array $__header_tags = [
 "<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>",
-"<meta http-equiv='Content-Language' content='ru'>",
+//"<meta http-equiv='Content-Language' content='ru'>",
 "<meta name='MS.LOCALE' content='RU'>",
 "<link rel='icon' href='/favicon.ico' type='image/x-icon'>",
 "<link rel='shortcut icon' href='/favicon.ico' type='image/x-icon'>",
