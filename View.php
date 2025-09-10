@@ -247,7 +247,7 @@ class View
 	{
 		if ($filename != '')
 		{
-			$this->__header_tags[] = "<script ".(($type != 'text/javascript')? " type='{$type}'": '')."src='{$filename}'></script>";
+			$this->__header_tags[] = "<script ".(($type != 'text/javascript') ? " type='{$type}'" : '')."src='{$filename}'></script>";
 		}
 		return $this;
 	}
@@ -285,7 +285,7 @@ class View
 		$js = trim($js);
 		if ($js != '')
 		{
-			$this->__header_tags[] = "<script type='{$type}'>\n{$js}\n</script>";
+			$this->__header_tags[] = "<script ".(($type != 'text/javascript') ? " type='{$type}'" : '').">\n{$js}\n</script>";
 		}
 		return $this;
 	}
