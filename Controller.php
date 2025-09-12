@@ -167,7 +167,7 @@ class Controller
 		{
 			http_response_code($http_response_code);
 		}
-		$html_message = preg_replace("/\n/", "<br/>\n", $message);
+		$html_message = preg_replace("/\n/", "<br>\n", $message);
 		if ($this->__need_render)
 		{// пытаемся впихнуть сообщение об ошибке внутрь стандартной страницы проекта
 			global $application;
