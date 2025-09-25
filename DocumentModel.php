@@ -621,16 +621,6 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 		{
 			$hr_value = $value;//какая-то осмысленная строка с т.з. класса этого поля
 		}
-		elseif ($field_info['value_type'] == 'T')//table in JSON
-		{
-			/* не может быть тут пустой строки.
-			if ($value == '')
-			{
-				return "{$field_info['title']} - [{$value}]: Ожидается непустая строка";
-			}*/
-			//$db_field = 'text_value';
-			//$result = '';
-		}
 		else
 		{
 			return "Field [{$field_info['title']}] with value [{$value}]: Unknown value_type [{$field_info['value_type']}]";//ошибка по-умолчанию
@@ -747,7 +737,6 @@ class Document_fieldsModel extends DbTable
 		'K'	=> 'Словарный', // key values
 		'X'	=> 'Внешний словарь', // key values
 		'B'	=> 'Логический', // integer (0|1), 0 - false, not 0 - true
-		'T'	=> 'Таблица',//описание структуры в x_description, данные в отдельной таблице
 		'Z'	=> 'Файлы',
 		'S'	=> 'Специальное поле',//Special Field
 	];
@@ -764,7 +753,6 @@ class Document_fieldsModel extends DbTable
 		'K'	=> 'int_value', // key values
 		'X'	=> 'int_value', // key values
 		'B'	=> 'int_value', // integer
-		'T'	=> 'int_value', // заглушка
 		'Z'	=> 'int_value', // files has no values here
 		'S'	=> 'text_value', // кастомные поля это спец структуры и спец код на кадый экземпляр поля. допустимо хранение данных в формате JSON
 	];
@@ -780,7 +768,6 @@ class Document_fieldsModel extends DbTable
 		'K'	=> 'value', // key values
 		'X'	=> 'value', // key values
 		'B'	=> 'int_value', // integer
-		'T'	=> 'int_value',	// заглушка, по таблицам сортировать нельзя
 		'Z'	=> 'int_value',	// files has no values here
 		'S'	=> 'text_value', // кастомные поля - не участвуют в сортировки списков
 	];
@@ -795,7 +782,6 @@ class Document_fieldsModel extends DbTable
 		'K'	=> 'integer', // key values
 		'X'	=> 'integer', // key values
 		'B'	=> 'integer', // integer (0|1), 0 - false, not 0 - true
-		'T'	=> 'string', // заглушка, таблицы сохраняются отдельно
 		'Z'	=> 'integer',// количество загруженных файлов
 		'S'	=> 'string',// информация для списков, специфичная для каждого поля
 	];
@@ -812,7 +798,6 @@ class Document_fieldsModel extends DbTable
 		'K'	=> [25, 1],
 		'X'	=> [25, 1],
 		'B'	=> [ 1, 1],//не имеет смысла, т.к. это радио кнопки
-		'T'	=> [25, 5],	//рисуется в блоке с полями, редактируется отдельно
 		'Z'	=> [ 1, 1],	//рисуется в отдельной форме
 		'S'	=> [ 1, 1],	//рисуется в отдельной форме
 	];
@@ -1049,11 +1034,6 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 			{
 				//return 'Только разработчик может создавать поля типа Внешний словарь, т.к. для этого требуется модификация исходного кода.';
 			}
-
-			if ($data['value_type'] == 'T')
-			{
-				return 'Только разработчик может создавать поля этого типа.';
-			}
 		}
 
 		//переключение между типами строковых полей автоматическое
@@ -1083,7 +1063,7 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 			$data['title'] = 'Новое поле '.time();
 		}
 
-		return '';
+		return parent::beforeSaveRow($action, $data, $old_data);
 	}
 
 /** иногда триггеры работают неправильно или мы меняем тип поля на словарный.
