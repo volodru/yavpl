@@ -429,14 +429,14 @@ WHERE document_id = $1 AND f.id = $2
 					}
 					else
 					{
-						$value = preg_replace("/\'/", '', $value);//TODO их бы экранироваь нормально
+						//$value = preg_replace("/\'/", '', $value);
 						if ($action == 'substr')
 						{
-							$params['where'][] = "v{$field_id}.value ILIKE '%{$value}%'";
+							$params['where'][] = "v{$field_id}.value ILIKE \$__{$field_id}\$%{$value}%\$__{$field_id}\$";
 						}
 						else
 						{
-							$params['where'][] = "v{$field_id}.value {$action} '{$value}'";
+							$params['where'][] = "v{$field_id}.value {$action} \$__{$field_id}\${$value}\$__{$field_id}\$";
 						}
 					}
 				}
