@@ -143,7 +143,7 @@ class ControllerWebUI extends Controller
 		return $this;
 	}
 
-/**  Устанавливает title Документа.
+/**  Устанавливает title Документа. Если не указать title, то выводим все хлебные крошки на данный момент в обратном порядке.
  */
 	public function setTitle(string $title = ''): Controller
 	{
