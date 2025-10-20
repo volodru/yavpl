@@ -429,6 +429,7 @@ WHERE document_id = $1 AND f.id = $2
 					}
 					else
 					{
+						$value = preg_replace("/\'/", '', $value);//TODO их бы экранироваь нормально
 						if ($action == 'substr')
 						{
 							$params['where'][] = "v{$field_id}.value ILIKE '%{$value}%'";
