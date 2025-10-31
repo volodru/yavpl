@@ -104,7 +104,7 @@ class ControllerWebUI extends Controller
 	public function sendEventStreamMessage($id, $data)
 	{
 		//https://www.php.net/manual/en/function.cli-set-process-title.php
-		print "id: {$id}" . PHP_EOL . "data: " . json_encode($data) . PHP_EOL . PHP_EOL;
+		print "id: {$id}" . PHP_EOL . "data: " . json_encode($data, JSON_UNESCAPED_UNICODE) . PHP_EOL . PHP_EOL;
 		ob_flush();
 		flush();
 	}

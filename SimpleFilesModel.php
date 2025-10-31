@@ -274,8 +274,6 @@ class SimpleFilesModel extends DbTable
 			:
 			$this->db->update($this->table_name, $this->key_field, $this->fields, $data)->affectedRows();
 
-		//delete it: return ($this->affected_rows == 1);
-
 		if ($this->affected_rows == 1)
 		{
 			$message = $this->afterSaveRow($action, $data, $old_data);
