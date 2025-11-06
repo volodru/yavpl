@@ -81,7 +81,7 @@ class Controller
 	private array $__methods = [];//for Helper
 
 	//https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
-	public $mime_types_per_extension = [
+	public array $mime_types_per_extension = [
 		'.7z'	=> 'application/x-7z-compressed',
 		'.csv'	=> 'text/csv',
 		'.doc'	=> 'application/msword',
@@ -567,7 +567,7 @@ experimental: Если тип начинается со знака вопрос�
  * магия по-умолчанию. на нее ссылается View.
  * тут же можно посылать уведомления о неинициализированных переменных.
  */
-	public function __get(string $name)
+	public function __get(string $name): mixed
 	{
 		global $application;
 		$this->$name = $application->getBasicModel($name);
@@ -587,7 +587,7 @@ experimental: Если тип начинается со знака вопрос�
  *
  * По сути, это имитация trait-ов другими средствами языка.
  */
-	public function __call(string $method_name, array $args)
+	public function __call(string $method_name, array $args): mixed
 	{
 		if (isset($this->__methods[$method_name]))
 		{

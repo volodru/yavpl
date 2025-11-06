@@ -21,7 +21,8 @@ namespace YAVPL;
 #[\AllowDynamicProperties]
 class ToolBar
 {
-	private $__elements = [];
+	/** Хранилище элементов тулбара */
+	private array $__elements = [];
 
 	public function __construct()
 	{

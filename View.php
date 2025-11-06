@@ -150,7 +150,7 @@ class View
  * Помощник сам может использовать методы вызвавшего его представления через магию __get()
  *
  */
-	public function registerHelper(string $helper_class_name): View//class
+	public function registerHelper(string $helper_class_name): View
 	{
 		$this->__methods = array_merge($this->__methods, \YAVPL\Helper::registerHelper($helper_class_name, $this));
 		return $this;

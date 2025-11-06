@@ -34,22 +34,46 @@ DEFINE('MAX_REGISTER_EXECUTED_SQL_COUNT', 100);
 #[\AllowDynamicProperties]
 class Db
 {
+	/** Счётчик выполненных запросов в пределах коннекта */
 	public int $executed_sql_count = 0;
+
+	/** */
 	public bool $save_executed_sql = false;
+
+	/** Путь к файлам с логами */
 	public string $log_path = '/tmp/';
+
+	/** Начиная с какого cost в плане надо логгировать в файл с "длинными запросами" */
 	public int $min_cost_to_save_log = 300;
-	public $sth = false;
+
+	/** Результат запроса */
+	public \PgSql\Result|false $sth = false;
+
+	/** Количество результирующих строк для селектов и upd,del,ins*/
 	public int $rows;//number of rows after executing SELECT (pg_numrows), for upd,del,ins results - see affectedRows()
 
-	protected array $host_params = [];//параметры подключения. устанавляваются в контрукторе, использу.тся в
-	protected int $executed_sql_queries_per_session = 0;//счетчик, сколько запросов делать до реконнекта
-	protected int $max_executed_sql_queries_per_session = 50000;//Pg memory leaks fighting :)
-	protected int $transaction_depth = 0; // begin++, commit--, reconnect when $transaction_depth==0
-	protected bool $allow_reconnects = true;//disableReconnects() если оно не надо или глючит
-	protected bool $is_connected = false;//lazy evaluation, коннектимся не в конструкторе, а по мере необходимости.
-	//если Db будет синглтон, то все упоминания is_connected можно убрать, но Db не всегда имеет смысл делать синглтоном
+	/** параметры подключения. устанавливаются в конструкторе, используются, как минимум, в коннекте к СУБД  */
+	protected array $host_params = [];
 
-	protected bool $show_error_messages = false; //mean on production. on develop - always show errors.
+	/** счетчик, сколько запросов делать до реконнекта */
+	protected int $executed_sql_queries_per_session = 0;
+
+	/** Pg memory leaks fighting :) */
+	protected int $max_executed_sql_queries_per_session = 50000;
+
+	/** begin++, commit--, reconnect when $transaction_depth==0 */
+	protected int $transaction_depth = 0;
+
+	/** disableReconnects() если оно не надо или глючит */
+	protected bool $allow_reconnects = true;
+
+	/** lazy evaluation, коннектимся не в конструкторе, а по мере необходимости.
+	 * если Db будет синглтон, то все упоминания is_connected можно убрать, но Db не всегда имеет смысл делать синглтоном
+	 * */
+	protected bool $is_connected = false;
+
+	/** Надо ли показывать ошибки на продакшн. На девелопе показываем всегда. */
+	protected bool $show_error_messages = false;
 
 /** передаются параметры подключения к серверу в виде красивого хеша.
  *  чего с ним потом делать решает ->connect() метод для конкретной базы

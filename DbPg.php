@@ -25,7 +25,9 @@ namespace YAVPL;
 class DbPg extends Db implements iDb
 {
 	public $pg_dbh;
-	private $row = 0;
+
+	/** Счётчик для fetchRow() */
+	private int $row = 0;
 
 /** Подключаемся к базе через установленные в конструкторе параметры соединения
  * @return void
@@ -295,8 +297,8 @@ PARAMS: ".print_r($this->query_params, true) : '').$explain);
 			&& (! preg_match("/^\s*BEGIN/sim", $this->query)))
 		{
 			$sth = (count($this->query_params) > 0) ?
-			pg_query_params($this->pg_dbh, "EXPLAIN {$this->query} ", $this->query_params) :
-			pg_query($this->pg_dbh, "EXPLAIN {$this->query} ");
+				pg_query_params($this->pg_dbh, "EXPLAIN {$this->query} ", $this->query_params) :
+				pg_query($this->pg_dbh, "EXPLAIN {$this->query} ");
 			$rows = pg_num_rows($sth);
 			$explain = '';
 			for ($r = 0; $r < $rows; $r++)

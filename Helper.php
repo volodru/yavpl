@@ -36,20 +36,24 @@ class Helper
 	{
 	}
 
-	public function getOwner()
+	public function getOwner(): mixed
 	{
 		return $this->__owner;
 	}
 
-	public function __get(string $name)
+	public function __get(string $name): mixed
 	{
 		if (isset($this->__owner))
 		{
 			return $this->__owner->$name;
 		}
+		else
+		{
+			return null;
+		}
 	}
 
-	public function __set(string $name, $value)
+	public function __set(string $name, $value): void
 	{
 		if (isset($this->__owner))
 		{
@@ -57,15 +61,19 @@ class Helper
 		}
 	}
 
-	public function __call(string $method_name, array $args)
+	public function __call(string $method_name, array $args): mixed
 	{//можно вызывать хелперы из других хелперов
 		if (isset($this->__owner))
 		{
 			return $this->__owner->__call($method_name, $args);
 		}
+		else
+		{
+			return null;
+		}
 	}
 
-	public function setOwner($owner)
+	public function setOwner(mixed $owner): Helper
 	{
 		$this->__owner = $owner;
 		return $this;
@@ -80,7 +88,7 @@ class Helper
  *
  * возвращает список методов хелпера, который вызывающий класс прицепляет к своему списку методов остальных хелперов
  */
-	public static function registerHelper(string $helper_class_name, $owner): array
+	public static function registerHelper(string $helper_class_name, mixed $owner): array
 	{//if register more than one helper with the same method - method of the last helper will be called. I guess. :)
 		$name = '\\Helpers\\'.$helper_class_name;
 		//da("making new Helper class {$name}");
