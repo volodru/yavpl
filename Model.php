@@ -179,8 +179,10 @@ class Model
 		else
 		{//если нет - пусть дальше разбираются наследники
 			//da('__get model '.$name);
-			return;//null
+			return null;//null
 		}
+
+		return null;
 /*в наследнике делать что-то вроде:
 	$result = parent::__get($name);
 	if (isset($result)) {return $result;}
