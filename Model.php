@@ -125,7 +125,7 @@ class Model
 		return new $s(...$arguments);
 	}
 
-	public function __get(string $name)//: mixed
+	public function __get(string $name): mixed
 	{
 		global $application;
 		if ($name == 'db')
