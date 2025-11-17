@@ -277,11 +277,21 @@ CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.d
 	public function getFieldsValues(int $document_id): array
 	{
 		return $this->db->exec("
-SELECT f.*, v.*, f.id AS field_id
+SELECT
+	--f.*
+	f.id AS field_id,
+	f.title, -- для удобства отладки
+	f.value_type,
+	v.int_value,
+    v.float_value,
+    v.date_value,
+    v.text_value,
+	v.value
 FROM {$this->scheme}.documents_fields AS f
 JOIN {$this->scheme}.documents_fields_values AS v ON (v.field_id = f.id)
-WHERE document_id = $1
-ORDER BY f.sort_order", $document_id)->fetchAll('field_id');
+WHERE
+	document_id = $1
+ORDER BY f.sort_order, f.id DESC", $document_id)->fetchAll('field_id');
 	}
 
 /** получить значение одного поля
@@ -899,7 +909,7 @@ SELECT * FROM {$this->table_name} WHERE {$this->key_field} = $1", $key_value)->f
 		}
 	}
 
-/** Возвращает список полей. Для интерйесов редактирования полей.
+/** Возвращает список полей. Для интефейсов редактирования полей.
  */
 	public function getList(array $params = []): array
 	{
