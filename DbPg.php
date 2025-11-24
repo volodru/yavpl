@@ -337,13 +337,13 @@ PARAMS: ".print_r($this->query_params, true) : '').$explain);
  *
  * По сути, эта функция аналог pg_copy_from работающий с другой структурой входных строк.
  */
-	public function bulkLoad(string $table_name, array $fields_list, array $data): void
+	public function bulkLoad(string $table_name, array $fields_list, array $data): string
 	{
 		if ((count($fields_list) == 0) ||
 			(count($data) == 0) ||
 			(trim($table_name) == ''))
 		{
-			return;
+			return 'bulkLoad: Не переданы поля, таблица или данные';
 		}
 
 		$buf = [];
@@ -370,13 +370,14 @@ PARAMS: ".print_r($this->query_params, true) : '').$explain);
 		//тут делаем строго один вызов - надо при удалении сервера СУБД от апача, иначе можно было бы просто сделать count($data) вызовов pg_put_line
 		if (!pg_put_line($this->pg_dbh, join("\n", $buf)."\\.\n"))
 		{
-			print pg_last_error($this->pg_dbh);
-			die("bulkLoad: Error while pg_put_line");
+			return "bulkLoad: Error while pg_put_line: ".pg_last_error($this->pg_dbh);
+			//die("bulkLoad: Error while pg_put_line");
 		}
 		if (!pg_end_copy($this->pg_dbh))
 		{
-			print pg_last_error($this->pg_dbh);
-			die("bulkLoad: Error while pg_end_copy");
+			return "bulkLoad: Error while pg_end_copy: ".pg_last_error($this->pg_dbh);
+			//die("bulkLoad: Error while pg_end_copy");
 		}
+		return '';//OK
 	}
 }
