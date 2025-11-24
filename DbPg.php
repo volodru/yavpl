@@ -24,7 +24,7 @@ namespace YAVPL;
 
 class DbPg extends Db implements iDb
 {
-	public $pg_dbh;
+	public ?\PgSql\Connection $pg_dbh;
 
 	/** Счётчик для fetchRow() */
 	private int $row = 0;
@@ -59,7 +59,7 @@ class DbPg extends Db implements iDb
 		if ($this->is_connected)
 		{
 			@pg_close($this->pg_dbh);
-			$this->pg_dbh = 0;
+			$this->pg_dbh = null;
 			$this->is_connected = false;
 		}
 	}
@@ -368,7 +368,15 @@ PARAMS: ".print_r($this->query_params, true) : '').$explain);
 		//da($fields_list);da($buf);return;
 		$this->exec("COPY {$table_name} (".join(',',$fields_list).") FROM stdin;");
 		//тут делаем строго один вызов - надо при удалении сервера СУБД от апача, иначе можно было бы просто сделать count($data) вызовов pg_put_line
-		pg_put_line($this->pg_dbh, join("\n", $buf)."\\.\n");
-		pg_end_copy($this->pg_dbh);
+		if (!pg_put_line($this->pg_dbh, join("\n", $buf)."\\.\n"))
+		{
+			print pg_last_error($this->pg_dbh);
+			die("bulkLoad: Error while pg_put_line");
+		}
+		if (!pg_end_copy($this->pg_dbh))
+		{
+			print pg_last_error($this->pg_dbh);
+			die("bulkLoad: Error while pg_end_copy");
+		}
 	}
 }
