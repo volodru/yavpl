@@ -365,7 +365,7 @@ PARAMS: ".print_r($this->query_params, true) : '').$explain);
 			}
 			$buf[] = join("\t", $line);
 		}
-		//da($fields_list);da($buf);return;
+		da($fields_list);da($buf);return;
 		$this->exec("COPY {$table_name} (".join(',',$fields_list).") FROM stdin;");
 		//тут делаем строго один вызов - надо при удалении сервера СУБД от апача, иначе можно было бы просто сделать count($data) вызовов pg_put_line
 		pg_put_line($this->pg_dbh, join("\n", $buf)."\\.\n");

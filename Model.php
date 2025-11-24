@@ -105,13 +105,6 @@ class Model
 		return $this->__sub_models;
 	}
 
-	/* //OBSOLETE proposed for deletion 2025-05-06
-	public function getBasicModel(string $name): Model
-	{
-		global $application;
-		return $application->getBasicModel($name);
-	}*/
-
 /** ЭКСПЕРИМЕНТ от 2025-05-07!
  * Возможный вызов
  * use \Models\Catalog;
@@ -124,6 +117,7 @@ class Model
 		$s = get_called_class().'\\'.$name;
 		return new $s(...$arguments);
 	}
+
 
 	public function __get(string $name): mixed
 	{
@@ -144,31 +138,6 @@ class Model
 			return $this->__sub_models_cache[$sub_model_name] = new $model_name();
 		}
 
-		/*
-		//старый вариант - всё маленькими буквами
-		elseif (in_array(strtolower($name), $this->__sub_models))
-		{//подмодели - инициируем и кладем ссылку на класс в кеш
-			$matches = [];
-			if (preg_match("/^(Models\\\\.+)/", get_class($this), $matches))
-			{
-				$s = $matches[1].'\\'.ucfirst($name);
-			}
-			$this->__sub_models_cache[$name] = new $s();
-			//OBSOLETE proposed for deletion 2025-05-06 $this->__sub_models_cache[$name]->__parent = $this;
-			return $this->__sub_models_cache[$name];
-		}
-		//новый вариант - регистрозависимый
-		elseif (in_array($name, $this->__sub_models))
-		{//подмодели - инициируем и кладем ссылку на класс в кеш
-			$matches = [];
-			if (preg_match("/^(Models\\\\.+)/", get_class($this), $matches))
-			{
-				$s = $matches[1].'\\'.$name;
-			}
-			$this->__sub_models_cache[$name] = new $s();
-			//OBSOLETE proposed for deletion 2025-05-06 $this->__sub_models_cache[$name]->__parent = $this;
-			return $this->__sub_models_cache[$name];
-		}*/
 
 //---------- Базовые модели подразделов - практически глобальные переменные
 		$this->$name = $application->getBasicModel($name);
@@ -183,7 +152,7 @@ class Model
 		}
 
 		return null;
-/*в наследнике делать что-то вроде:
+/** в наследнике делать что-то вроде:
 	$result = parent::__get($name);
 	if (isset($result)) {return $result;}
 */

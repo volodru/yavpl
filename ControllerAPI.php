@@ -80,7 +80,7 @@ class ControllerAPI extends Controller
 			if ($this->__result_content_type == 'json')
 			{
 				header("Content-type: application/json");
-				print json_encode($this->result);
+				print json_encode($this->result, JSON_UNESCAPED_UNICODE);
 			}
 			else
 			{
