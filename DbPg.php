@@ -339,11 +339,15 @@ PARAMS: ".print_r($this->query_params, true) : '').$explain);
  */
 	public function bulkLoad(string $table_name, array $fields_list, array $data): string
 	{
+		if (count($data) == 0)
+		{//ничего не надо вставлять - и хорошо. кому надо, пусть проверяет при вызове.
+			return '';
+		}
+
 		if ((count($fields_list) == 0) ||
-			(count($data) == 0) ||
 			(trim($table_name) == ''))
 		{
-			return 'bulkLoad: Не переданы поля, таблица или данные';
+			return 'bulkLoad: Не передан массив полей или название таблицы';
 		}
 
 		$buf = [];
