@@ -24,7 +24,7 @@ namespace YAVPL;
 
 class DbPg extends Db implements iDb
 {
-	public ?\PgSql\Connection $pg_dbh;
+	public \PgSql\Connection|false $pg_dbh;
 
 	/** Счётчик для fetchRow() */
 	private int $row = 0;
@@ -59,7 +59,7 @@ class DbPg extends Db implements iDb
 		if ($this->is_connected)
 		{
 			@pg_close($this->pg_dbh);
-			$this->pg_dbh = null;
+			$this->pg_dbh = false;
 			$this->is_connected = false;
 		}
 	}
