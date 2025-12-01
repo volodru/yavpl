@@ -386,7 +386,7 @@ ORDER BY {$params['order']}
 	public function updateField(int $key_value, string $field_name, $value): string
 	{
 		$data = [
-			$this->key_field	=> $key_value,
+			$this->key_field		=> $key_value,
 			$field_name			=> $value,
 		];
 		if (!in_array($field_name, $this->fields))
