@@ -11,9 +11,8 @@ declare(strict_types=1);
  * DATE: 2023-04-28
  * Вынесены в глобальное пространство имен
 
-
 /** Мега универсальный отладчик. Название - сокращение от DumpArray */
-function da($v)
+function da(mixed $v): void
 {
 	//require_once('sage.phar');
 	if (APPLICATION_RUNNING_MODE == 'CLI')
@@ -28,7 +27,7 @@ function da($v)
 }
 
 /** Dump And Die */
-function dd(...$val)
+function dd(...$val): void
 {
 	foreach ($val as $v)
 	{
@@ -41,7 +40,7 @@ function dd(...$val)
 
 /** DumpArray in temp File - специально для отладки кукиев и сессий
  */
-function daf($v)
+function daf(mixed $v): void
 {
 	if (APPLICATION_ENV != 'production')
 	{
@@ -54,14 +53,14 @@ function daf($v)
 
 /** Обертка над print_backtrace - возвращает трейс в красивом виде через print_r
  */
-function __getBacktrace()
+function __getBacktrace(): string
 {
 	return print_r(debug_backtrace(0, 5), true);
 }
 
 /** Обертка для вывода только на девелопе/тесте, короче, кроме продакшн
  */
-function __printBacktrace()
+function __printBacktrace(): void
 {
 	if (defined('APPLICATION_ENV') && (APPLICATION_ENV != 'production'))
 	{
@@ -71,7 +70,7 @@ function __printBacktrace()
 
 /** Мегаотладчик по почте - в случае проблем высылаем ошибку по email
  */
-function sendBugReport($subject = 'Bug report', $message = 'Common bug', $is_fatal = false)
+function sendBugReport(string $subject = 'Bug report', string $message = 'Common bug', bool $is_fatal = false): void
 {
 	if (APPLICATION_RUNNING_MODE != 'CLI')
 	{
@@ -118,9 +117,12 @@ SESSION\n".print_r($_SESSION ?? [], true)))->send();
  * Уведомления предполагаются административного характера или бизнес-процессы и т.п.
  * Не для ошибочных ситуаций! Для потециальных ошибок и предупреждений использовать sendBugReport()
  */
-function sendNotification($subject = 'Notification', $message = 'Message')
+function sendNotification($subject = 'Notification', $message = 'Message'): void
 {
-	if (!isset($_SESSION)){session_start();}
+	if (!isset($_SESSION))
+	{
+		session_start();
+	}
 
 	$a = [];
 	exec('hostname', $a);
