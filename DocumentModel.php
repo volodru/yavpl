@@ -367,15 +367,6 @@ WHERE document_id = $1 AND f.id = $2
 //?? чтобы не было в выдаче рутового документа
 		$params['where'][] = "d.id > 0";
 
-		/*
-		$f = 'parent_id';
-		if (isset($params[$f]) && $params[$f] > 0)
-		{
-			$params['where'][] = "{$f} = {$params[$f]}";
-		}*/
-
-		//da('FILTER');		da($params['filter']);
-
 //универсальный фильтр по значениям полей
 //передаем сюда поле, действие и значение.
 //всё вместе идет как AND по всем полям.
@@ -391,7 +382,6 @@ WHERE document_id = $1 AND f.id = $2
 				if (is_numeric($value) && $value == 0) {continue;}
 
 				$action = $this->list_actions[$params['filter_actions'][$field_id] ?? 'eq'];
-				//da("$field_id $action");
 
 				$field_info = $this->fields_model->getRow($field_id);
 				if ($action == 'is_null')
@@ -402,7 +392,6 @@ WHERE document_id = $1 AND f.id = $2
 				{
 					if (($field_info['value_type'] == 'K')|| ($field_info['value_type'] == 'X'))
 					{//сравнение по значению для больше-меньше и по ключу - когда равно / не равно
-						//da($field_info);						da($action);
 						if (($action == '='))
 						{
 							$params['where'][] = "v{$field_id}.int_value {$action} {$value}";
@@ -415,7 +404,6 @@ WHERE document_id = $1 AND f.id = $2
 						{
 							$params['where'][] = "v{$field_id}.value {$action} '".$field_info['values'][$value]['value']."'";
 						}
-						//da($params['where']);
 					}
 					elseif ($field_info['value_type'] == 'I')
 					{
@@ -439,7 +427,6 @@ WHERE document_id = $1 AND f.id = $2
 					}
 					else
 					{
-						//$value = preg_replace("/\'/", '', $value);
 						if ($action == 'substr')
 						{
 							$params['where'][] = "v{$field_id}.value ILIKE \$__{$field_id}\$%{$value}%\$__{$field_id}\$";
@@ -453,7 +440,6 @@ WHERE document_id = $1 AND f.id = $2
 				$params['fields_to_join'][] = $field_id;
 			}
 		}
-		//da($params['where']);		da($params); die();
 
 //прицепляем к запросу все используемые поля
 //в селектах/сортировке/фильтрах появляются таблицы v{$field_id}
@@ -467,7 +453,6 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 		$params['select'] ??= "SELECT d.*";
 
 		$list = parent::getList($params);
-		//$this->db->print_r();die();
 
 		foreach ($list as $row)
 		{
