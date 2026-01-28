@@ -677,17 +677,13 @@ ON CONFLICT ON CONSTRAINT documents_fields_values_pkey DO NOTHING";
  * @param $fields_ids - если задан, о проходим только по указанным автоматизированным полям. иначе по всем автоматизированным
  * @return string сообщение об ошибке или пустая строка если все хорошо
  */
-	public function calcAutomatedFields(int $document_id = 0, array $fields_ids = []): string
+	public function calcAutomatedFields(int $document_id = 0): string
 	{
 		if ($document_id == 0){die('Lost $document_id in calcAutomatedFields($document_id = 0)');}
 
 		/* ШАБЛОН для наследников
 		foreach (array_keys($this->fields_model->getList(['automated' => 1])) as $field_id)
 		{
-			//если передан список полей для автообновления - используем строго его. иначе - по всем полям.
-			if (count($fields_ids) > 0 && !in_array($field_id, $fields_ids)){continue;}
-
-
 			if (in_array($field_id, [71]))
 			{//
 				$fv1 = $this->getFieldValue($document_id, 16);
