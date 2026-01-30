@@ -798,7 +798,8 @@ class Document_fieldsModel extends DbTable
 	{
 		parent::__construct($scheme.'.documents_fields', 'id', [
 			'title', 'value_type', 'measure', 'sort_order', 'description', 'automated',
-			'x_value_field_name', 'x_table_name', 'x_table_order', 'x_list_url', 'x_description', 'x_fill_values',
+			'x_value_field_name', 'x_table_name', 'x_table_order', 'x_list_url', 'x_description',
+			'x_fill_values',
 			'width', 'height',
 			'use_in_index_sort',
 		]);
@@ -1016,9 +1017,13 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 					$data['x_list_url'] = '/'.preg_replace("/\./", '/', $data['x_table_name']);
 				}
 			}
-
 			//return 'Только разработчик может создавать поля типа Внешний словарь, т.к. для этого требуется модификация исходного кода.';
 		}
+		elseif ($data['value_type'] == 'K')
+		{
+			$data['x_fill_values'] = 1;
+		}
+
 
 		if ($action == 'insert')
 		{
