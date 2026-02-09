@@ -117,7 +117,7 @@ SESSION\n".print_r($_SESSION ?? [], true)))->send();
  * Уведомления предполагаются административного характера или бизнес-процессы и т.п.
  * Не для ошибочных ситуаций! Для потециальных ошибок и предупреждений использовать sendBugReport()
  */
-function sendNotification($subject = 'Notification', $message = 'Message'): void
+function sendNotification(string $subject = 'Notification', string $message = 'Message'): void
 {
 	if (!isset($_SESSION))
 	{

@@ -265,7 +265,7 @@ CREATE TRIGGER log_history AFTER INSERT OR UPDATE OR DELETE ON {$this->scheme}.d
 	public function getEmptyRow(): array
 	{
 		return [
-			'id'				=> 0,
+			'id'		=> 0,
 		];
 	}
 
@@ -991,7 +991,6 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 		}
 
 		//для внешнего словаря проверяем существование таблицы и наличие указанных полей в таблице
-		///da($data);
 		if ($data['value_type'] == 'X')
 		{
 			//заполнять значения - либо 1 либо 0
@@ -1000,7 +999,6 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 			if ($data['x_table_name'] != '')
 			{
 				$table_info = (new \YAVPL\PostgresQL())->getFieldsList($data['x_table_name']);
-				//da($table_info);return 'sss';
 				if (empty($table_info))
 				{
 					return "Не найдена таблица [{$data['x_table_name']}]";
@@ -1023,7 +1021,6 @@ ALTER TABLE IF EXISTS shipments.documents_fields ALTER COLUMN height SET NOT NUL
 		{
 			$data['x_fill_values'] = 1;
 		}
-
 
 		if ($action == 'insert')
 		{
@@ -1151,10 +1148,10 @@ WHERE f.value_type='K' AND v.int_value = {$key_value} LIMIT 1")->rows > 0)
 		return [
 			'pk'	=> $this->key_field,
 			'fields'=> [
-				'field_id'	=> [
-					'title'	=> 'Поле',
-					'hidden' => true,
-					'type'	=> 'string',
+				'field_id'		=> [
+					'title'		=> 'Поле',
+					'hidden'		=> true,
+					'type'		=> 'string',
 				],
 				'value'	=> [
 					'title'	=> 'Значение',

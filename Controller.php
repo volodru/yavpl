@@ -160,7 +160,6 @@ class Controller
 /** Выводит сообщение о фатальной ошибке и завершает работу скрипта.
  * Внешний вид вывода зависит от контекста - рендер на сайте, ajax или json
  */
-	//public function error(string $message, int $http_response_code = 200): void
 	public function error(string $message, string $status = 'ERROR', int $http_response_code = 200): void
 	{
 		if ($http_response_code != 200)
@@ -490,9 +489,9 @@ class Controller
 
 experimental: Если тип начинается со знака вопроса И дефолтное значение не передано, то возвращаемое значение может быть null.
 
-
+Метод публичный, т.к. иногда передаются ссылки на класс контроллера в хелперы и эти хелперы должны сами брать параметры.
  */
-	protected function getParam(string $name, string $type, mixed $default_value = null, array $valid_values = []): mixed
+	public function getParam(string $name, string $type, mixed $default_value = null, array $valid_values = []): mixed
 	{
 		//da("START----------- ($type)  $name");		da('default_value: ['.$default_value.']');da(isset($default_value));da(is_null($default_value));
 		/* experimental*/
