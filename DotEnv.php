@@ -15,6 +15,8 @@ namespace YAVPL;
  *
  * .env файлы на серверах хранятся в папке с проектом.
  * При деплое после команды git checkout-index, файл .env копируется в папку проекта вместе с исходникам.
+ *
+ * Все ошибки в .env файле всегда являются фатальными и их обработка сводится к exit('Сообщение об ошибке')
 */
 
 class DotEnv
@@ -22,9 +24,7 @@ class DotEnv
 /** Полный путь к файлу с параметрами */
 	public string $env_file_name;
 
-/** Параметры:
- * env_file_name - путь и имя файла с настройками. Если не передан, то используется APPLICATION_PATH.'/.env'
- * required_constants - массив названий параметров, которые обязательно должны быть определены в .env файле */
+/**  @param string env_file_name абсолютный путь к файлу с настройками. Если параметр не передан, то используется APPLICATION_PATH.'/.env' */
 	public function __construct(string $env_file_name = '')
 	{
 		if ($env_file_name == '')
@@ -79,8 +79,8 @@ class DotEnv
 		}
 	}
 
-/** Параметры:
- * @array $required_constants массив названий параметров, которые обязательно должны быть определены в .env файле
+/**
+ *  @param array $required_constants массив названий параметров, которые обязательно должны быть определены в .env файле
  */
 	public function validate(array $required_constants): void
 	{
