@@ -29,7 +29,6 @@ class DotEnv
 	{
 		if ($env_file_name == '')
 		{
-			print "APPLICATION_PATH=".APPLICATION_PATH;
 			if (!defined('APPLICATION_PATH'))
 			{
 				exit("Не определена константа APPLICATION_PATH.");
