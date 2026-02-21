@@ -668,7 +668,7 @@ ON CONFLICT ON CONSTRAINT documents_fields_values_pkey DO NOTHING";
 	{
 		$this->document_id = $data['id'] = $this->db->nextVal($this->getSeqName());
 		$ar = $this->db->insert($this->table_name, $this->key_field, $this->fields, $data)->affectedRows();
-		return ($ar == 1) ? '' : "Произошла ошибка при сохранении документа [#{$this->document_id}]: количество измененных записей = {$ar}";
+		return ($ar == 1) ? '' : "Произошла ошибка при сохранении документа [ID={$this->document_id}]: количество измененных записей = {$ar}";
 	}
 
 /** В наследниках проходим по всем автоматизированным полям и вычисляем/сохраняем.
