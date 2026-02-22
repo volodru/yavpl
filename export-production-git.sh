@@ -20,9 +20,10 @@ do
   ssh deploy@$server "cd $project && git pull && git checkout-index -a -f --prefix=/www/src/$project/"
 done
 
-for server in v2.volod.ru
+for server in v2.volod.ru ber.volod.ru h.volod.ru
 do
   echo ----EXPORTING TO SERVER $server
   ssh deploy@$server "cd $project && git pull && git checkout-index -a -f --prefix=/www/src/$project/"
 done
+
 
