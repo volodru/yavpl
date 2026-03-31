@@ -44,7 +44,7 @@ class Db
 	public string $log_path = '/tmp/';
 
 	/** Начиная с какого cost в плане надо логгировать в файл с "длинными запросами" */
-	public int $min_cost_to_save_log = 300;
+	public int $min_cost_to_save_log = 1000;
 
 	/** Результат запроса */
 	public \PgSql\Result|false $sth = false;
