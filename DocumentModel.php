@@ -496,7 +496,7 @@ LEFT OUTER JOIN {$this->scheme}.documents_fields_values AS v{$field_id}
 	public function saveFieldValue(int $document_id = 0, int $field_id = 0, mixed $value = ''): string
 	{
 		if ($document_id == 0){die('DocumentModel.saveFieldsValue: $document_id == 0');}	// - absolutely
-		if ($field_id == 0){die('DocumentModel.saveFieldsValue: $field_id == 0');}			// - barbaric!
+		if ($field_id == 0){die('DocumentModel.saveFieldsValue: $field_id == 0');}		// - barbaric!
 
 		$field_info = $this->fields_model->getRow($field_id);
 		//da($value);da($field_info);die;
