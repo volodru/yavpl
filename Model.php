@@ -118,7 +118,6 @@ class Model
 		return new $s(...$arguments);
 	}
 
-
 	public function __get(string $name): mixed
 	{
 		global $application;

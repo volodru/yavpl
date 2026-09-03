@@ -398,7 +398,7 @@ WHERE document_id = $1 AND f.id = $2
 						}
 						elseif (($action == '!='))
 						{
-							$params['where'][] = "(v{$field_id}.int_value IS NULL) OR (v{$field_id}.int_value {$action} {$value})";
+							$params['where'][] = "((v{$field_id}.int_value IS NULL) OR (v{$field_id}.int_value {$action} {$value}))";
 						}
 						else
 						{
