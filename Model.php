@@ -172,7 +172,7 @@ class Model
 		else
 		{
 			//da('__get model '.$method_name);
-			sendBugReport("__call(".get_class($this)."->{$method_name})", 'called undefined MODEL method');
+			sendBugReport("__call(".get_class($this)."->{$method_name})", 'called undefined MODEL method', true);
 			return null;
 		}
 	}
