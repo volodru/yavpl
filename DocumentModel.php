@@ -101,10 +101,10 @@ class DocumentModel extends DbTable
 	public $list_actions = [
 		'more'		=> '>',
 		'less'		=> '<',
-		'eq'		=> '=',
-		'ne'		=> '!=',
+		'eq'			=> '=',
+		'ne'			=> '!=',
 		'is_null'	=> 'is_null',
-		'substr'	=> 'substr',
+		'substr'		=> 'substr',
 	];
 
 	public function __construct(string $scheme)
@@ -371,6 +371,7 @@ WHERE document_id = $1 AND f.id = $2
 //передаем сюда поле, действие и значение.
 //всё вместе идет как AND по всем полям.
 //кому надо OR делает несколько запросов :)
+
 		if (isset($params['filter_values']) && (count($params['filter_values']) > 0))
 		{
 			//структура: $params['filter']
@@ -378,15 +379,15 @@ WHERE document_id = $1 AND f.id = $2
 			foreach ($params['filter_values'] as $field_id => $value)
 			{
 				$value = trim($value);
-				if (is_string($value) && $value == ''){continue;}
-				if (is_numeric($value) && $value == 0) {continue;}
-
 				$action = $this->list_actions[$params['filter_actions'][$field_id] ?? 'eq'];
+
+				if (($action != 'is_null') && is_string($value) && ($value == '')){continue;}
+				if (($action != 'is_null') && is_numeric($value) && $value == 0) {continue;}
 
 				$field_info = $this->fields_model->getRow($field_id);
 				if ($action == 'is_null')
 				{
-					$params['where'][] = "v{$field_id}.int_value IS NULL";
+					$params['where'][] = "v{$field_id}.field_id IS NULL";
 				}
 				else
 				{
