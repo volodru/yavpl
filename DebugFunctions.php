@@ -89,7 +89,10 @@ function sendBugReport(string $subject = 'Bug report', string $message = 'Common
 <h2>{$message}</h2>
 <h2>".($_SERVER['SCRIPT_URI']??'').'?'.($_SERVER['QUERY_STRING'] ?? '')."</h2>
 <div>TRACE:<xmp>".__getBacktrace()."</xmp></div>";
-		exit();
+		if ($is_fatal)
+		{
+			exit();
+		}
 	}
 
 	(new \YAVPL\Mail(ADMIN_EMAIL, "[{$server_name}] {$subject}", "{$message}
@@ -148,11 +151,13 @@ function pgCheckDate(string $date, string $message = ''): void
 		$d = DateTime::createFromFormat($format, $date);
 		if ($d === false)
 		{
+			sendBugReport('pgCheckDate', $message);
 			die($message);
 		}
 	}
     if ($d->format($format) != $date)
     {
+	    	sendBugReport('pgCheckDate', $message);
 		die($message);
     }
 }

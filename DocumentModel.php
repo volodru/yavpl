@@ -424,6 +424,7 @@ WHERE document_id = $1 AND f.id = $2
 					elseif ($field_info['value_type'] == 'D')
 					{//дата приходит в русском формате (DD-MM-YYYY), переводим его в естественный YYYY-MM-DD
 						$value = preg_replace("/(\d{1,2})-(\d{1,2})-(\d{4})/", "$3-$2-$1", $value);
+						pgCheckDate($value);
 						$params['where'][] = "v{$field_id}.date_value {$action} '{$value}'";
 					}
 					else
