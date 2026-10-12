@@ -133,3 +133,26 @@ ____________________________________________________
 SESSION\n".print_r($_SESSION, true)))->send();
 }
 
+/** Фатальная проверка формата даты перед передачей в SQL запрос */
+function pgCheckDate(string $date, string $message = ''): void
+{
+	if ($message == '')
+	{
+		$message = "Ошибка в формате даты [{$date}]";
+	}
+	$format = 'Y-m-d';
+	$d = DateTime::createFromFormat($format, $date);
+	if ($d === false)
+	{
+		$format = 'd-m-Y';
+		$d = DateTime::createFromFormat($format, $date);
+		if ($d === false)
+		{
+			die($message);
+		}
+	}
+    if ($d->format($format) != $date)
+    {
+		die($message);
+    }
+}
