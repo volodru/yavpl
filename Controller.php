@@ -575,7 +575,8 @@ experimental: Если тип начинается со знака вопрос�
 			return $this->$name;
 		}
 //!это всегда ошибка. у контроллера не должно быть неинициализированных переменных. это 99% опечатка в коде и надо проверять.
-		sendBugReport(get_class($this).": variable [{$name}] is undefined", $name);
+		sendBugReport(get_class($this).": переменная контроллера [{$name}] не инициализирована.
+", "Если это глобальная модель, проверьте ее наличие в переменной класса application->basic_models_names.");
 		return null;
 	}
 
