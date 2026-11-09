@@ -434,12 +434,10 @@ class Application
 	{
 		if (in_array($name, $this->basic_models_names))
 		{//путь с учетом регистра - ничего не делаем
-da($name);
 		}
 		elseif (in_array(strtolower($name), array_map(function($v) {return strtolower($v);}, $this->basic_models_names)))
 		{//путь в нижнем регистре
 			$name = strtolower($name);
-			da('strtolower '.$name);
 		}
 		else
 		{//никак нет - выходим отсюда
